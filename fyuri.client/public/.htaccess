@@ -1,0 +1,72 @@
+# FYURI SPA — Apache rewrite rules
+# Fixes "broken links": React Router handles routing client-side, so the server
+# must serve index.html for any path that isn't a real file, instead of 404ing.
+#
+# Place this file in the SAME folder as index.html (e.g. public_html/).
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # If the site lives in a subfolder, change to: RewriteBase /subfolder/
+  RewriteBase /
+
+  # Never rewrite API calls — let them reach the backend / proxy
+  RewriteRule ^api/ - [L]
+
+  # Serve existing files and directories as-is (JS, CSS, images, video)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else -> index.html so React Router can take over
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Optional: proxy /api to the .NET backend if it runs on the same server.
+# Requires mod_proxy + mod_proxy_http enabled. Adjust the port if needed.
+# ----------------------------------------------------------------------
+# <IfModule mod_proxy.c>
+#   ProxyPreserveHost On
+#   ProxyPass        /api/    http://127.0.0.1:5000/api/
+#   ProxyPassReverse /api/    http://127.0.0.1:5000/api/
+#   ProxyPass        /images/ http://127.0.0.1:5000/images/
+#   ProxyPassReverse /images/ http://127.0.0.1:5000/images/
+# </IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/javascript application/json
+</IfModule>
+
+# Cache hashed static assets aggressively, never cache index.html
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css                 "access plus 1 year"
+  ExpiresByType application/javascript   "access plus 1 year"
+  ExpiresByType image/jpeg               "access plus 1 year"
+  ExpiresByType image/png                "access plus 1 year"
+  ExpiresByType image/svg+xml            "access plus 1 year"
+  ExpiresByType image/webp               "access plus 1 year"
+  ExpiresByType video/mp4                "access plus 1 year"
+</IfModule>
+
+<Files "index.html">
+  <IfModule mod_headers.c>
+	Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</Files>
+
+# Ensure correct MIME types
+AddType application/javascript .js
+AddType text/css .css
+AddType image/svg+xml .svg
+AddType video/mp4 .mp4

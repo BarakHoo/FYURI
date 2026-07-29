@@ -35,6 +35,8 @@ A full-stack e-commerce platform for professional night vision equipment: monocu
 
 ## Quick Start (Docker)
 
+> **Not using Docker?** See **[DEPLOYMENT.md](DEPLOYMENT.md)** for deploying to cPanel/Plesk, IIS, or a plain VPS — including the SPA rewrite rules that keep links from breaking on refresh.
+
 Prerequisites: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ```bash
@@ -113,7 +115,6 @@ All configured in `.env` (never committed — see `.env.example` for the full te
 | `EMAIL_SMTP_SERVER`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD` | SMTP delivery (optional — orders/messages are persisted even if email fails) |
 
 ## Local Development (without Docker)
-
 Prerequisites: .NET 10 SDK, Node.js 20+, MySQL 8 running locally.
 
 ```bash

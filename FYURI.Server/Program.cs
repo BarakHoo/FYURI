@@ -32,11 +32,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(connectionString));
 
 // Add CORS
+// Production origins come from configuration (Cors:AllowedOrigins, or the
+// CORS_ALLOWED_ORIGINS env var as a comma-separated list) so the site can be
+// hosted on a real domain without a rebuild. Localhost stays allowed for dev.
+var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? (builder.Configuration["CORS_ALLOWED_ORIGINS"] ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+var allowedOrigins = new[] { "https://localhost:5173", "http://localhost:5173", "http://localhost:3000" }
+    .Concat(configuredOrigins)
+    .Distinct()
+    .ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("https://localhost:5173", "http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
