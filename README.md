@@ -31,11 +31,39 @@ A full-stack e-commerce platform for professional night vision equipment: monocu
 | Backend | ASP.NET Core (.NET 10) Web API, EF Core |
 | Database | MySQL 8 |
 | Auth | JWT (cookie) + TOTP 2FA |
-| Deployment | Docker Compose (nginx frontend, .NET backend, MySQL) |
+| Deployment | Docker Compose, **or** any host running .NET 10 + MySQL (see [DEPLOYMENT.md](DEPLOYMENT.md)) |
+
+## ⚠️ Before You Deploy — Read This
+
+**FYURI is not a static website.** It has two parts that must both run:
+
+| Part | What it is | Requirement |
+|---|---|---|
+| Frontend (`fyuri.client`) | React SPA compiled to static files | Any web server **with URL rewriting** |
+| Backend (`FYURI.Server`) | ASP.NET Core API + MySQL | Must run a **.NET 10 process** |
+
+Uploading only the built HTML/JS will render pages that stay **empty** — products, cart, orders, contact form and the admin panel all come from the API.
+
+Two things commonly go wrong on first deploy:
+
+1. **All links 404 on refresh.** There is no `products.html` on disk — only `index.html`. The server must serve `index.html` for any path that isn't a real file. Ready-made configs ship in [`deploy/`](deploy/) and are copied into every build automatically.
+2. **HTTPS is mandatory.** Admin cookies use `Secure` + `SameSite=Strict`, so admin login silently fails over plain HTTP.
+
+**Minimum hosting:** URL rewriting · a way to run .NET 10 · MySQL 8 · SSL.
+Static-only hosting (GitHub Pages, basic shared HTML plans) **cannot run this project** — there is nowhere for the API to live.
+
+## Deployment Options
+
+| Your hosting | Guide |
+|---|---|
+| VPS / local machine with Docker | [Quick Start (Docker)](#quick-start-docker) below — easiest |
+| cPanel / Plesk (Apache) | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Windows hosting / IIS | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Plain Linux VPS (nginx + systemd) | [DEPLOYMENT.md](DEPLOYMENT.md) |
+
+> **Note on XAMPP:** XAMPP bundles Apache + MySQL + **PHP**. It's designed for PHP apps and **cannot run the .NET backend**. Its MySQL and Apache can be reused (Apache for the frontend with the supplied `.htaccess`, MySQL for the database), but the API still has to be started separately with `dotnet`. See [DEPLOYMENT.md](DEPLOYMENT.md#using-xampp).
 
 ## Quick Start (Docker)
-
-> **Not using Docker?** See **[DEPLOYMENT.md](DEPLOYMENT.md)** for deploying to cPanel/Plesk, IIS, or a plain VPS — including the SPA rewrite rules that keep links from breaking on refresh.
 
 Prerequisites: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 

@@ -148,6 +148,70 @@ Admin session cookies are issued with `Secure` + `SameSite=Strict`. **Over plain
 
 ---
 
+## Using XAMPP
+
+XAMPP bundles **Apache + MySQL + PHP**. It's a PHP development stack, so it's worth being precise about what it can and cannot do here:
+
+| Component | Useful for FYURI? |
+|---|---|
+| **MySQL / MariaDB** | ✅ Yes — can host the `fyuri_db` database |
+| **Apache** | ✅ Yes — can serve the built frontend (use the supplied `.htaccess`) |
+| **PHP** | ❌ Irrelevant — FYURI contains no PHP |
+| **Running the backend** | ❌ **No** — XAMPP cannot run an ASP.NET Core app |
+
+So XAMPP is a convenient way to get Apache and MySQL on Windows, but **the .NET backend must still be started separately.** Installing XAMPP alone will not make the site work.
+
+> ⚠️ MariaDB (shipped with XAMPP) is *mostly* compatible, but MySQL 8 is what this project is tested against. Prefer real MySQL 8 for production.
+
+### If you want to use XAMPP anyway
+
+1. **Install [.NET 10 Runtime (ASP.NET Core Hosting Bundle)](https://dotnet.microsoft.com/download/dotnet/10.0)** — this is the part XAMPP does not provide.
+
+2. **Create the database** via phpMyAdmin (`http://localhost/phpmyadmin`):
+   ```sql
+   CREATE DATABASE fyuri_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE USER 'fyuri_user'@'localhost' IDENTIFIED BY 'your-password';
+   GRANT ALL PRIVILEGES ON fyuri_db.* TO 'fyuri_user'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+
+3. **Publish and run the backend** (separate from XAMPP):
+   ```powershell
+   cd FYURI.Server
+   dotnet publish -c Release -o ./publish
+   cd publish
+   $env:ASPNETCORE_URLS='http://127.0.0.1:5000'
+   $env:ConnectionStrings__DefaultConnection='Server=localhost;Port=3306;Database=fyuri_db;User=fyuri_user;Password=your-password;CharSet=utf8mb4;'
+   $env:Jwt__Secret='64+ random characters'
+   $env:AdminAccount__Email='your-admin@example.com'
+   $env:AdminAccount__Password='a-strong-password'
+   dotnet FYURI.Server.dll
+   ```
+   Keep this process running (as a Windows Service or scheduled task for permanence).
+
+4. **Build and copy the frontend** into XAMPP's web root:
+   ```powershell
+   cd fyuri.client
+   npm install
+   npm run build
+   Copy-Item -Recurse -Force dist\* C:\xampp\htdocs\
+   ```
+   Ensure the hidden `.htaccess` is copied too — it's what prevents 404s on refresh.
+
+5. **Enable the proxy modules** so `/api` reaches the backend. In `C:\xampp\apache\conf\httpd.conf` uncomment:
+   ```apache
+   LoadModule proxy_module modules/mod_proxy.so
+   LoadModule proxy_http_module modules/mod_proxy_http.so
+   LoadModule rewrite_module modules/mod_rewrite.so
+   ```
+   Also ensure `AllowOverride All` is set for `htdocs` so `.htaccess` is honored, then uncomment the proxy block inside the `.htaccess`. Restart Apache.
+
+6. Visit `http://localhost`. Note the admin panel needs HTTPS — for local testing only, you can temporarily relax the cookie settings, but **never do this in production.**
+
+**Bottom line:** XAMPP replaces the nginx + MySQL containers, not the backend. If that sounds like more moving parts than Docker, that's because it is — a small VPS running `docker compose up` is usually simpler.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -158,6 +222,7 @@ Admin session cookies are issued with `Secure` + `SameSite=Strict`. **Over plain
 | Admin login does nothing / loops | Not on HTTPS | Enable SSL — Secure cookies require it |
 | Product images 404 | `/images/` not proxied | Add the `/images/` proxy rule, or set `VITE_API_BASE_URL` |
 | Blank white page, console 404s on `.js` | Site is in a subfolder | Set `base: '/subfolder/'` in `vite.config.js`, rebuild, and update `RewriteBase` |
+| "Installing XAMPP didn't fix it" | XAMPP can't run .NET | See [Using XAMPP](#using-xampp) — the backend must run separately |
 
 ### Minimum hosting requirements
 
