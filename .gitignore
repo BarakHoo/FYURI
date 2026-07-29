@@ -30,6 +30,3 @@ dist-ssr/
 .idea/
 .DS_Store
 Thumbs.db
-
-# Large media assets (exceed GitHub's 100 MB limit; provision locally)
-fyuri.client/public/videos/
