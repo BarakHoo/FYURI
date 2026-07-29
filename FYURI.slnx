@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="fyuri.client/fyuri.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="FYURI.Server/FYURI.Server.csproj" />
+</Solution>

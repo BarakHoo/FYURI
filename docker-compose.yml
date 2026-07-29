@@ -1,0 +1,81 @@
+﻿services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: fyuri_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: fyuri_db
+      MYSQL_USER: fyuri_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fyuri_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (.NET)
+  backend:
+    build:
+      context: .
+      dockerfile: FYURI.Server/Dockerfile
+    container_name: fyuri_backend
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=fyuri_db;User=fyuri_user;Password=${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env};CharSet=utf8mb4;
+      - EmailSettings__AdminEmail=${EMAIL_ADMIN:-your-admin@example.com}
+      - EmailSettings__SenderEmail=${EMAIL_SENDER:-}
+      - EmailSettings__SenderName=${EMAIL_SENDER_NAME:-FYURI}
+      - EmailSettings__SmtpServer=${EMAIL_SMTP_SERVER:-}
+      - EmailSettings__SmtpPort=${EMAIL_SMTP_PORT:-587}
+      - EmailSettings__SmtpUsername=${EMAIL_SMTP_USERNAME:-}
+      - EmailSettings__SmtpPassword=${EMAIL_SMTP_PASSWORD:-}
+      - AdminAccount__Email=${ADMIN_EMAIL:-your-admin@example.com}
+      - AdminAccount__Password=${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      - Jwt__Secret=${JWT_SECRET:?set JWT_SECRET in .env}
+      - Jwt__Issuer=FYURI
+      - Jwt__Audience=FYURI
+    ports:
+      - "5000:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - backend_images:/app/wwwroot/images
+    networks:
+      - fyuri_network
+
+  # Frontend (React + Vite + Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: fyuri.client/Dockerfile
+    container_name: fyuri_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - backend_images:/usr/share/nginx/html/images:ro
+    networks:
+      - fyuri_network
+
+networks:
+  fyuri_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  backend_images:
+    driver: local
