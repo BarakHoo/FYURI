@@ -4,16 +4,16 @@ WORKDIR /src
 
 # Copy csproj and restore dependencies
 COPY FYURI.Server/FYURI.Server.csproj FYURI.Server/
-RUN dotnet restore "FYURI.Server/FYURI.Server.csproj"
+RUN dotnet restore "FYURI.Server/FYURI.Server.csproj" -p:BuildFrontend=false
 
 # Copy everything else and build
 COPY FYURI.Server/ FYURI.Server/
 WORKDIR "/src/FYURI.Server"
-RUN dotnet build "FYURI.Server.csproj" -c Release -o /app/build
+RUN dotnet build "FYURI.Server.csproj" -c Release -o /app/build -p:BuildFrontend=false
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "FYURI.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "FYURI.Server.csproj" -c Release -o /app/publish /p:UseAppHost=false -p:BuildFrontend=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final

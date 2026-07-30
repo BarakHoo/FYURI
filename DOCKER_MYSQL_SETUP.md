@@ -1,5 +1,8 @@
 ﻿# FYURI - Docker + MySQL Setup Complete! נ³
 
+> Historical implementation note. Use the root [README](README.md) for current
+> deployment and administrator-provisioning instructions.
+
 ## What's Been Added
 
 ### ג… MySQL Database Integration
@@ -33,7 +36,9 @@ All controllers now use database instead of in-memory storage:
 
 ```powershell
 # From the solution root (FYURI folder)
-docker-compose up --build
+Copy-Item .env.example .env
+# Set the database passwords, initial admin credentials, and 64+ character JWT secret.
+docker compose up --build
 ```
 
 That's it! The command will:
@@ -41,13 +46,14 @@ That's it! The command will:
 2. Build .NET backend container  
 3. Build React frontend container
 4. Start all services
-5. Initialize database with sample data
+5. Apply migrations and seed the catalog; the administrator is created only
+   when none exists and valid bootstrap credentials were supplied
 
 ### Access the Application
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
-- **MySQL Database**: localhost:3306
+- **MySQL Database**: localhost:3307
 
 ---
 

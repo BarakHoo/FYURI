@@ -74,7 +74,8 @@ cd FYURI
 # 1. Create your environment file from the template
 cp .env.example .env
 
-# 2. Edit .env and fill in ALL values (see "Setting Up an Admin Account" below)
+# 2. Set database, initial-admin, and JWT values.
+#    SMTP values are optional (see "Setting Up an Admin Account" below).
 
 # 3. Build and run
 docker compose up -d --build
@@ -88,22 +89,28 @@ The database schema is created automatically via EF Core migrations on first sta
 
 ## Setting Up an Admin Account
 
-The admin account is provisioned **automatically on first startup** from environment variables — no manual database work needed.
+The admin account is provisioned **once**, when the admin table is empty. Ordinary
+startup never changes an existing administrator's email, password, two-factor
+enrollment, or lockout state.
 
 1. **Set credentials in `.env`** before the first `docker compose up`:
 
    ```env
-   ADMIN_EMAIL=your-admin@example.com
-   ADMIN_PASSWORD=choose-a-strong-password
+   ADMIN_EMAIL=  # set the real administrator email
+   ADMIN_PASSWORD=  # set a unique password of at least 12 characters; 16+ recommended
    JWT_SECRET=  # 64+ random characters, e.g. from: openssl rand -base64 48
    ```
 
    > On Windows without openssl, generate a JWT secret in PowerShell:
    > ```powershell
-   > -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
+   > $bytes = New-Object byte[] 48
+   > $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+   > $rng.GetBytes($bytes)
+   > [Convert]::ToBase64String($bytes)
+   > $rng.Dispose()
    > ```
 
-2. **Start the stack** (`docker compose up -d --build`). On first run the backend hashes the password and creates the admin user. (If an admin already exists, the seeding step is skipped — see "Resetting the admin account" below.)
+2. **Start the stack** (`docker compose up -d --build`). On first run the backend validates and hashes the password before creating the administrator. Missing, placeholder, or too-short bootstrap credentials stop the backend instead of creating an unsafe account.
 
 3. **Log in and enroll 2FA** — go to `http://localhost:3000/fyuri-admin/login`:
    - Enter your admin email and password
@@ -111,17 +118,38 @@ The admin account is provisioned **automatically on first startup** from environ
    - Enter the 6-digit code to complete enrollment
    - From then on, every login requires password + a fresh 6-digit code
 
+4. **Clear `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`**, then remove the bootstrap values from the long-running container:
+
+   ```bash
+   docker compose up -d --force-recreate backend
+   ```
+
+Changing bootstrap values and restarting is intentionally ignored after an
+administrator exists. Use the explicit reset command below when credentials
+must change.
+
 ### Resetting the admin account
 
-The seeder only runs when **no** admin exists. To reset (e.g. lost password or lost authenticator):
+The one-shot reset command changes the existing administrator without deleting
+orders or other application data. It replaces the email/password, clears
+lockout state, disables the existing TOTP enrollment, and exits without starting
+the HTTP server.
 
 ```bash
-# Delete the admin user, then restart the backend to re-seed from .env
-docker exec -it fyuri_mysql mysql -u fyuri_user -p fyuri_db -e "DELETE FROM AdminUsers;"
-docker restart fyuri_backend
+# Temporarily set new ADMIN_EMAIL and ADMIN_PASSWORD values in .env
+docker compose stop backend
+docker compose run --rm backend reset-admin
+
+# Clear those two bootstrap values again, then recreate the running backend
+docker compose up -d --force-recreate backend
 ```
 
 Then log in again — you'll be prompted to enroll 2FA from scratch.
+
+An account reset does not revoke JWT cookies already issued; they remain valid
+for up to eight hours. If compromise is suspected, keep the backend stopped and
+also rotate `JWT_SECRET` before recreating it. Rotating that secret signs out
+every active administrator session.
 
 ### Account protection
 
@@ -136,8 +164,8 @@ All configured in `.env` (never committed — see `.env.example` for the full te
 | Variable | Purpose |
 |---|---|
 | `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | Database credentials |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Initial admin account (first startup only) |
-| `JWT_SECRET` | Signing key for admin session tokens (64+ chars) |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Bootstrap/reset input; required only when no admin exists or while running `reset-admin`; ignored on ordinary restarts and safe to clear after use |
+| `JWT_SECRET` | Required signing key for admin sessions (64+ random characters); keep stable unless deliberately revoking all sessions |
 | `EMAIL_ADMIN` | Where order/contact notifications are sent |
 | `EMAIL_SENDER`, `EMAIL_SENDER_NAME` | From-address for outgoing mail |
 | `EMAIL_SMTP_SERVER`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD` | SMTP delivery (optional — orders/messages are persisted even if email fails) |
@@ -158,6 +186,12 @@ npm run dev
 
 Update `FYURI.Server/appsettings.Development.json` with your local MySQL connection and desired dev admin credentials.
 
+### Automated backend tests
+
+```bash
+dotnet test FYURI.Server.Tests/FYURI.Server.Tests.csproj -c Release
+```
+
 ## Project Structure
 
 ```
@@ -167,6 +201,7 @@ FYURI/
 │   ├── Data/              # DbContext, migrations, seed data, builder catalog
 │   ├── Models/            # Entities
 │   └── Services/          # Email, JWT, TOTP
+├── FYURI.Server.Tests/    # Focused backend regression tests
 ├── fyuri.client/          # React + Vite frontend
 │   ├── src/pages/         # Storefront pages
 │   ├── src/pages/admin/   # Admin panel pages

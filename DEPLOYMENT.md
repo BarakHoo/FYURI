@@ -74,21 +74,50 @@ Upload `publish/` to the server.
 
 Set these as environment variables (or in `appsettings.Production.json`). **Never commit real values.**
 
+Always-required runtime values:
+
 ```bash
 ConnectionStrings__DefaultConnection="Server=localhost;Port=3306;Database=fyuri_db;User=fyuri_user;Password=YOUR_DB_PASSWORD;CharSet=utf8mb4;"
-Jwt__Secret="64+ random characters"
-AdminAccount__Email="your-admin@example.com"
-AdminAccount__Password="a-strong-password"
+Jwt__Secret="" # supply 64+ random characters through your secret manager
 Cors__AllowedOrigins__0="https://yoursite.com"
+```
+
+Optional email-delivery values:
+
+```bash
 EmailSettings__SmtpServer="smtp.yourprovider.com"
 EmailSettings__SmtpUsername="..."
 EmailSettings__SmtpPassword="..."
 EmailSettings__AdminEmail="your-admin@example.com"
 ```
 
+Initial-admin values, required only while the admin table is empty:
+
+```bash
+AdminAccount__Email=""    # supply the real administrator email through your secret manager
+AdminAccount__Password="" # supply a unique 12+ character value through your secret manager
+```
+
 `Cors__AllowedOrigins__0` **must** be your real site URL, otherwise the browser blocks all API calls.
 
-Create the MySQL database and user first; the schema and catalog are created automatically on first startup.
+Create the MySQL database and user first; the schema and catalog are created automatically on first startup. After the initial administrator has been created, remove the two `AdminAccount__*` bootstrap values from the long-running service environment. Ordinary startup deliberately ignores them when an administrator already exists.
+
+### Resetting administrator credentials
+
+Stop the normal service, supply new `AdminAccount__Email` and
+`AdminAccount__Password` values through the protected service environment, then
+run the one-shot command from the published backend directory:
+
+```bash
+sudo systemctl stop fyuri
+dotnet FYURI.Server.dll reset-admin
+```
+
+The command updates the existing administrator, clears lockout and TOTP
+enrollment, and exits without starting HTTP. Remove the two bootstrap values
+again before restarting the normal service. An existing JWT cookie remains
+valid for up to eight hours; if compromise is suspected, keep the service
+stopped and rotate `Jwt__Secret` as well to revoke every active session.
 
 ### Running it
 
@@ -182,12 +211,12 @@ So XAMPP is a convenient way to get Apache and MySQL on Windows, but **the .NET 
    cd publish
    $env:ASPNETCORE_URLS='http://127.0.0.1:5000'
    $env:ConnectionStrings__DefaultConnection='Server=localhost;Port=3306;Database=fyuri_db;User=fyuri_user;Password=your-password;CharSet=utf8mb4;'
-   $env:Jwt__Secret='64+ random characters'
-   $env:AdminAccount__Email='your-admin@example.com'
-   $env:AdminAccount__Password='a-strong-password'
+   $env:Jwt__Secret='' # Supply a generated 64+ character value before running.
+   $env:AdminAccount__Email='' # Supply the real administrator email before running.
+   $env:AdminAccount__Password='' # Supply a unique 12+ character value before running.
    dotnet FYURI.Server.dll
    ```
-   Keep this process running (as a Windows Service or scheduled task for permanence).
+   Keep this process running (as a Windows Service or scheduled task for permanence). After initial provisioning, clear the two `AdminAccount__*` variables before future starts. To perform an explicit reset, supply replacement values and run `dotnet FYURI.Server.dll reset-admin` once.
 
 4. **Build and copy the frontend** into XAMPP's web root:
    ```powershell
