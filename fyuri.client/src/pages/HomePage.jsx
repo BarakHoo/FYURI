@@ -78,8 +78,8 @@ function HomePage() {
       <Box
         sx={{
           position: 'relative',
-          height: { xs: 'calc(85vh + 100px)', md: 'calc(85vh + 108px)' },
-          minHeight: '650px',
+          height: { xs: 'auto', md: 'calc(85vh + 108px)' },
+          minHeight: { xs: 'calc(100vh - 56px)', md: '650px' },
           width: '100vw',
           marginLeft: 'calc(-50vw + 50%)',
           marginRight: 'calc(-50vw + 50%)',
@@ -89,6 +89,7 @@ function HomePage() {
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
+          py: { xs: '120px', md: 0 },
           mb: 6,
         }}
       >
@@ -134,8 +135,9 @@ function HomePage() {
             sx={{
               display: 'flex',
               justifyContent: 'center',
-              mb: 3,
-              filter: 'drop-shadow(3px 3px 6px rgba(0,0,0,0.8))'
+              mb: { xs: 2, md: 3 },
+              filter: 'drop-shadow(3px 3px 6px rgba(0,0,0,0.8))',
+              '& img, & svg': { height: { xs: 68, md: 100 } },
             }}
           >
             <Logo height={100} />
@@ -145,9 +147,9 @@ function HomePage() {
             paragraph 
             sx={{ 
               fontWeight: 300, 
-              mb: 4,
+              mb: { xs: 2, md: 4 },
               textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' }
+              fontSize: { xs: '1.35rem', sm: '2rem', md: '2.5rem' }
             }}
           >
             {t({ he: 'אמצעי ראיית לילה מתקדמים', en: 'Advanced Night Vision Systems' })}
@@ -158,10 +160,10 @@ function HomePage() {
             sx={{ 
               maxWidth: 700, 
               mx: 'auto', 
-              mb: 5, 
+              mb: { xs: 3, md: 5 }, 
               opacity: 0.95,
               textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-              fontSize: { xs: '1rem', sm: '1.25rem' }
+              fontSize: { xs: '0.95rem', sm: '1.25rem' }
             }}
           >
             {t({ 
@@ -169,7 +171,7 @@ function HomePage() {
               en: 'Leaders in night vision equipment, image intensifier tubes and professional lab services'
             })}
           </Typography>
-          <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: { xs: 2, sm: 0 } }}>
+          <Box sx={{ mt: { xs: 2, md: 4 }, display: 'flex', gap: { xs: 1.5, md: 2 }, justifyContent: 'center', flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: { xs: 2, sm: 0 } }}>
             <Button
               variant="contained"
               size="large"
@@ -179,7 +181,7 @@ function HomePage() {
                 bgcolor: 'primary.main',
                 color: 'white',
                 px: 4,
-                py: 1.5,
+                py: { xs: 1.1, md: 1.5 },
                 fontSize: '1.1rem',
                 width: { xs: '100%', sm: 'auto' },
                 boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -200,7 +202,7 @@ function HomePage() {
                 color: '#0a0f0a',
                 fontWeight: 700,
                 px: 4,
-                py: 1.5,
+                py: { xs: 1.1, md: 1.5 },
                 fontSize: '1.1rem',
                 width: { xs: '100%', sm: 'auto' },
                 display: { xs: 'flex', sm: 'none' },
@@ -233,7 +235,7 @@ function HomePage() {
                 borderWidth: 2,
                 color: 'white',
                 px: 4,
-                py: 1.5,
+                py: { xs: 1.1, md: 1.5 },
                 fontSize: '1.1rem',
                 width: { xs: '100%', sm: 'auto' },
                 '&:hover': { 
