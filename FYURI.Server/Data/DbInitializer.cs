@@ -680,11 +680,6 @@ public static class DbInitializer
 
     private static void SeedAdminUser(AppDbContext context, IConfiguration configuration)
     {
-        if (context.AdminUsers.Any())
-        {
-            return; // Admin already provisioned
-        }
-
         var email = configuration["AdminAccount:Email"];
         var password = configuration["AdminAccount:Password"];
 
@@ -694,6 +689,37 @@ public static class DbInitializer
         }
 
         var hasher = new PasswordHasher<AdminUser>();
+        var existing = context.AdminUsers.FirstOrDefault();
+
+        if (existing != null)
+        {
+            // Keep the admin account in sync with the configured credentials so
+            // updated AdminAccount settings take effect without wiping the DB.
+            var needsUpdate = false;
+
+            if (!string.Equals(existing.Email, email, StringComparison.OrdinalIgnoreCase))
+            {
+                existing.Email = email;
+                needsUpdate = true;
+            }
+
+            if (hasher.VerifyHashedPassword(existing, existing.PasswordHash, password) == PasswordVerificationResult.Failed)
+            {
+                existing.PasswordHash = hasher.HashPassword(existing, password);
+                needsUpdate = true;
+            }
+
+            if (needsUpdate)
+            {
+                // Clear any lockout so the refreshed credentials work immediately.
+                existing.FailedLoginAttempts = 0;
+                existing.LockoutUntil = null;
+                context.SaveChanges();
+            }
+
+            return;
+        }
+
         var admin = new AdminUser
         {
             Email = email,
