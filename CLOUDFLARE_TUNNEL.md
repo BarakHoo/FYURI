@@ -6,16 +6,10 @@ ports in this mode.
 
 ## Immediate review URL
 
-Quick Tunnels are useful for a temporary owner review. They use a random
+Quick Tunnels are useful for a temporary public review. They use a random
 `trycloudflare.com` hostname and have no uptime guarantee. This Compose profile
-places a password-protected gateway in front of every storefront and API route.
-
-Set a reviewer username and a Caddy password hash before starting:
-
-```powershell
-$env:FYURI_REVIEW_USERNAME = 'fyuri-reviewer'
-$env:FYURI_REVIEW_PASSWORD_HASH = '<bcrypt hash from caddy hash-password>'
-```
+publishes the storefront and same-origin API without an additional review
+password. Application-level authentication still protects administrator routes.
 
 ```powershell
 docker compose `
@@ -35,8 +29,8 @@ docker compose `
 
 The local production build remains available only on
 `http://127.0.0.1:4180`. MySQL and the backend are reachable only by services
-inside the Compose network. Share the generated Quick Tunnel URL and the
-reviewer credentials through separate channels.
+inside the Compose network. Anyone with the generated Quick Tunnel URL can
+open the current review.
 
 ## Stable review hostname
 

@@ -1,15 +1,12 @@
 services:
-  # A temporary review gateway protects every storefront and API route before
-  # traffic reaches the application. Only a password hash is stored here.
+  # Keep a stable internal origin for the temporary public Quick Tunnel while
+  # the frontend container is rebuilt or recreated.
   review-gateway:
     image: caddy:2-alpine
     container_name: fyuri_review_gateway
     restart: unless-stopped
-    environment:
-      FYURI_REVIEW_USERNAME: ${FYURI_REVIEW_USERNAME:?set FYURI_REVIEW_USERNAME}
-      FYURI_REVIEW_PASSWORD_HASH: ${FYURI_REVIEW_PASSWORD_HASH:?set FYURI_REVIEW_PASSWORD_HASH}
     volumes:
-      - ./Caddyfile.review:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile.quick:/etc/caddy/Caddyfile:ro
     depends_on:
       - frontend
     networks:
