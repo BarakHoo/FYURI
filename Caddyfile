@@ -1,13 +1,13 @@
 # FYURI - Caddy reverse proxy with automatic HTTPS
 #
-# Replace "fyuri.example.com" with your real domain (and set an A/AAAA record
-# pointing at this server). Caddy will automatically obtain and renew a
-# Let's Encrypt TLS certificate for it.
+# Point an A/AAAA DNS record for munkys.dev (and www.munkys.dev) at this
+# server's public IP. Caddy will automatically obtain and renew a
+# Let's Encrypt TLS certificate for these domains.
 #
 # For local testing without a domain, replace the site address with
 # ":80" (HTTP only) or "localhost".
 
-fyuri.example.com {
+munkys.dev, www.munkys.dev {
 	encode gzip zstd
 
 	# The frontend Nginx container already serves the SPA and proxies
