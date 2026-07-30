@@ -1,4 +1,12 @@
 import { expect, test as base } from '@playwright/test';
+import { stat } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
+const heroMediaPaths = {
+  poster: fileURLToPath(new URL('../public/images/banners/tactical-nvg-poster.webp', import.meta.url)),
+  webm: fileURLToPath(new URL('../public/videos/tactical-nvg.webm', import.meta.url)),
+  mp4: fileURLToPath(new URL('../public/videos/tactical-nvg.mp4', import.meta.url)),
+};
 
 const responsiveViewports = [
   { width: 320, height: 640 },
@@ -72,7 +80,7 @@ test.describe('homepage positioning and conversion', () => {
     }
   });
 
-  test('uses static imagery without loading legacy homepage video media', async ({ page }) => {
+  test('loads the optimized muted hero loop when motion and network policy allow it', async ({ page }) => {
     const videoRequests = [];
 
     page.on('request', (request) => {
@@ -82,10 +90,95 @@ test.describe('homepage positioning and conversion', () => {
     });
 
     await visitHome(page);
-    await page.waitForLoadState('networkidle');
 
-    await expect(page.locator('main video')).toHaveCount(0);
-    expect(videoRequests, 'The homepage requested media from /videos/').toEqual([]);
+    const video = page.getByTestId('home-hero-video');
+    const properties = await video.evaluate((element) => ({
+      autoplay: element.autoplay,
+      controls: element.controls,
+      loop: element.loop,
+      muted: element.muted,
+      playsInline: element.playsInline,
+      poster: new URL(element.poster).pathname,
+      preload: element.preload,
+    }));
+    const sources = await video.locator('source').evaluateAll((elements) => (
+      elements.map((element) => ({
+        src: new URL(element.src).pathname,
+        type: element.type,
+      }))
+    ));
+
+    await expect(video).toHaveCount(1);
+    await expect(page.getByTestId('home-hero-poster')).toBeVisible();
+    expect(properties).toEqual({
+      autoplay: true,
+      controls: false,
+      loop: true,
+      muted: true,
+      playsInline: true,
+      poster: '/images/banners/tactical-nvg-poster.webp',
+      preload: 'metadata',
+    });
+    expect(sources).toEqual([
+      { src: '/videos/tactical-nvg.webm', type: 'video/webm' },
+      { src: '/videos/tactical-nvg.mp4', type: 'video/mp4' },
+    ]);
+    await expect.poll(() => videoRequests.length).toBeGreaterThan(0);
+  });
+
+  test('keeps the complete hero media package below two megabytes', async () => {
+    const [poster, webm, mp4] = await Promise.all([
+      stat(heroMediaPaths.poster),
+      stat(heroMediaPaths.webm),
+      stat(heroMediaPaths.mp4),
+    ]);
+
+    expect(poster.size).toBeLessThanOrEqual(100_000);
+    expect(webm.size).toBeLessThanOrEqual(900_000);
+    expect(mp4.size).toBeLessThanOrEqual(1_200_000);
+    expect(poster.size + webm.size + mp4.size).toBeLessThanOrEqual(2_000_000);
+  });
+
+  test('uses only the poster when reduced motion is requested', async ({ page }) => {
+    const videoRequests = [];
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.startsWith('/videos/')) {
+        videoRequests.push(request.url());
+      }
+    });
+
+    await visitHome(page);
+    await expect(page.getByTestId('home-hero-poster')).toBeVisible();
+    await expect(page.getByTestId('home-hero-video')).toHaveCount(0);
+    expect(videoRequests).toEqual([]);
+  });
+
+  test('uses only the poster when the browser requests data saving', async ({ page }) => {
+    const videoRequests = [];
+
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'connection', {
+        configurable: true,
+        value: {
+          addEventListener() {},
+          effectiveType: '4g',
+          removeEventListener() {},
+          saveData: true,
+        },
+      });
+    });
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.startsWith('/videos/')) {
+        videoRequests.push(request.url());
+      }
+    });
+
+    await visitHome(page);
+    await expect(page.getByTestId('home-hero-poster')).toBeVisible();
+    await expect(page.getByTestId('home-hero-video')).toHaveCount(0);
+    expect(videoRequests).toEqual([]);
   });
 
   test('gives homepage imagery explicit alt intent, stable dimensions, and loading intent', async ({ page }) => {
@@ -107,7 +200,9 @@ test.describe('homepage positioning and conversion', () => {
       await expect(image).toHaveAttribute('loading', index === 0 ? 'eager' : 'lazy');
     }
 
-    await expect(images.first()).toHaveAttribute('alt', /\S/);
+    await expect(images.first()).toHaveAttribute('alt', '');
+    await expect(images.first()).toHaveAttribute('fetchpriority', 'high');
+    await expect(page.locator('main img:not([alt=""])').first()).toHaveAttribute('alt', /\S/);
     await expect(page.locator('main svg[role="img"]')).toHaveAttribute('aria-label', /\S/);
   });
 

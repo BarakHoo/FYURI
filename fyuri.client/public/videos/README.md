@@ -1,23 +1,22 @@
-# Videos Directory
+# Homepage hero media
 
-This directory should contain the homepage hero video background.
+The homepage uses a short, silent night-vision loop with a static poster fallback.
 
-## Required File
+## Production assets
 
-**tactical-nvg.mp4** - A video showing tactical operations with night vision equipment
+- `tactical-nvg.webm` — preferred VP9 source for supported browsers
+- `tactical-nvg.mp4` — H.264 fallback with fast-start metadata
+- `../images/banners/tactical-nvg-poster.webp` — fallback for reduced motion, data-saving mode, slow connections, autoplay failure, or media errors
 
-### Specifications
-- Format: MP4 (H.264)
-- Resolution: 1920x1080 minimum
-- Duration: 10-30 seconds
-- File size: Under 10 MB
-- Content: Tactical/military night vision operations
+Both videos are 1280×720 at 24 fps with no audio. The loop is cut from the strongest section of the original footage and crossfades back into its opening.
 
-### Where to Find Videos
+## Budgets
 
-Search for "tactical night vision" or "military operations night" on:
-- Pexels Videos (https://www.pexels.com/videos/)
-- Pixabay (https://pixabay.com/videos/)
-- Videvo (https://www.videvo.net/)
+- WebM: at most 900 KB
+- MP4: at most 1.2 MB
+- Poster: at most 100 KB
+- Complete package: at most 2 MB
 
-The video will autoplay, loop, and be muted on the homepage.
+The Playwright homepage suite enforces these limits. Do not store an uncompressed source master under `public/`; Vite copies every file in that directory into the production build even when the application does not reference it.
+
+The footage source and commercial-use rights should be confirmed by the site owner before production publication.

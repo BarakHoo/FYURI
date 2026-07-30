@@ -15,6 +15,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { productCategories } from '../components/navigationConfig';
 import { useLanguage } from '../context/LanguageContext';
@@ -54,6 +55,34 @@ const categoryMedia = {
   },
 };
 
+const heroMedia = {
+  poster: '/images/banners/tactical-nvg-poster.webp',
+  webm: '/videos/tactical-nvg.webm',
+  mp4: '/videos/tactical-nvg.mp4',
+};
+
+function getNetworkConnection() {
+  if (typeof navigator === 'undefined') {
+    return undefined;
+  }
+
+  return navigator.connection
+    || navigator.mozConnection
+    || navigator.webkitConnection;
+}
+
+function canUseHeroVideo() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const connection = getNetworkConnection();
+  const constrainedNetwork = ['slow-2g', '2g'].includes(connection?.effectiveType);
+
+  return !reducedMotion && !connection?.saveData && !constrainedNetwork;
+}
+
 const focusRing = (color = '#b8ff3d', outlineOffset = 3) => ({
   '&:focus-visible': {
     outline: `3px solid ${color}`,
@@ -85,6 +114,71 @@ function HomePage() {
   const { mode } = useThemeMode();
   const isRtl = language === 'he';
   const isDark = mode === 'dark';
+  const heroVideoRef = useRef(null);
+  const [shouldLoadHeroVideo, setShouldLoadHeroVideo] = useState(canUseHeroVideo);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
+
+  useEffect(() => {
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const connection = getNetworkConnection();
+    const updateMediaPolicy = () => {
+      const shouldLoad = canUseHeroVideo();
+      setShouldLoadHeroVideo(shouldLoad);
+
+      if (!shouldLoad) {
+        setHeroVideoReady(false);
+      }
+    };
+
+    if (motionPreference.addEventListener) {
+      motionPreference.addEventListener('change', updateMediaPolicy);
+    } else {
+      motionPreference.addListener?.(updateMediaPolicy);
+    }
+    connection?.addEventListener?.('change', updateMediaPolicy);
+
+    return () => {
+      if (motionPreference.removeEventListener) {
+        motionPreference.removeEventListener('change', updateMediaPolicy);
+      } else {
+        motionPreference.removeListener?.(updateMediaPolicy);
+      }
+      connection?.removeEventListener?.('change', updateMediaPolicy);
+    };
+  }, []);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+
+    if (!video || !shouldLoadHeroVideo) {
+      return undefined;
+    }
+
+    let isHeroVisible = true;
+    const syncPlayback = () => {
+      if (isHeroVisible && document.visibilityState === 'visible') {
+        video.play()?.catch(() => {});
+      } else {
+        video.pause();
+      }
+    };
+    const observer = typeof IntersectionObserver === 'undefined'
+      ? undefined
+      : new IntersectionObserver(([entry]) => {
+        isHeroVisible = entry.isIntersecting;
+        syncPlayback();
+      }, { threshold: 0.05 });
+
+    observer?.observe(video);
+    document.addEventListener('visibilitychange', syncPlayback);
+    syncPlayback();
+
+    return () => {
+      observer?.disconnect();
+      document.removeEventListener('visibilitychange', syncPlayback);
+      video.pause();
+    };
+  }, [shouldLoadHeroVideo]);
 
   const featuredCategories = featuredCategoryValues
     .map((value) => productCategories.find((category) => category.value === value))
@@ -182,14 +276,13 @@ function HomePage() {
           },
           mt: 'calc(0px - var(--site-header-reserved-height))',
           color: '#edf9ff',
-          background:
-            'radial-gradient(circle at 75% 32%, rgba(79,195,247,0.18), transparent 30%), radial-gradient(circle at 18% 78%, rgba(184,255,61,0.08), transparent 28%), linear-gradient(135deg, #02070c 0%, #07131e 52%, #0c2432 100%)',
+          bgcolor: '#02070c',
           isolation: 'isolate',
           '&::before': {
             content: '""',
             position: 'absolute',
             inset: 0,
-            zIndex: -1,
+            zIndex: 2,
             opacity: 0.24,
             backgroundImage:
               'linear-gradient(rgba(79,195,247,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.15) 1px, transparent 1px)',
@@ -199,6 +292,7 @@ function HomePage() {
           '&::after': {
             content: '""',
             position: 'absolute',
+            zIndex: 4,
             insetInlineStart: { xs: 18, md: 32 },
             top: 'calc(var(--site-header-reserved-height) + 28px)',
             width: 58,
@@ -209,11 +303,101 @@ function HomePage() {
           },
         }}
       >
+        <Box
+          data-testid="home-hero-media"
+          aria-hidden="true"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+          }}
+        >
+          <img
+            data-testid="home-hero-poster"
+            src={heroMedia.poster}
+            alt=""
+            width={1280}
+            height={720}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center',
+              filter: 'saturate(0.72) contrast(1.1) brightness(0.86)',
+            }}
+          />
+
+          {shouldLoadHeroVideo && (
+            <Box
+              ref={heroVideoRef}
+              data-testid="home-hero-video"
+              component="video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={heroMedia.poster}
+              disablePictureInPicture
+              disableRemotePlayback
+              tabIndex={-1}
+              onPlaying={() => setHeroVideoReady(true)}
+              onError={() => setHeroVideoReady(false)}
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+                opacity: heroVideoReady ? 1 : 0,
+                filter: 'saturate(0.72) contrast(1.1) brightness(0.86)',
+                transition: 'opacity 500ms ease',
+              }}
+            >
+              <source src={heroMedia.webm} type="video/webm" />
+              <source src={heroMedia.mp4} type="video/mp4" />
+            </Box>
+          )}
+        </Box>
+
+        <Box
+          data-testid="home-hero-scrim"
+          aria-hidden="true"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: 'none',
+            background: {
+              xs: [
+                'linear-gradient(to bottom, rgba(2,7,12,0.32), rgba(2,7,12,0.68))',
+                'linear-gradient(rgba(2,7,12,0.56), rgba(2,7,12,0.64))',
+                'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)',
+              ].join(', '),
+              lg: [
+                'linear-gradient(to bottom, rgba(2,7,12,0.2), rgba(2,7,12,0.62))',
+                isRtl
+                  ? 'linear-gradient(90deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))'
+                  : 'linear-gradient(270deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))',
+                'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)',
+              ].join(', '),
+            },
+          }}
+        />
+
         <Container
           maxWidth="xl"
           sx={{
             position: 'relative',
-            zIndex: 1,
+            zIndex: 3,
             display: 'grid',
             alignItems: 'center',
             minHeight: 'inherit',
@@ -426,8 +610,7 @@ function HomePage() {
                 })}
                 width={1920}
                 height={2560}
-                loading="eager"
-                fetchPriority="high"
+                loading="lazy"
                 decoding="async"
                 style={{
                   position: 'absolute',
