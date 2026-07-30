@@ -39,8 +39,8 @@
       - EmailSettings__SmtpPort=${EMAIL_SMTP_PORT:-587}
       - EmailSettings__SmtpUsername=${EMAIL_SMTP_USERNAME:-}
       - EmailSettings__SmtpPassword=${EMAIL_SMTP_PASSWORD:-}
-      - AdminAccount__Email=${ADMIN_EMAIL:-your-admin@example.com}
-      - AdminAccount__Password=${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      - AdminAccount__Email=${ADMIN_EMAIL:-admin@fyuri.co.il}
+      - AdminAccount__Password=${ADMIN_PASSWORD:-admin}
       - Jwt__Secret=${JWT_SECRET:?set JWT_SECRET in .env}
       - Jwt__Issuer=FYURI
       - Jwt__Audience=FYURI
