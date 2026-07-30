@@ -1,17 +1,32 @@
 using FYURI.Server.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace FYURI.Server.Data;
 
 public static class DbInitializer
 {
-    public static void Initialize(AppDbContext context, IConfiguration configuration)
+    public static void Initialize(
+        AppDbContext context,
+        IConfiguration configuration,
+        bool resetAdminAccount = false,
+        bool allowDevelopmentCredentials = false)
     {
         // Create database and apply any pending migrations
         context.Database.Migrate();
 
-        SeedAdminUser(context, configuration);
+        if (resetAdminAccount)
+        {
+            AdminAccountProvisioner.Reset(
+                context,
+                configuration,
+                allowDevelopmentCredentials);
+            return;
+        }
+
+        AdminAccountProvisioner.EnsureProvisioned(
+            context,
+            configuration,
+            allowDevelopmentCredentials);
 
         // Check if data already exists
         if (context.Categories.Any())
@@ -678,56 +693,4 @@ public static class DbInitializer
         }
     }
 
-    private static void SeedAdminUser(AppDbContext context, IConfiguration configuration)
-    {
-        var email = configuration["AdminAccount:Email"];
-        var password = configuration["AdminAccount:Password"];
-
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            return; // No admin credentials configured; skip seeding
-        }
-
-        var hasher = new PasswordHasher<AdminUser>();
-        var existing = context.AdminUsers.FirstOrDefault();
-
-        if (existing != null)
-        {
-            // Keep the admin account in sync with the configured credentials so
-            // updated AdminAccount settings take effect without wiping the DB.
-            var needsUpdate = false;
-
-            if (!string.Equals(existing.Email, email, StringComparison.OrdinalIgnoreCase))
-            {
-                existing.Email = email;
-                needsUpdate = true;
-            }
-
-            if (hasher.VerifyHashedPassword(existing, existing.PasswordHash, password) == PasswordVerificationResult.Failed)
-            {
-                existing.PasswordHash = hasher.HashPassword(existing, password);
-                needsUpdate = true;
-            }
-
-            if (needsUpdate)
-            {
-                // Clear any lockout so the refreshed credentials work immediately.
-                existing.FailedLoginAttempts = 0;
-                existing.LockoutUntil = null;
-                context.SaveChanges();
-            }
-
-            return;
-        }
-
-        var admin = new AdminUser
-        {
-            Email = email,
-            PasswordHash = string.Empty
-        };
-        admin.PasswordHash = hasher.HashPassword(admin, password);
-
-        context.AdminUsers.Add(admin);
-        context.SaveChanges();
-    }
 }

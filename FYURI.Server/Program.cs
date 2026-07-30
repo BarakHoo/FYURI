@@ -9,7 +9,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 
-var builder = WebApplication.CreateBuilder(args);
+var resetAdminAccount = AdminAccountCommand.IsReset(args);
+var applicationArgs = resetAdminAccount ? [] : args;
+
+var builder = WebApplication.CreateBuilder(applicationArgs);
 
 // Add services to the container.
 
@@ -61,7 +64,12 @@ builder.Services.AddSingleton<ITotpService, TotpService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 
 // JWT Authentication for the admin panel, token read from an httpOnly cookie
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured");
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 64)
+{
+    throw new InvalidOperationException("Jwt:Secret must be configured with at least 64 characters");
+}
+
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "FYURI";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "FYURI";
 
@@ -153,7 +161,18 @@ using (var scope = app.Services.CreateScope())
         try
         {
             var context = services.GetRequiredService<AppDbContext>();
-            DbInitializer.Initialize(context, builder.Configuration);
+            DbInitializer.Initialize(
+                context,
+                builder.Configuration,
+                resetAdminAccount,
+                app.Environment.IsDevelopment());
+
+            if (resetAdminAccount)
+            {
+                logger.LogWarning(
+                    "The administrator credentials, lockout state, and two-factor enrollment were reset by the explicit reset-admin command.");
+                break;
+            }
 
             // Clean up orphaned hidden custom-build products (older than 7 days,
             // not referenced by any cart item or order item)
@@ -173,18 +192,28 @@ using (var scope = app.Services.CreateScope())
             }
             break;
         }
+        catch (AdminAccountConfigurationException ex)
+        {
+            logger.LogCritical(ex, "Administrator provisioning configuration is invalid.");
+            throw;
+        }
         catch (Exception ex)
         {
             if (attempt == maxRetries)
             {
                 logger.LogError(ex, "An error occurred while seeding the database after {Attempts} attempts.", attempt);
-                break;
+                throw;
             }
 
             logger.LogWarning("Database not ready yet (attempt {Attempt}/{MaxRetries}): {Message}", attempt, maxRetries, ex.Message);
             Thread.Sleep(3000);
         }
     }
+}
+
+if (resetAdminAccount)
+{
+    return;
 }
 
 // Serve static files from wwwroot (for images)

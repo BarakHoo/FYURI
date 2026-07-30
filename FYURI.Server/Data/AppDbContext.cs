@@ -124,7 +124,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<AdminUser>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(AdminUser.MaximumEmailLength);
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.TotpSecret).HasMaxLength(200);
 
