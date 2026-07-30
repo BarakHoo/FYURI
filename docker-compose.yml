@@ -70,6 +70,23 @@
     networks:
       - fyuri_network
 
+  # Reverse proxy + automatic HTTPS (Caddy)
+  caddy:
+    image: caddy:latest
+    container_name: fyuri_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+    networks:
+      - fyuri_network
+
 networks:
   fyuri_network:
     driver: bridge
@@ -78,4 +95,8 @@ volumes:
   mysql_data:
     driver: local
   backend_images:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
     driver: local
