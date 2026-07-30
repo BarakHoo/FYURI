@@ -380,14 +380,18 @@ function HomePage() {
               xs: [
                 'linear-gradient(to bottom, rgba(2,7,12,0.32), rgba(2,7,12,0.68))',
                 'linear-gradient(rgba(2,7,12,0.56), rgba(2,7,12,0.64))',
-                'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)',
+                isRtl
+                  ? 'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)'
+                  : 'radial-gradient(circle at 28% 34%, rgba(79,195,247,0.12), transparent 34%)',
               ].join(', '),
               lg: [
                 'linear-gradient(to bottom, rgba(2,7,12,0.2), rgba(2,7,12,0.62))',
                 isRtl
                   ? 'linear-gradient(90deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))'
                   : 'linear-gradient(270deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))',
-                'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)',
+                isRtl
+                  ? 'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)'
+                  : 'radial-gradient(circle at 28% 34%, rgba(79,195,247,0.12), transparent 34%)',
               ].join(', '),
             },
           }}
@@ -410,13 +414,17 @@ function HomePage() {
         >
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1.04fr) minmax(390px, 0.96fr)' },
-              gap: { xs: 6, md: 8, lg: 10 },
-              alignItems: 'center',
+              width: '100%',
             }}
           >
-            <Box sx={{ maxWidth: 790, textAlign: 'start' }}>
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: { xs: 790, lg: 860 },
+                marginInlineEnd: 'auto',
+                textAlign: 'start',
+              }}
+            >
               <Stack
                 direction="row"
                 spacing={1}
@@ -569,156 +577,6 @@ function HomePage() {
               >
                 {t({ he: 'דברו איתנו ב-WhatsApp', en: 'Talk to us on WhatsApp' })}
               </Button>
-            </Box>
-
-            <Box
-              component="figure"
-              sx={{
-                position: 'relative',
-                m: 0,
-                minHeight: { xs: 390, sm: 520, lg: 650 },
-                border: '1px solid rgba(79,195,247,0.36)',
-                borderRadius: { xs: 2, md: 3 },
-                overflow: 'hidden',
-                boxShadow: '0 34px 90px rgba(0,0,0,0.48)',
-                bgcolor: '#071826',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  inset: 0,
-                  zIndex: 2,
-                  background:
-                    'linear-gradient(to bottom, rgba(2,7,12,0.06), rgba(2,7,12,0.2) 48%, rgba(2,7,12,0.88)), linear-gradient(90deg, rgba(2,7,12,0.32), transparent 36%)',
-                  pointerEvents: 'none',
-                },
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  zIndex: 3,
-                  inset: 20,
-                  border: '1px solid rgba(184,255,61,0.2)',
-                  borderRadius: 1,
-                  pointerEvents: 'none',
-                },
-              }}
-            >
-              <img
-                src="/images/products/pvs-31.jpg"
-                alt={t({
-                  he: 'מערכת ראיית לילה דו־עינית בתאורה כחולה',
-                  en: 'Binocular night vision system under blue lighting',
-                })}
-                width={1920}
-                height={2560}
-                loading="lazy"
-                decoding="async"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: '50% 49%',
-                  filter: 'saturate(0.9) contrast(1.06)',
-                }}
-              />
-
-              <Box
-                sx={{
-                  position: 'absolute',
-                  zIndex: 4,
-                  insetInlineStart: { xs: 36, md: 44 },
-                  top: { xs: 36, md: 44 },
-                }}
-              >
-                <SectionLabel color="#dfffad">OPTICAL / SYSTEM</SectionLabel>
-                <Typography sx={{ mt: 0.5, color: '#fff', fontWeight: 850 }}>
-                  {t({ he: 'בחירת תצורה ורכיבים', en: 'Choose a form factor & components' })}
-                </Typography>
-              </Box>
-
-              <Box
-                aria-hidden="true"
-                sx={{
-                  position: 'absolute',
-                  zIndex: 4,
-                  top: '50%',
-                  left: '50%',
-                  width: { xs: 112, md: 150 },
-                  height: { xs: 112, md: 150 },
-                  border: '1px solid rgba(184,255,61,0.4)',
-                  borderRadius: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  '&::before, &::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bgcolor: 'rgba(184,255,61,0.38)',
-                  },
-                  '&::before': {
-                    width: 1,
-                    height: 'calc(100% + 46px)',
-                    left: '50%',
-                    top: -23,
-                  },
-                  '&::after': {
-                    height: 1,
-                    width: 'calc(100% + 46px)',
-                    top: '50%',
-                    left: -23,
-                  },
-                }}
-              />
-
-              <Box
-                sx={{
-                  position: 'absolute',
-                  zIndex: 4,
-                  insetInline: { xs: 36, md: 44 },
-                  bottom: { xs: 36, md: 44 },
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 1,
-                }}
-              >
-                {[
-                  ['01', t({ he: 'חד עיני', en: 'MONO' })],
-                  ['02', t({ he: 'דו עיני', en: 'BINO' })],
-                  ['03', t({ he: 'פנורמי', en: 'PANO' })],
-                ].map(([number, label]) => (
-                  <Box
-                    key={number}
-                    sx={{
-                      px: { xs: 1, sm: 1.5 },
-                      py: 1.25,
-                      bgcolor: 'rgba(3,11,17,0.72)',
-                      border: '1px solid rgba(79,195,247,0.24)',
-                      backdropFilter: 'blur(8px)',
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: '#b8ff3d',
-                        fontFamily: 'var(--mono)',
-                        fontSize: '0.68rem',
-                        fontWeight: 800,
-                      }}
-                    >
-                      {number}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        mt: 0.25,
-                        color: '#eefaff',
-                        fontFamily: language === 'en' ? 'var(--mono)' : 'inherit',
-                        fontSize: { xs: '0.74rem', sm: '0.83rem' },
-                        fontWeight: 850,
-                      }}
-                    >
-                      {label}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
             </Box>
           </Box>
         </Container>

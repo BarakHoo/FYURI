@@ -181,7 +181,7 @@ test.describe('homepage positioning and conversion', () => {
     expect(videoRequests).toEqual([]);
   });
 
-  test('gives homepage imagery explicit alt intent, stable dimensions, and loading intent', async ({ page }) => {
+  test('gives homepage decorative imagery explicit alt intent, stable dimensions, and loading intent', async ({ page }) => {
     await visitHome(page);
 
     const images = page.locator('main img');
@@ -202,7 +202,8 @@ test.describe('homepage positioning and conversion', () => {
 
     await expect(images.first()).toHaveAttribute('alt', '');
     await expect(images.first()).toHaveAttribute('fetchpriority', 'high');
-    await expect(page.locator('main img:not([alt=""])').first()).toHaveAttribute('alt', /\S/);
+    expect(await images.evaluateAll((elements) => elements.map((image) => image.getAttribute('alt'))))
+      .toEqual(Array(imageCount).fill(''));
     await expect(page.locator('main svg[role="img"]')).toHaveAttribute('aria-label', /\S/);
   });
 
