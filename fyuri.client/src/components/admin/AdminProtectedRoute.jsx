@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router';
 import { Box, CircularProgress } from '@mui/material';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 

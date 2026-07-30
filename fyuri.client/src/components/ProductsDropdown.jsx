@@ -6,7 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 import { ArrowForward } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
 import { productNavigationGroups } from './navigationConfig';

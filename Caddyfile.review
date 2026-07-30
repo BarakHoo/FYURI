@@ -1,0 +1,9 @@
+:8080 {
+	encode gzip zstd
+
+	basic_auth {
+		{$FYURI_REVIEW_USERNAME} {$FYURI_REVIEW_PASSWORD_HASH}
+	}
+
+	reverse_proxy frontend:80
+}

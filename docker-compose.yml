@@ -65,8 +65,6 @@
       - "3000:80"
     depends_on:
       - backend
-    volumes:
-      - backend_images:/usr/share/nginx/html/images:ro
     networks:
       - fyuri_network
 

@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
 import { CartProvider } from './context/CartContext';

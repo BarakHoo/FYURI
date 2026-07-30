@@ -25,7 +25,7 @@ import {
   Phone,
   WhatsApp,
 } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { primaryNavigationItems, productNavigationGroups } from './navigationConfig';
 import Logo from './Logo';
 

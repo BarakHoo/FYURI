@@ -10,11 +10,16 @@ public class EmailService : IEmailService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IHostEnvironment _environment;
 
-    public EmailService(ILogger<EmailService> logger, IConfiguration configuration)
+    public EmailService(
+        ILogger<EmailService> logger,
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         _logger = logger;
         _configuration = configuration;
+        _environment = environment;
     }
 
     public async Task SendOrderNotificationToAdminAsync(OrderRequest order)
@@ -83,12 +88,23 @@ public class EmailService : IEmailService
 
         if (string.IsNullOrWhiteSpace(smtpServer))
         {
-            // No SMTP configured - fall back to logging so nothing crashes in dev environments
-            _logger.LogInformation("=== EMAIL (SMTP NOT CONFIGURED) ===");
-            _logger.LogInformation("To: {ToEmail}", toEmail);
-            _logger.LogInformation("Subject: {Subject}", subject);
-            _logger.LogInformation("Body:\n{Body}", htmlBody);
-            _logger.LogInformation("====================================");
+            // Full email bodies contain customer contact/order data. They are
+            // useful during local development but must never be copied into
+            // production container logs.
+            if (_environment.IsDevelopment())
+            {
+                _logger.LogInformation("=== EMAIL (SMTP NOT CONFIGURED) ===");
+                _logger.LogInformation("To: {ToEmail}", toEmail);
+                _logger.LogInformation("Subject: {Subject}", subject);
+                _logger.LogInformation("Body:\n{Body}", htmlBody);
+                _logger.LogInformation("====================================");
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "SMTP is not configured; an email with subject {Subject} was not sent.",
+                    subject);
+            }
             return;
         }
 
@@ -103,7 +119,7 @@ public class EmailService : IEmailService
 
         if (!string.IsNullOrWhiteSpace(smtpUsername))
         {
-            await client.AuthenticateAsync(smtpUsername, smtpPassword);
+            await client.AuthenticateAsync(smtpUsername, smtpPassword ?? string.Empty);
         }
 
         await client.SendAsync(message);

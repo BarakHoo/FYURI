@@ -1,6 +1,6 @@
 import { Typography, Box, Paper, Button, IconButton, Grid } from '@mui/material';
 import { Delete, Add, Remove, ShoppingCart } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useEffect, useState } from 'react';

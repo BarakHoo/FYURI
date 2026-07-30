@@ -1,5 +1,5 @@
 import { Box, Container, Typography, Grid, Link as MuiLink, IconButton, Stack, Tooltip } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { WhatsApp, Facebook, Instagram } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';

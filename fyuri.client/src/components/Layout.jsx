@@ -3,7 +3,7 @@ import { Container, Box } from '@mui/material';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import TopBar from './TopBar';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 function Layout({ children, fullWidth = false }) {
   const location = useLocation();

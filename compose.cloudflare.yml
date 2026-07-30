@@ -1,0 +1,20 @@
+services:
+  # Tunnel deployments keep the database and API on the private Compose
+  # network. The storefront is bound to loopback only for local verification.
+  mysql:
+    ports: !reset []
+
+  backend:
+    ports: !reset []
+
+  frontend:
+    ports: !override
+      - "127.0.0.1:${FYURI_LOCAL_PORT:-4180}:80"
+
+  # Caddy obtains certificates through inbound ports 80/443 and is not part of
+  # the outbound-only Cloudflare Tunnel path. It remains available explicitly
+  # with: docker compose --profile direct-origin up caddy
+  caddy:
+    profiles:
+      - direct-origin
+    ports: !reset []

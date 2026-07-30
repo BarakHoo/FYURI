@@ -1,0 +1,32 @@
+services:
+  # A temporary review gateway protects every storefront and API route before
+  # traffic reaches the application. Only a password hash is stored here.
+  review-gateway:
+    image: caddy:2-alpine
+    container_name: fyuri_review_gateway
+    restart: unless-stopped
+    environment:
+      FYURI_REVIEW_USERNAME: ${FYURI_REVIEW_USERNAME:?set FYURI_REVIEW_USERNAME}
+      FYURI_REVIEW_PASSWORD_HASH: ${FYURI_REVIEW_PASSWORD_HASH:?set FYURI_REVIEW_PASSWORD_HASH}
+    volumes:
+      - ./Caddyfile.review:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - frontend
+    networks:
+      - fyuri_network
+
+  # Quick Tunnels are for temporary review only. Their random hostname can
+  # change after recreation and Cloudflare provides no uptime guarantee.
+  cloudflared-quick:
+    image: cloudflare/cloudflared:latest
+    container_name: fyuri_cloudflared_quick
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://review-gateway:8080
+    depends_on:
+      - review-gateway
+    networks:
+      - fyuri_network

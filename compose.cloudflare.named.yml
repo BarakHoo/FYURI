@@ -1,0 +1,24 @@
+services:
+  # Create the remotely-managed tunnel and its public hostname in Cloudflare,
+  # then place its token in the ignored file below. Configure the published
+  # application route to use http://frontend:80.
+  cloudflared-named:
+    image: cloudflare/cloudflared:latest
+    container_name: fyuri_cloudflared_named
+    restart: unless-stopped
+    command:
+      - tunnel
+      - --no-autoupdate
+      - run
+      - --token-file
+      - /run/secrets/cloudflare_tunnel_token
+    depends_on:
+      - frontend
+    networks:
+      - fyuri_network
+    secrets:
+      - cloudflare_tunnel_token
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${CLOUDFLARE_TUNNEL_TOKEN_FILE:-.cloudflare/tunnel-token}

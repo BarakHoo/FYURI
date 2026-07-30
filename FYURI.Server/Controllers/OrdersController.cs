@@ -77,7 +77,10 @@ public class OrdersController : ControllerBase
                 });
             }
 
-            var orderNumber = $"FYURI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
+            // This value is used as the capability key for the public order
+            // confirmation page, which contains customer details. Keep the
+            // complete 128-bit GUID rather than a guessable short prefix.
+            var orderNumber = $"FYURI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid():N}".ToUpperInvariant();
 
             var order = new OrderRequest
             {

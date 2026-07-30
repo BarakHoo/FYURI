@@ -27,7 +27,7 @@ A full-stack e-commerce platform for professional night vision equipment: monocu
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite + Material UI (react-router, lazy-loaded routes) |
+| Frontend | React 19 + Vite + Material UI (react-router, lazy-loaded routes) |
 | Backend | ASP.NET Core (.NET 10) Web API, EF Core |
 | Database | MySQL 8 |
 | Auth | JWT (cookie) + TOTP 2FA |
@@ -56,6 +56,7 @@ Static-only hosting (GitHub Pages, basic shared HTML plans) **cannot run this pr
 
 | Your hosting | Guide |
 |---|---|
+| Local machine without router port forwarding | [Cloudflare Tunnel](CLOUDFLARE_TUNNEL.md) |
 | VPS / local machine with Docker | [Quick Start (Docker)](#quick-start-docker) below — easiest |
 | cPanel / Plesk (Apache) | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Windows hosting / IIS | [DEPLOYMENT.md](DEPLOYMENT.md) |

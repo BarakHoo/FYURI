@@ -5,7 +5,7 @@ import {
   FormGroup, FormControlLabel, Checkbox, useMediaQuery, useTheme,
   IconButton, Collapse
 } from '@mui/material';
-import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router';
 import { 
   FilterList, ExpandMore, ExpandLess
 } from '@mui/icons-material';
