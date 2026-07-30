@@ -262,4 +262,27 @@ test.describe('responsive site navigation', () => {
     await lastCategoryLink.scrollIntoViewIfNeeded();
     await expect(lastCategoryLink).toBeInViewport();
   });
+
+  test('desktop contact strip slides away while the main navigation stays pinned', async ({ page }) => {
+    await visitPublicPage(page, desktopViewport, '/');
+
+    const contactStrip = page.getByTestId('contact-strip');
+    const navbar = page.locator('header').first();
+
+    await expect(contactStrip).toHaveCSS('height', '44px');
+    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(44);
+
+    await page.evaluate(() => window.scrollTo(0, 200));
+
+    await expect(contactStrip).toHaveCSS('height', '0px');
+    await expect(contactStrip).toHaveAttribute('aria-hidden', 'true');
+    await expect.poll(async () => Math.abs((await navbar.boundingBox())?.y ?? 999))
+      .toBeLessThanOrEqual(1);
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    await expect(contactStrip).toHaveCSS('height', '44px');
+    await expect(contactStrip).not.toHaveAttribute('aria-hidden', 'true');
+    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(44);
+  });
 });

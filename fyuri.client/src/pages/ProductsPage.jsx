@@ -277,7 +277,11 @@ function ProductsPage() {
             boxSizing: 'border-box',
             top: 'var(--site-header-height)',
             height: 'calc(100vh - var(--site-header-height))',
-            zIndex: 1100
+            zIndex: 1100,
+            transition: (theme) => theme.transitions.create(
+              ['top', 'height'],
+              { duration: theme.transitions.duration.shorter },
+            ),
           },
         }}
         open

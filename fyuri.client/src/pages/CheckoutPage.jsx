@@ -316,7 +316,17 @@ function CheckoutPage() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, position: 'sticky', top: 'calc(var(--site-header-height) + 16px)' }}>
+          <Paper
+            sx={{
+              p: 3,
+              position: 'sticky',
+              top: 'calc(var(--site-header-height) + 16px)',
+              transition: (theme) => theme.transitions.create(
+                'top',
+                { duration: theme.transitions.duration.shorter },
+              ),
+            }}
+          >
             <Typography variant="h5" gutterBottom>
               {t({ he: 'סיכום הזמנה', en: 'Order Summary' })}
             </Typography>

@@ -69,10 +69,10 @@ function HomePage() {
       <Box
         sx={{
           position: 'relative',
-          height: 'calc(85vh + var(--site-header-height))',
+          height: 'calc(85vh + var(--site-header-reserved-height))',
           minHeight: '650px',
           width: '100%',
-          marginTop: 'calc(0px - var(--site-header-height))',
+          marginTop: 'calc(0px - var(--site-header-reserved-height))',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
