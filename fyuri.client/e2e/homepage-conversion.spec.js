@@ -80,6 +80,51 @@ test.describe('homepage positioning and conversion', () => {
     }
   });
 
+  test('serves the responsive FYURI identity system and installable-site assets', async ({ page, request }) => {
+    await visitHome(page);
+
+    const headerLogo = page.getByTestId('site-logo-link').getByTestId('fyuri-logo');
+    await expect(headerLogo).toHaveAttribute('src', '/brand/fyuri-lockup-on-dark.svg');
+
+    const renderedLogo = await headerLogo.evaluate((image) => ({
+      complete: image.complete,
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+    }));
+    expect(renderedLogo.complete).toBe(true);
+    expect(renderedLogo.naturalWidth).toBe(222);
+    expect(renderedLogo.naturalHeight).toBe(64);
+
+    const assetPaths = [
+      '/favicon.svg',
+      '/favicon.ico',
+      '/brand/favicon-16x16.png',
+      '/brand/favicon-32x32.png',
+      '/brand/apple-touch-icon.png',
+      '/brand/fyuri-lockup-on-dark.svg',
+      '/brand/fyuri-lockup-on-light.svg',
+      '/brand/fyuri-mark-on-dark.svg',
+      '/brand/fyuri-icon-192.png',
+      '/brand/fyuri-icon-512.png',
+      '/brand/fyuri-icon-maskable-512.png',
+      '/site.webmanifest',
+    ];
+
+    for (const path of assetPaths) {
+      const response = await request.get(path);
+      expect(response.ok(), `${path} should load`).toBe(true);
+    }
+
+    const manifestResponse = await request.get('/site.webmanifest');
+    const manifest = await manifestResponse.json();
+    expect(manifest.short_name).toBe('FYURI');
+    expect(manifest.theme_color).toBe('#07111b');
+    expect(manifest.icons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ sizes: '192x192', purpose: 'any' }),
+      expect.objectContaining({ sizes: '512x512', purpose: 'maskable' }),
+    ]));
+  });
+
   test('loads the optimized muted hero loop when motion and network policy allow it', async ({ page }) => {
     const videoRequests = [];
 

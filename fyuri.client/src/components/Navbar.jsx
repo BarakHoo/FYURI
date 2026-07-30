@@ -258,7 +258,11 @@ function Navbar() {
               },
             }}
           >
-            <Logo height={{ xs: 34, lg: 38 }} />
+            <Logo
+              height={{ xs: 32, sm: 34, lg: 38 }}
+              surface="dark"
+              alt=""
+            />
           </Box>
 
           <Box

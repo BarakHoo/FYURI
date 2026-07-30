@@ -72,6 +72,11 @@ test.describe('responsive site navigation', () => {
     await expect(closeButton).toBeFocused();
     await expect(body).toHaveCSS('overflow', 'hidden');
 
+    const drawerLogo = drawer.getByTestId('fyuri-logo');
+    await expect(drawerLogo).toHaveAttribute('src', '/brand/fyuri-lockup-on-dark.svg');
+    await drawer.getByRole('button', { name: /מצב בהיר|Light mode/i }).click();
+    await expect(drawerLogo).toHaveAttribute('src', '/brand/fyuri-lockup-on-light.svg');
+
     await closeButton.click();
 
     await expect(drawer).toBeHidden();

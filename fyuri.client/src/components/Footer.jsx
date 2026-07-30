@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { WhatsApp, Facebook, Instagram } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
+import Logo from './Logo';
 
 function Footer() {
   const { t } = useLanguage();
@@ -21,10 +22,8 @@ function Footer() {
       <Container>
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
-            <Typography variant="h6" gutterBottom>
-              {t({ he: 'FYURI אמצעי ראיית לילה', en: 'FYURI Night Vision Systems' })}
-            </Typography>
-            <Typography variant="body2" color="grey.400">
+            <Logo height={{ xs: 32, md: 36 }} surface="dark" />
+            <Typography variant="body2" color="grey.400" sx={{ mt: 1.25 }}>
               {t({ he: 'לראות מה שהחושך מסתיר', en: 'See What The Darkness Hides' })}
             </Typography>
           </Grid>

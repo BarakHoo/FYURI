@@ -1,0 +1,29 @@
+{
+  "name": "FYURI Night Vision Systems",
+  "short_name": "FYURI",
+  "description": "Night vision systems, components, custom builds and professional lab services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#02070c",
+  "theme_color": "#07111b",
+  "icons": [
+    {
+      "src": "/brand/fyuri-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/fyuri-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/fyuri-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

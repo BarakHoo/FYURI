@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <title>FYURI Split Aperture mark</title>
+  <g stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M29 5C14.9 5 5 16.4 5 32s9.9 27 24 27" stroke="#07111B" stroke-width="4.5"/>
+    <path d="M35 5c14.1 0 24 11.4 24 27s-9.9 27-24 27" stroke="#07111B" stroke-width="4.5"/>
+    <path d="m11.5 22.5 16 12M52.5 22.5l-16 12" stroke="#0D5F8A" stroke-width="5.5"/>
+    <path d="M26.5 33.5 32 41l5.5-7.5M32 41v17" stroke="#07111B" stroke-width="6.5"/>
+    <path d="M32 61v3" stroke="#2D6500" stroke-width="2.5"/>
+  </g>
+</svg>

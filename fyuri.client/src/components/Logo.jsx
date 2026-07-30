@@ -1,33 +1,35 @@
 import { Box } from '@mui/material';
 import { useThemeMode } from '../context/ThemeContext';
 
-function Logo({ height = 40, width = 'auto' }) {
+function Logo({
+  height = 40,
+  width = 'auto',
+  surface = 'auto',
+  markOnly = false,
+  alt = 'FYURI Night Vision Systems',
+}) {
   const { mode } = useThemeMode();
-
-  // Single logo asset (metallic lettering + owl mark) works on both light and dark backgrounds
-  const logoPath = '/images/logos/fyuri-logo.png';
+  const resolvedSurface = surface === 'auto'
+    ? (mode === 'dark' ? 'dark' : 'light')
+    : surface;
+  const assetName = markOnly ? 'fyuri-mark' : 'fyuri-lockup';
+  const logoPath = `/brand/${assetName}-on-${resolvedSurface}.svg`;
 
   return (
     <Box
       component="img"
       src={logoPath}
-      alt="FYURI Night Vision"
+      alt={alt}
+      data-testid="fyuri-logo"
+      loading="eager"
+      decoding="async"
+      draggable={false}
       sx={{
-        height: height,
-        width: width,
+        height,
+        width,
         objectFit: 'contain',
-        // Fallback to text if image not found
-        display: 'block'
-      }}
-      onError={(e) => {
-        // If image fails to load, replace with text
-        e.target.style.display = 'none';
-        const textElement = document.createElement('span');
-        textElement.textContent = 'FYURI';
-        textElement.style.fontSize = '24px';
-        textElement.style.fontWeight = 'bold';
-        textElement.style.color = mode === 'dark' ? '#4fc3f7' : '#0d47a1';
-        e.target.parentNode.insertBefore(textElement, e.target);
+        display: 'block',
+        flexShrink: 0,
       }}
     />
   );

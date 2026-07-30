@@ -81,9 +81,11 @@ function AdminLayout({ children }) {
       {/* AppBar */}
       <AppBar
         position="fixed"
-        sx={{ 
-          width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` }, 
-          ml: { xs: 0, sm: `${drawerWidth}px` } 
+        sx={{
+          width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
+          ml: { xs: 0, sm: `${drawerWidth}px` },
+          bgcolor: '#07111b',
+          backgroundImage: 'none',
         }}
       >
         <Toolbar>
@@ -99,12 +101,13 @@ function AdminLayout({ children }) {
             <IconButton
               component={RouterLink}
               to="/"
+              aria-label="FYURI home"
               sx={{ 
                 p: 0,
                 '&:hover': { backgroundColor: 'transparent' }
               }}
             >
-              <Logo height={50} />
+              <Logo height={32} surface="dark" alt="" />
             </IconButton>
           </Box>
           {admin?.email && (

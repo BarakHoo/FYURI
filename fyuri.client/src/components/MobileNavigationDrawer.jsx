@@ -202,7 +202,11 @@ function MobileNavigationDrawer({
               },
             }}
           >
-            <Logo height={36} />
+            <Logo
+              height={32}
+              surface={mode === 'dark' ? 'dark' : 'light'}
+              alt=""
+            />
           </Box>
 
           <IconButton
