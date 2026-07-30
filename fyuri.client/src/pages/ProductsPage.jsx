@@ -7,11 +7,11 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
 import { 
-  FilterList, ExpandMore, ExpandLess,
-  Visibility, Security, Build, LocalShipping, RemoveRedEye, ViewComfy, Memory, Thermostat
+  FilterList, ExpandMore, ExpandLess
 } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import { productCategories } from '../components/navigationConfig';
 import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
 
 const drawerWidth = 280;
@@ -34,57 +34,6 @@ function ProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, [searchParams]);
-
-  const categories = [
-    { 
-      value: 'monocular', 
-      labelHe: 'חד עיניים', 
-      labelEn: 'Monoculars',
-      icon: <Visibility fontSize="small" />
-    },
-    { 
-      value: 'binocular', 
-      labelHe: 'דו עיניים', 
-      labelEn: 'Binoculars',
-      icon: <RemoveRedEye fontSize="small" />
-    },
-    { 
-      value: 'panoramic', 
-      labelHe: 'ארבע-עיניים', 
-      labelEn: 'Panoramic',
-      icon: <ViewComfy fontSize="small" />
-    },
-    { 
-      value: 'intensifier', 
-      labelHe: 'מגברי אור', 
-      labelEn: 'Image Intensifiers',
-      icon: <Memory fontSize="small" />
-    },
-    { 
-      value: 'optics', 
-      labelHe: 'עדשות ואופטיקה', 
-      labelEn: 'Lenses & Optics',
-      icon: <Build fontSize="small" />
-    },
-    { 
-      value: 'thermal', 
-      labelHe: 'תרמי', 
-      labelEn: 'Thermal',
-      icon: <Thermostat fontSize="small" />
-    },
-    { 
-      value: 'housing', 
-      labelHe: 'גופים', 
-      labelEn: 'Housings',
-      icon: <Build fontSize="small" />
-    },
-    { 
-      value: 'accessories', 
-      labelHe: 'אביזרים', 
-      labelEn: 'Accessories',
-      icon: <LocalShipping fontSize="small" />
-    },
-  ];
 
   const generations = ['Gen 1', 'Gen 2', 'Gen 2+', 'Gen 3'];
 
@@ -174,9 +123,9 @@ function ProductsPage() {
       return t({ he: 'קטלוג מוצרים', en: 'Product Catalog' });
     }
 
-    const categoryInfo = categories.find(c => c.value === category);
+    const categoryInfo = productCategories.find(c => c.value === category);
     return categoryInfo 
-      ? (language === 'he' ? categoryInfo.labelHe : categoryInfo.labelEn)
+      ? (categoryInfo.label[language] || categoryInfo.label.en)
       : t({ he: 'קטלוג מוצרים', en: 'Product Catalog' });
   };
 
@@ -208,22 +157,26 @@ function ProductsPage() {
               />
             </ListItemButton>
           </ListItem>
-          {categories.map((category) => (
-            <ListItem key={category.value} disablePadding>
-              <ListItemButton
-                selected={searchParams.get('category') === category.value}
-                onClick={() => handleCategorySelect(category.value)}
-                sx={{ pl: 2 }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {category.icon}
-                  <ListItemText 
-                    primary={language === 'he' ? category.labelHe : category.labelEn} 
-                  />
-                </Box>
-              </ListItemButton>
-            </ListItem>
-          ))}
+          {productCategories.map((category) => {
+            const CategoryIcon = category.icon;
+
+            return (
+              <ListItem key={category.value} disablePadding>
+                <ListItemButton
+                  selected={searchParams.get('category') === category.value}
+                  onClick={() => handleCategorySelect(category.value)}
+                  sx={{ pl: 2 }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CategoryIcon fontSize="small" />
+                    <ListItemText
+                      primary={category.label[language] || category.label.en}
+                    />
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
         </List>
       </Collapse>
 
@@ -322,8 +275,8 @@ function ProductsPage() {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
-            top: 108,
-            height: 'calc(100vh - 108px)',
+            top: 'var(--site-header-height)',
+            height: 'calc(100vh - var(--site-header-height))',
             zIndex: 1100
           },
         }}

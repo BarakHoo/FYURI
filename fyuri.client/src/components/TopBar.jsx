@@ -47,6 +47,7 @@ function TopBar() {
               target="_blank"
               rel="noopener noreferrer"
               size="small"
+              aria-label={t({ he: 'פתח WhatsApp', en: 'Open WhatsApp' })}
               sx={{ color: 'inherit', p: 0.5, '&:hover': { color: '#25D366' } }}
             >
               <WhatsApp sx={{ fontSize: 20 }} />
@@ -59,6 +60,7 @@ function TopBar() {
               target="_blank"
               rel="noopener noreferrer"
               size="small"
+              aria-label={t({ he: 'פתח Facebook', en: 'Open Facebook' })}
               sx={{ color: 'inherit', p: 0.5, '&:hover': { color: '#1877f2' } }}
             >
               <Facebook sx={{ fontSize: 20 }} />
@@ -71,6 +73,7 @@ function TopBar() {
               target="_blank"
               rel="noopener noreferrer"
               size="small"
+              aria-label={t({ he: 'פתח Instagram', en: 'Open Instagram' })}
               sx={{ color: 'inherit', p: 0.5, '&:hover': { color: '#e1306c' } }}
             >
               <Instagram sx={{ fontSize: 20 }} />
@@ -90,19 +93,21 @@ function TopBar() {
   };
 
   const isRtl = language === 'he';
+  const previousLabel = t({ he: 'הודעה קודמת', en: 'Previous announcement' });
+  const nextLabel = t({ he: 'הודעה הבאה', en: 'Next announcement' });
 
   return (
     <Box
       sx={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1300,
+        display: { xs: 'none', md: 'flex' },
+        height: '44px',
         minHeight: '44px',
+        boxSizing: 'border-box',
+        flexShrink: 0,
         bgcolor: mode === 'dark' ? '#0d3a52' : '#1a8fb8',
         color: 'white',
         py: 0.75,
         px: 2,
-        display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 1,
@@ -112,7 +117,7 @@ function TopBar() {
         onClick={isRtl ? goToNext : goToPrevious}
         size="small"
         sx={{ color: 'inherit', flexShrink: 0 }}
-        aria-label="previous"
+        aria-label={isRtl ? nextLabel : previousLabel}
       >
         <ChevronLeft fontSize="small" />
       </IconButton>
@@ -152,7 +157,7 @@ function TopBar() {
         onClick={isRtl ? goToPrevious : goToNext}
         size="small"
         sx={{ color: 'inherit', flexShrink: 0 }}
-        aria-label="next"
+        aria-label={isRtl ? previousLabel : nextLabel}
       >
         <ChevronRight fontSize="small" />
       </IconButton>

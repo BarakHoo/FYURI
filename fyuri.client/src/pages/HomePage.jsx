@@ -1,4 +1,4 @@
-import { Typography, Box, Button, Container, Grid, Paper, Card, CardContent, CardMedia } from '@mui/material';
+import { Typography, Box, Button, Container, Grid, Card, CardContent, CardMedia } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useRef, useEffect } from 'react';
@@ -69,12 +69,10 @@ function HomePage() {
       <Box
         sx={{
           position: 'relative',
-          height: { xs: 'calc(85vh + 100px)', md: 'calc(85vh + 108px)' },
+          height: 'calc(85vh + var(--site-header-height))',
           minHeight: '650px',
-          width: '100vw',
-          marginLeft: 'calc(-50vw + 50%)',
-          marginRight: 'calc(-50vw + 50%)',
-          marginTop: { xs: '-100px', md: '-108px' },
+          width: '100%',
+          marginTop: 'calc(0px - var(--site-header-height))',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',

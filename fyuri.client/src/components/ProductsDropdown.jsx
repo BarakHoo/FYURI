@@ -1,232 +1,240 @@
-import { useState } from 'react';
-import { Box, Paper, Typography, Grid, Divider } from '@mui/material';
+import {
+  Box,
+  Button,
+  Divider,
+  Popover,
+  Typography,
+} from '@mui/material';
+import { ArrowForward } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
-import { 
-  Visibility, 
-  RemoveRedEye, 
-  ViewComfy, 
-  Memory, 
-  Build, 
-  Thermostat,
-  Biotech,
-  ViewInAr 
-} from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
+import { productNavigationGroups } from './navigationConfig';
 
-function ProductsDropdown({ onClose }) {
+function ProductsDropdown({
+  anchorEl,
+  buttonId,
+  onClose,
+  open,
+}) {
   const { t, language } = useLanguage();
   const { mode } = useThemeMode();
-
-  const categories = [
-    {
-      section: t({ he: 'מכשירי ראייה', en: 'Vision Devices' }),
-      items: [
-        {
-          titleHe: 'חד עיניים',
-          titleEn: 'Monoculars',
-          descHe: 'מכשירי ראיית לילה חד עיניים',
-          descEn: 'Single-eye night vision devices',
-          icon: <Visibility />,
-          link: '/products?category=monocular'
-        },
-        {
-          titleHe: 'דו עיניים',
-          titleEn: 'Binoculars',
-          descHe: 'מכשירי ראיית לילה דו עיניים',
-          descEn: 'Dual-eye night vision devices',
-          icon: <RemoveRedEye />,
-          link: '/products?category=binocular'
-        },
-        {
-          titleHe: 'ארבע-עיניים',
-          titleEn: 'Panoramic',
-          descHe: 'מערכות ראייה ארבע-עיניות',
-          descEn: 'Panoramic vision systems',
-          icon: <ViewComfy />,
-          link: '/products?category=panoramic'
-        }
-      ]
-    },
-    {
-      section: t({ he: 'רכיבים ואופטיקה', en: 'Components & Optics' }),
-      items: [
-        {
-          titleHe: 'מגברי אור',
-          titleEn: 'Image Intensifiers',
-          descHe: 'שפופרות Gen 2, Gen 3',
-          descEn: 'Gen 2, Gen 3 tubes',
-          icon: <Memory />,
-          link: '/products?category=intensifier'
-        },
-        {
-          titleHe: 'גופים',
-          titleEn: 'Housings',
-          descHe: 'גופים לחד עיני, דו עיני וארבע-עיני',
-          descEn: 'Monocular, binocular & panoramic housings',
-          icon: <ViewInAr />,
-          link: '/products?category=housing'
-        },
-        {
-          titleHe: 'עדשות ואופטיקה',
-          titleEn: 'Lenses & Optics',
-          descHe: 'עדשות מקצועיות',
-          descEn: 'Professional lenses',
-          icon: <Build />,
-          link: '/products?category=optics'
-        },
-        {
-          titleHe: 'תרמי',
-          titleEn: 'Thermal',
-          descHe: 'מכשירי הדמיה תרמית וקליפ-און',
-          descEn: 'Thermal imagers & clip-ons',
-          icon: <Thermostat />,
-          link: '/products?category=thermal'
-        }
-      ]
-    },
-    {
-      section: t({ he: 'אביזרים ושירותים', en: 'Accessories & Services' }),
-      items: [
-        {
-          titleHe: 'אביזרים',
-          titleEn: 'Accessories',
-          descHe: 'כבלים, סוללות, חלפים',
-          descEn: 'Cables, batteries, parts',
-          icon: <Build />,
-          link: '/products?category=accessories'
-        },
-        {
-          titleHe: 'שירותי מעבדה',
-          titleEn: 'Lab Services',
-          descHe: 'תיקון ושדרוג',
-          descEn: 'Repair & upgrade',
-          icon: <Biotech />,
-          link: '/services'
-        }
-      ]
-    }
-  ];
+  const isRtl = language === 'he';
+  const accentColor = mode === 'dark' ? '#b8ff3d' : '#2d6500';
+  const cyanColor = mode === 'dark' ? '#4fc3f7' : '#0d5f8a';
 
   return (
-    <Paper
-      elevation={8}
-      sx={{
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        right: 0,
-        mt: 0,
-        bgcolor: mode === 'dark' ? '#2a2a2a' : '#ffffff',
-        borderRadius: 0,
-        borderTop: '3px solid',
-        borderColor: 'primary.main',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-        zIndex: 1300,
-        minWidth: '900px',
-        maxWidth: '1100px',
-        mx: 'auto',
-        overflow: 'hidden',
-        animation: 'slideDown 0.3s ease-out',
-        '@keyframes slideDown': {
-          from: {
-            opacity: 0,
-            transform: 'translateY(-20px)'
+    <Popover
+      id="desktop-products-navigation"
+      open={open}
+      anchorEl={anchorEl}
+      onClose={onClose}
+      disableScrollLock
+      marginThreshold={16}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      slotProps={{
+        paper: {
+          dir: isRtl ? 'rtl' : 'ltr',
+          sx: {
+            width: 'min(960px, calc(100vw - 32px))',
+            mt: 1,
+            color: mode === 'dark' ? '#e8f4fb' : '#0d1b2a',
+            background:
+              mode === 'dark'
+                ? 'linear-gradient(145deg, rgba(7,18,29,0.98), rgba(15,39,54,0.98))'
+                : 'linear-gradient(145deg, rgba(255,255,255,0.99), rgba(235,244,249,0.99))',
+            border: '1px solid rgba(79, 195, 247, 0.32)',
+            borderTop: `3px solid ${cyanColor}`,
+            borderRadius: 2,
+            boxShadow: '0 24px 70px rgba(0, 0, 0, 0.42)',
+            maxHeight: 'calc(100vh - 96px)',
+            overflowX: 'hidden',
+            overflowY: 'auto',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(79,195,247,0.5) transparent',
+            '&::-webkit-scrollbar': {
+              width: 7,
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(79,195,247,0.48)',
+              borderRadius: 999,
+            },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              opacity: mode === 'dark' ? 0.16 : 0.08,
+              backgroundImage:
+                'linear-gradient(rgba(79,195,247,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.16) 1px, transparent 1px)',
+              backgroundSize: '28px 28px',
+              maskImage: 'linear-gradient(to bottom, black, transparent 80%)',
+            },
           },
-          to: {
-            opacity: 1,
-            transform: 'translateY(0)'
-          }
-        }
+        },
       }}
     >
-      <Box sx={{ p: 4 }}>
-        <Grid container spacing={4}>
-          {categories.map((section, sectionIdx) => (
-            <Grid item xs={12} md={4} key={sectionIdx}>
-              <Typography 
-                variant="overline" 
-                sx={{ 
-                  color: 'primary.main', 
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  letterSpacing: 1,
-                  mb: 2,
-                  display: 'block',
-                  whiteSpace: 'nowrap'
+      <Box
+        component="nav"
+        aria-labelledby={buttonId}
+        aria-label={t({ he: 'קטגוריות מוצרים', en: 'Product categories' })}
+        sx={{ position: 'relative', zIndex: 1, p: 3 }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+            mb: 2.5,
+          }}
+        >
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{
+                color: cyanColor,
+                fontFamily: 'var(--mono)',
+                fontWeight: 800,
+                letterSpacing: '0.14em',
+              }}
+            >
+              FYURI / CATALOG
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              {t({ he: 'מצא את המערכת המתאימה למשימה', en: 'Find the right system for the mission' })}
+            </Typography>
+          </Box>
+
+          <Button
+            component={RouterLink}
+            to="/products"
+            onClick={onClose}
+            endIcon={<ArrowForward sx={{ transform: isRtl ? 'scaleX(-1)' : 'none' }} />}
+            sx={{
+              minHeight: 44,
+              flexShrink: 0,
+              color: accentColor,
+              border: `1px solid ${mode === 'dark' ? 'rgba(184,255,61,0.46)' : 'rgba(45,101,0,0.48)'}`,
+              '&:hover, &:focus-visible': {
+                bgcolor: mode === 'dark' ? 'rgba(184,255,61,0.1)' : 'rgba(45,101,0,0.09)',
+                borderColor: accentColor,
+                outline: `2px solid ${accentColor}`,
+                outlineOffset: 2,
+              },
+            }}
+          >
+            {t({ he: 'כל המוצרים', en: 'All products' })}
+          </Button>
+        </Box>
+
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${productNavigationGroups.length}, minmax(0, 1fr))`,
+            gap: 3,
+          }}
+        >
+          {productNavigationGroups.map((group) => (
+            <Box key={group.id}>
+              <Typography
+                variant="subtitle2"
+                sx={{
+                  minHeight: 28,
+                  color: cyanColor,
+                  fontWeight: 800,
+                  letterSpacing: '0.03em',
                 }}
               >
-                {section.section}
+                {t(group.label)}
               </Typography>
-              <Divider sx={{ mb: 2, borderColor: 'primary.main', opacity: 0.3 }} />
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {section.items.map((item, itemIdx) => (
-                  <Box
-                    key={itemIdx}
-                    component={RouterLink}
-                    to={item.link}
-                    onClick={onClose}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 2,
-                      p: 1.5,
-                      borderRadius: 1,
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-                        transform: 'translateX(8px)',
-                        '& .icon': {
-                          color: 'primary.main',
-                          transform: 'scale(1.1)'
-                        }
-                      }
-                    }}
-                  >
+              <Divider sx={{ my: 1.25, borderColor: 'rgba(79,195,247,0.24)' }} />
+
+              <Box sx={{ display: 'grid', gap: 0.5 }}>
+                {group.items.map((item) => {
+                  const CategoryIcon = item.icon;
+
+                  return (
                     <Box
-                      className="icon"
+                      key={item.id}
+                      component={RouterLink}
+                      to={item.path}
+                      onClick={onClose}
                       sx={{
-                        color: 'text.secondary',
-                        display: 'flex',
-                        alignItems: 'center',
-                        transition: 'all 0.2s ease',
-                        mt: 0.5
+                        display: 'grid',
+                        gridTemplateColumns: '36px minmax(0, 1fr)',
+                        gap: 1.25,
+                        alignItems: 'start',
+                        minHeight: 62,
+                        p: 1.25,
+                        color: 'inherit',
+                        textDecoration: 'none',
+                        borderRadius: 1.5,
+                        border: '1px solid transparent',
+                        transition: 'background-color 160ms ease, border-color 160ms ease, transform 160ms ease',
+                        '&:hover, &:focus-visible': {
+                          bgcolor:
+                            mode === 'dark'
+                              ? 'rgba(79,195,247,0.09)'
+                              : 'rgba(13,71,161,0.06)',
+                          borderColor: 'rgba(79,195,247,0.3)',
+                          outline: 'none',
+                          transform: `translateX(${isRtl ? '-3px' : '3px'})`,
+                          '& .product-nav-icon': {
+                            color: accentColor,
+                            borderColor: mode === 'dark'
+                              ? 'rgba(184,255,61,0.45)'
+                              : 'rgba(45,101,0,0.48)',
+                          },
+                        },
+                        '@media (prefers-reduced-motion: reduce)': {
+                          transition: 'none',
+                          '&:hover, &:focus-visible': {
+                            transform: 'none',
+                          },
+                        },
                       }}
                     >
-                      {item.icon}
-                    </Box>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography 
-                        variant="subtitle2" 
-                        sx={{ 
-                          fontWeight: 600,
-                          mb: 0.5,
-                          color: mode === 'dark' ? '#fff' : '#000'
+                      <Box
+                        className="product-nav-icon"
+                        sx={{
+                          display: 'grid',
+                          placeItems: 'center',
+                          width: 34,
+                          height: 34,
+                          color: cyanColor,
+                          border: '1px solid rgba(79,195,247,0.25)',
+                          borderRadius: 1,
+                          transition: 'color 160ms ease, border-color 160ms ease',
                         }}
                       >
-                        {language === 'he' ? item.titleHe : item.titleEn}
-                      </Typography>
-                      <Typography 
-                        variant="caption" 
-                        sx={{ 
-                          color: 'text.secondary',
-                          display: 'block',
-                          lineHeight: 1.4
-                        }}
-                      >
-                        {language === 'he' ? item.descHe : item.descEn}
-                      </Typography>
+                        <CategoryIcon fontSize="small" />
+                      </Box>
+
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 750, lineHeight: 1.25 }}>
+                          {t(item.label)}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ display: 'block', mt: 0.25, color: 'text.secondary', lineHeight: 1.35 }}
+                        >
+                          {t(item.description)}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
+                  );
+                })}
               </Box>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       </Box>
-    </Paper>
+    </Popover>
   );
 }
 
