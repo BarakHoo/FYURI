@@ -1,7 +1,8 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, useGLTF, Center, Html, Line } from '@react-three/drei';
-import { Box, Chip, CircularProgress, Fade } from '@mui/material';
+import { Box, Chip, CircularProgress, Fade, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import * as THREE from 'three';
 import { useLanguage } from '../../context/LanguageContext';
 import { useBuilder } from '../../context/BuilderContext';
@@ -127,6 +128,13 @@ function IdleSpin({ paused, children }) {
   return <group ref={ref}>{children}</group>;
 }
 
+/* On mobile / touch we give up the idle spin entirely and let the user
+   rotate the device themselves via OrbitControls. Rendering a plain group
+   avoids running the per-frame rotation work at all. -------------------- */
+function StaticGroup({ children }) {
+  return <group>{children}</group>;
+}
+
 /* Schematic-style callout: anchor dot on the part, 3D leader line to an
    outer label pill. Everything lives in the rotating group, so the line
    and label never detach from their target while the model spins. ------ */
@@ -242,6 +250,12 @@ export default function Device3D() {
   const { deviceType, selections, activeCategory, setActiveCategory } = useBuilder();
   const { t } = useLanguage();
   const [hovered, setHovered] = useState(false);
+  const theme = useTheme();
+  // Auto-rotation makes hotspots a moving target that is hard to tap accurately
+  // on touch screens, so disable the idle spin on mobile / coarse pointers.
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isCoarsePointer = useMediaQuery('(pointer: coarse)');
+  const disableIdleSpin = isMobile || isCoarsePointer;
 
   const model = MODELS[deviceType] ?? MODELS.monocular;
   const deviceInfo = deviceTypes.find((d) => d.id === deviceType);
@@ -299,28 +313,33 @@ export default function Device3D() {
           <ambientLight intensity={0.4} />
           <directionalLight position={[4, 6, 4]} intensity={1.2} />
           <directionalLight position={[-4, 2, -3]} intensity={0.35} color={ACCENT} />
-          <IdleSpin paused={hovered || Boolean(activeCategory)}>
-            <DeviceModel
-              url={model.url}
-              targetSize={model.targetSize}
-              hovered={hovered}
-              onPointerOver={() => setHovered(true)}
-              onPointerOut={() => setHovered(false)}
-            />
-            {hotspotCategories.map((category) => (
-              <Hotspot
-                key={category.id}
-                anchor={hotspotPositions[category.id].anchor}
-                labelPos={hotspotPositions[category.id].label}
-                label={t({ he: category.nameHe, en: category.nameEn })}
-                selected={Boolean(selections[category.id])}
-                active={activeCategory === category.id}
-                onClick={() =>
-                  setActiveCategory(activeCategory === category.id ? null : category.id)
-                }
-              />
-            ))}
-          </IdleSpin>
+          {(() => {
+            const ModelGroup = disableIdleSpin ? StaticGroup : IdleSpin;
+            return (
+              <ModelGroup paused={hovered || Boolean(activeCategory)}>
+                <DeviceModel
+                  url={model.url}
+                  targetSize={model.targetSize}
+                  hovered={hovered}
+                  onPointerOver={() => setHovered(true)}
+                  onPointerOut={() => setHovered(false)}
+                />
+                {hotspotCategories.map((category) => (
+                  <Hotspot
+                    key={category.id}
+                    anchor={hotspotPositions[category.id].anchor}
+                    labelPos={hotspotPositions[category.id].label}
+                    label={t({ he: category.nameHe, en: category.nameEn })}
+                    selected={Boolean(selections[category.id])}
+                    active={activeCategory === category.id}
+                    onClick={() =>
+                      setActiveCategory(activeCategory === category.id ? null : category.id)
+                    }
+                  />
+                ))}
+              </ModelGroup>
+            );
+          })()}
           <ContactShadows position={[0, -1.1, 0]} opacity={0.5} blur={2.4} scale={9} />
           <Environment preset="city" />
           <OrbitControls

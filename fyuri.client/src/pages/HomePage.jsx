@@ -3,10 +3,19 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useRef, useEffect } from 'react';
 import Logo from '../components/Logo';
+import useSeo from '../hooks/useSeo';
 
 function HomePage() {
   const { language, t } = useLanguage();
   const videoRef = useRef(null);
+
+  useSeo({
+    title: t({ he: 'ציוד ראיית לילה מקצועי', en: 'Professional Night Vision' }),
+    description: t({
+      he: 'FYURI – מכשירי ראיית לילה, מגברי אור ושירותי מעבדה מקצועיים.',
+      en: 'FYURI – night vision devices, image intensifier tubes and professional lab services.',
+    }),
+  });
 
   useEffect(() => {
     const video = videoRef.current;
@@ -120,7 +129,7 @@ function HomePage() {
         />
 
         {/* Hero Content */}
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 2, textAlign: 'center', px: { xs: 3, sm: 3 } }}>
           <Box
             sx={{
               display: 'flex',
@@ -160,7 +169,7 @@ function HomePage() {
               en: 'Leaders in night vision equipment, image intensifier tubes and professional lab services'
             })}
           </Typography>
-          <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: { xs: 2, sm: 0 } }}>
             <Button
               variant="contained"
               size="large"
@@ -172,6 +181,7 @@ function HomePage() {
                 px: 4,
                 py: 1.5,
                 fontSize: '1.1rem',
+                width: { xs: '100%', sm: 'auto' },
                 boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 '&:hover': { 
                   bgcolor: 'primary.dark',
@@ -180,6 +190,38 @@ function HomePage() {
               }}
             >
               {t({ he: 'צפה בקטלוג', en: 'View Catalog' })}
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              component={RouterLink}
+              to="/builder"
+              sx={{ 
+                color: '#0a0f0a',
+                fontWeight: 700,
+                px: 4,
+                py: 1.5,
+                fontSize: '1.1rem',
+                width: { xs: '100%', sm: 'auto' },
+                display: { xs: 'flex', sm: 'none' },
+                background: 'linear-gradient(120deg, #7CFC00 0%, #3ddc84 45%, #00e5ff 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'fyuriHeroCtaGradient 4s ease infinite',
+                boxShadow: '0 0 12px rgba(80, 250, 123, 0.55), 0 0 28px rgba(0, 229, 255, 0.25)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                '&:hover': { 
+                  background: 'linear-gradient(120deg, #8cff1a 0%, #4dedb0 45%, #33eaff 100%)',
+                  boxShadow: '0 0 18px rgba(80, 250, 123, 0.85), 0 0 40px rgba(0, 229, 255, 0.45)',
+                  transform: 'translateY(-1px) scale(1.03)',
+                },
+                '@keyframes fyuriHeroCtaGradient': {
+                  '0%': { backgroundPosition: '0% 50%' },
+                  '50%': { backgroundPosition: '100% 50%' },
+                  '100%': { backgroundPosition: '0% 50%' },
+                },
+              }}
+            >
+              {t({ he: 'בנה מכשיר', en: 'Build Your Device' })}
             </Button>
             <Button
               variant="outlined"
@@ -193,6 +235,7 @@ function HomePage() {
                 px: 4,
                 py: 1.5,
                 fontSize: '1.1rem',
+                width: { xs: '100%', sm: 'auto' },
                 '&:hover': { 
                   borderColor: 'white',
                   borderWidth: 2,

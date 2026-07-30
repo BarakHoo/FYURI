@@ -13,6 +13,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
+import useSeo from '../hooks/useSeo';
 
 const drawerWidth = 280;
 
@@ -28,6 +29,14 @@ function ProductsPage() {
   const { language, t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  useSeo({
+    title: t({ he: 'מוצרים', en: 'Products' }),
+    description: t({
+      he: 'קטלוג מכשירי ראיית לילה, מגברי אור, גופים, אופטיקה ותרמי.',
+      en: 'Catalog of night vision devices, image intensifier tubes, housings, optics and thermal.',
+    }),
+  });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 

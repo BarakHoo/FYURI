@@ -111,6 +111,9 @@ function ProductsDropdown({ onClose }) {
   return (
     <Paper
       elevation={8}
+      id="products-mega-menu"
+      role="menu"
+      aria-label={t({ he: 'תפריט מוצרים', en: 'Products menu' })}
       sx={{
         position: 'absolute',
         top: '100%',

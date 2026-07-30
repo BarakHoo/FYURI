@@ -1,8 +1,17 @@
 import { Typography, Box, Paper, Grid } from '@mui/material';
 import { useLanguage } from '../context/LanguageContext';
+import useSeo from '../hooks/useSeo';
 
 function AboutPage() {
   const { t } = useLanguage();
+
+  useSeo({
+    title: t({ he: 'מי אנחנו', en: 'About Us' }),
+    description: t({
+      he: 'אודות FYURI – מומחיות בציוד ראיית לילה ושירותי מעבדה.',
+      en: 'About FYURI – expertise in night vision equipment and lab services.',
+    }),
+  });
 
   return (
     <Box>

@@ -1,9 +1,18 @@
 import { Typography, Box, Paper, Grid, List, ListItem, ListItemText, Link, Stack } from '@mui/material';
 import { Build, Visibility, Settings, Phone, Email, WhatsApp } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
+import useSeo from '../hooks/useSeo';
 
 function LabServicesPage() {
   const { t, language } = useLanguage();
+
+  useSeo({
+    title: t({ he: 'שירותי מעבדה', en: 'Lab Services' }),
+    description: t({
+      he: 'שירותי מעבדה – תיקון, כיוון, בדיקה ושדרוג מכשירי ראיית לילה.',
+      en: 'Lab services – repair, calibration, testing and upgrades for night vision devices.',
+    }),
+  });
 
   const services = [
     {

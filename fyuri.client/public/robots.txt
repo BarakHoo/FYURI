@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Do not index the private admin panel
+Disallow: /fyuri-admin
+Disallow: /checkout
+Disallow: /cart
+Disallow: /order-confirmation
+
+Sitemap: https://munkys.dev/sitemap.xml

@@ -125,7 +125,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet("{orderNumber}")]
-    public async Task<ActionResult<OrderRequest>> GetOrder(string orderNumber)
+    public async Task<ActionResult<OrderConfirmationResponse>> GetOrder(string orderNumber)
     {
         try
         {
@@ -139,7 +139,27 @@ public class OrdersController : ControllerBase
                 return NotFound();
             }
 
-            return Ok(order);
+            // This endpoint is anonymous (the confirmation page is reachable via a
+            // guessable order number), so it must NOT expose customer PII such as
+            // email, phone, or address. Full details are available to the customer
+            // through the emailed confirmation and to staff via the admin API.
+            var response = new OrderConfirmationResponse
+            {
+                OrderNumber = order.OrderNumber,
+                Status = order.Status,
+                CreatedDate = order.CreatedDate,
+                TotalAmount = order.TotalAmount,
+                Items = order.Items.Select(i => new OrderConfirmationItem
+                {
+                    ProductName = i.ProductName,
+                    ProductSku = i.ProductSku,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    TotalPrice = i.TotalPrice
+                }).ToList()
+            };
+
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -147,6 +167,24 @@ public class OrdersController : ControllerBase
             return StatusCode(500, "An error occurred while retrieving the order");
         }
     }
+}
+
+public class OrderConfirmationResponse
+{
+    public required string OrderNumber { get; set; }
+    public OrderStatus Status { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public decimal TotalAmount { get; set; }
+    public List<OrderConfirmationItem> Items { get; set; } = new();
+}
+
+public class OrderConfirmationItem
+{
+    public required string ProductName { get; set; }
+    public required string ProductSku { get; set; }
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalPrice { get; set; }
 }
 
 public class CreateOrderRequest

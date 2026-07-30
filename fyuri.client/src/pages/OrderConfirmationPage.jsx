@@ -112,29 +112,6 @@ function OrderConfirmationPage() {
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Customer Information */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom color="primary">
-            {t({ he: 'פרטי לקוח', en: 'Customer Information' })}
-          </Typography>
-          <Typography variant="body2"><strong>{t({ he: 'שם:', en: 'Name:' })}</strong> {order.customerName}</Typography>
-          <Typography variant="body2"><strong>{t({ he: 'אימייל:', en: 'Email:' })}</strong> {order.customerEmail}</Typography>
-          <Typography variant="body2"><strong>{t({ he: 'טלפון:', en: 'Phone:' })}</strong> {order.customerPhone}</Typography>
-          {order.customerAddress && (
-            <Typography variant="body2"><strong>{t({ he: 'כתובת:', en: 'Address:' })}</strong> {order.customerAddress}</Typography>
-          )}
-          {order.customerCity && (
-            <Typography variant="body2"><strong>{t({ he: 'עיר:', en: 'City:' })}</strong> {order.customerCity}</Typography>
-          )}
-          {order.customerNotes && (
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              <strong>{t({ he: 'הערות:', en: 'Notes:' })}</strong> {order.customerNotes}
-            </Typography>
-          )}
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
         {/* Order Items */}
         <Typography variant="h6" gutterBottom color="primary">
           {t({ he: 'פריטים בהזמנה', en: 'Order Items' })}
@@ -156,24 +133,6 @@ function OrderConfirmationPage() {
                   <TableCell>
                     <Typography variant="body2">{item.productName}</Typography>
                     <Typography variant="caption" color="text.secondary">{item.productSku}</Typography>
-                    {item.product?.productType === 'custom-build' &&
-                      (language === 'he' ? item.product?.descriptionHebrew : item.product?.description) && (
-                        <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2 }}>
-                          {(language === 'he' ? item.product.descriptionHebrew : item.product.description)
-                            .split('; ')
-                            .map((line, i) => (
-                              <Typography
-                                key={i}
-                                component="li"
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ display: 'list-item' }}
-                              >
-                                {line}
-                              </Typography>
-                            ))}
-                        </Box>
-                      )}
                   </TableCell>
                   <TableCell align="right">{item.quantity}</TableCell>
                   <TableCell align="right">₪{item.unitPrice.toLocaleString()}</TableCell>

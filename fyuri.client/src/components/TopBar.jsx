@@ -1,13 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import { ChevronLeft, ChevronRight, Email, Phone, WhatsApp, Facebook, Instagram } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
 
+// Scroll distance (in px) after which the top contact bar collapses out of view.
+// Roughly equivalent to 2-3 mouse-wheel notches. Kept in sync with Navbar's
+// sticky `top` offset so the header does not leave a gap when the bar hides.
+export const TOP_BAR_HIDE_THRESHOLD = 200;
+
 function TopBar() {
   const { t, language } = useLanguage();
   const { mode } = useThemeMode();
   const [slideIndex, setSlideIndex] = useState(0);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setHidden(window.scrollY > TOP_BAR_HIDE_THRESHOLD);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const slides = [
     {
@@ -97,16 +112,22 @@ function TopBar() {
         position: 'sticky',
         top: 0,
         zIndex: 1300,
-        minHeight: '44px',
+        minHeight: hidden ? 0 : '44px',
+        maxHeight: hidden ? 0 : '80px',
         bgcolor: mode === 'dark' ? '#0d3a52' : '#1a8fb8',
         color: 'white',
-        py: 0.75,
+        py: hidden ? 0 : 0.75,
         px: 2,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 1,
+        overflow: 'hidden',
+        opacity: hidden ? 0 : 1,
+        pointerEvents: hidden ? 'none' : 'auto',
+        transition: 'max-height 0.35s ease, min-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease',
       }}
+      aria-hidden={hidden}
     >
       <IconButton
         onClick={isRtl ? goToNext : goToPrevious}

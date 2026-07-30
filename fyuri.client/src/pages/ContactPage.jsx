@@ -2,9 +2,18 @@ import { Typography, Box, Paper, TextField, Button, Grid, IconButton, Tooltip, A
 import { Phone, Email, LocationOn, WhatsApp, Facebook, Instagram } from '@mui/icons-material';
 import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import useSeo from '../hooks/useSeo';
 
 function ContactPage() {
   const { t } = useLanguage();
+
+  useSeo({
+    title: t({ he: 'צור קשר', en: 'Contact' }),
+    description: t({
+      he: 'צרו קשר עם FYURI – טלפון, אימייל ווואטסאפ.',
+      en: 'Contact FYURI – phone, email and WhatsApp.',
+    }),
+  });
   const [formData, setFormData] = useState({
     name: '',
     email: '',

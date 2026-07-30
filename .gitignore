@@ -30,3 +30,6 @@ dist-ssr/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local video/asset backups (not for repo)
+_backups/
