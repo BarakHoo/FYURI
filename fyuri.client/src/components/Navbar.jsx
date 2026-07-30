@@ -7,11 +7,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
 import ProductsDropdown from './ProductsDropdown';
 import Logo from './Logo';
-import { TOP_BAR_HIDE_THRESHOLD } from './TopBar';
+import { TOP_BAR_HIDE_THRESHOLD, TOP_BAR_SHOW_THRESHOLD } from './TopBar';
 
 function Navbar() {
   const { getCartCount } = useCart();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { toggleLanguage, t } = useLanguage();
   const { mode, toggleTheme } = useThemeMode();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
@@ -41,7 +41,12 @@ function Navbar() {
   useEffect(() => {
     const handleScroll = () => {
       // Keep the navbar's sticky offset in sync with the collapsing top bar.
-      setTopBarHidden(window.scrollY > TOP_BAR_HIDE_THRESHOLD);
+      // Uses the same hysteresis (dead zone) as TopBar so the offset never
+      // flickers when the bar's own height change nudges scrollY at the boundary.
+      const y = window.scrollY;
+      setTopBarHidden((prev) =>
+        prev ? y > TOP_BAR_SHOW_THRESHOLD : y > TOP_BAR_HIDE_THRESHOLD
+      );
 
       if (isHomePage) {
         // Stay transparent until the user has scrolled about half the hero video's height
@@ -117,18 +122,20 @@ function Navbar() {
     >
       <Toolbar sx={{ py: 0.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
         {/* Mobile hamburger */}
-        <IconButton
-          color="inherit"
-          aria-label={t({ he: 'פתח תפריט', en: 'Open menu' })}
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen(true)}
-          sx={{ display: { xs: 'inline-flex', md: 'none' }, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
-        >
-          <MenuIcon />
-        </IconButton>
+        <Box sx={{ flex: { xs: '0 0 auto', md: '1 1 0' }, minWidth: 0, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-start' }}>
+          <IconButton
+            color="inherit"
+            aria-label={t({ he: 'פתח תפריט', en: 'Open menu' })}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen(true)}
+            sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Box>
 
         {/* Left Section - Navigation */}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1, position: 'relative' }}>
+        <Box sx={{ flex: '1 1 0', minWidth: 0, display: { xs: 'none', md: 'flex' }, gap: 1, position: 'relative' }}>
           <Button 
             color="inherit" 
             component={RouterLink} 
@@ -225,11 +232,17 @@ function Navbar() {
             component={RouterLink}
             to="/"
             sx={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              // On mobile the logo grows to fill the gap between the hamburger
+              // and the action cluster, centering its content so it has equal
+              // spacing to the nearest button on each side. On desktop it stays
+              // static between the two equal-width side rows (true page-center).
+              flex: { xs: '1 1 auto', md: '0 0 auto' },
+              minWidth: 0,
+              justifyContent: 'center',
+              flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
+              '& img, & svg': { height: { xs: 40, md: 60 }, width: 'auto' },
               '&:hover': { opacity: 0.9 }
             }}
           >
@@ -238,12 +251,12 @@ function Navbar() {
         )}
 
         {/* Right Section - Actions */}
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: { xs: 0.25, md: 1 }, alignItems: 'center', flex: { xs: '0 0 auto', md: '1 1 0' }, minWidth: 0, justifyContent: 'flex-end' }}>
           <IconButton
             color="inherit" 
             onClick={toggleTheme} 
             title={t({ he: 'החלף ערכת נושא', en: 'Toggle Theme' })}
-            sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+            sx={{ p: { xs: 0.75, md: 1 }, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
           >
             {mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
@@ -252,7 +265,7 @@ function Navbar() {
             color="inherit" 
             onClick={toggleLanguage} 
             title={t({ he: 'English', en: 'עברית' })}
-            sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+            sx={{ p: { xs: 0.75, md: 1 }, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
           >
             <Language />
           </IconButton>
@@ -261,7 +274,7 @@ function Navbar() {
             color="inherit" 
             component={RouterLink} 
             to="/cart"
-            sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
+            sx={{ p: { xs: 0.75, md: 1 }, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }}
           >
             <Badge badgeContent={getCartCount()} color="error">
               <ShoppingCart />
@@ -272,7 +285,10 @@ function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       <Drawer
-        anchor={language === 'he' ? 'right' : 'left'}
+        // Always anchor to the "start" edge. MUI resolves this against the
+        // theme direction: left in LTR (English) and right in RTL (Hebrew),
+        // so the drawer always opens from the same side as the hamburger.
+        anchor="left"
         open={mobileOpen}
         onClose={closeMobileMenu}
         ModalProps={{ keepMounted: true }}

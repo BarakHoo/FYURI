@@ -8,7 +8,10 @@ import { useThemeMode } from '../context/ThemeContext';
 // Roughly equivalent to 2-3 mouse-wheel notches. Kept in sync with Navbar's
 // sticky `top` offset so the header does not leave a gap when the bar hides.
 export const TOP_BAR_HIDE_THRESHOLD = 200;
-
+// Lower threshold to reveal the bar again. The gap between hide/show creates a
+// dead zone (hysteresis) so collapsing the bar — which shifts scrollY — cannot
+// bounce the page back across a single boundary and flicker hide/show rapidly.
+export const TOP_BAR_SHOW_THRESHOLD = 120;
 function TopBar() {
   const { t, language } = useLanguage();
   const { mode } = useThemeMode();
@@ -17,7 +20,15 @@ function TopBar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setHidden(window.scrollY > TOP_BAR_HIDE_THRESHOLD);
+      const y = window.scrollY;
+      setHidden((prev) => {
+        if (prev) {
+          // Currently hidden: only reveal after scrolling well back up.
+          return y > TOP_BAR_SHOW_THRESHOLD;
+        }
+        // Currently shown: only hide after passing the higher threshold.
+        return y > TOP_BAR_HIDE_THRESHOLD;
+      });
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
