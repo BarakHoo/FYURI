@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useLocation, useParams, useNavigate } from 'react-router';
 import {
   Typography,
   Box,
@@ -31,6 +31,7 @@ const G24_SKU = 'BLD-MOUNT-G24';
 function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [variants, setVariants] = useState([]);
   const [tubes, setTubes] = useState([]);
@@ -97,9 +98,19 @@ function ProductDetailPage() {
   const handleVariantChange = (e) => {
     const newId = e.target.value;
     if (String(newId) !== String(id)) {
-      navigate(`/products/${newId}`, { replace: true });
+      navigate(`/products/${newId}`, {
+        replace: true,
+        state: location.state,
+      });
     }
   };
+
+  const catalogUrl = (
+    typeof location.state?.catalogUrl === 'string'
+    && location.state.catalogUrl.startsWith('/products')
+  )
+    ? location.state.catalogUrl
+    : '/products';
 
   // Tubes are per-channel parts (same rule as the custom builder):
   // monocular = 1, binocular = 2, panoramic = 4 — derived from the housing's Form Factor spec.
@@ -140,7 +151,7 @@ function ProductDetailPage() {
     <Box>
       <Button
         startIcon={<ArrowBack />}
-        onClick={() => navigate('/products')}
+        onClick={() => navigate(catalogUrl)}
         sx={{ mb: 3 }}
       >
         {t({ he: 'חזור לקטלוג', en: 'Back to Catalog' })}

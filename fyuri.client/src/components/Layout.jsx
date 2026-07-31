@@ -10,7 +10,11 @@ function Layout({ children, fullWidth = false }) {
   const [topBarCollapsed, setTopBarCollapsed] = useState(
     () => typeof window !== 'undefined' && window.scrollY > 12,
   );
-  const useFullWidthContent = fullWidth || location.pathname === '/';
+  const useFullWidthContent = (
+    fullWidth
+    || location.pathname === '/'
+    || location.pathname === '/products'
+  );
 
   useEffect(() => {
     let animationFrame = null;
