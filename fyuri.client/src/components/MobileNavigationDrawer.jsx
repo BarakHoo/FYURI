@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Box,
   Button,
@@ -11,6 +11,7 @@ import {
   ListItemIcon,
   ListItemText,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import {
@@ -23,9 +24,10 @@ import {
   ExpandMore,
   Language,
   Phone,
+  Search,
   WhatsApp,
 } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { primaryNavigationItems, productNavigationGroups } from './navigationConfig';
 import Logo from './Logo';
 
@@ -50,6 +52,8 @@ function MobileNavigationDrawer({
   t,
 }) {
   const closeButtonRef = useRef(null);
+  const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
   const isRtl = language === 'he';
   const accentColor = mode === 'dark' ? '#42baf2' : '#0d5f8a';
   const accentTextColor = mode === 'dark' ? '#d8f3ff' : '#0d4663';
@@ -83,7 +87,7 @@ function MobileNavigationDrawer({
     mb: 0.5,
     color: active ? accentColor : 'text.primary',
     bgcolor: active
-      ? (mode === 'dark' ? 'rgba(184, 255, 61, 0.09)' : 'rgba(45, 101, 0, 0.1)')
+      ? (mode === 'dark' ? 'rgba(66, 186, 242, 0.12)' : 'rgba(13, 95, 138, 0.1)')
       : 'transparent',
     borderInlineStart: '2px solid',
     borderInlineStartColor: active ? accentColor : 'transparent',
@@ -113,6 +117,13 @@ function MobileNavigationDrawer({
         />
       </ListItemButton>
     );
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    const query = searchValue.trim();
+    onNavigate();
+    navigate(query ? `/products?${new URLSearchParams({ q: query })}` : '/products');
   };
 
   return (
@@ -263,6 +274,55 @@ function MobileNavigationDrawer({
           >
             {t({ he: 'ניווט ראשי', en: 'Primary navigation' })}
           </Typography>
+
+          <Box
+            component="form"
+            onSubmit={handleSearchSubmit}
+            role="search"
+            sx={{
+              mb: 2,
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) 48px',
+              gap: 1,
+            }}
+          >
+            <TextField
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              label={t({ he: 'חיפוש מוצרים', en: 'Search products' })}
+              size="small"
+              autoComplete="off"
+              inputProps={{ maxLength: 100 }}
+              sx={{
+                '& .MuiInputBase-root': {
+                  minHeight: 48,
+                  color: mode === 'dark' ? '#eef7fb' : '#0d1b2a',
+                  background: mode === 'dark' ? '#06131c' : 'rgba(255,255,255,0.74)',
+                },
+                '& fieldset': {
+                  borderColor: mode === 'dark'
+                    ? 'rgba(66,186,242,0.3)'
+                    : 'rgba(13,95,138,0.32)',
+                },
+                '& .MuiInputLabel-root': {
+                  color: mode === 'dark' ? '#91a4b0' : '#526977',
+                },
+              }}
+            />
+            <IconButton
+              type="submit"
+              aria-label={t({ he: 'חיפוש בקטלוג', en: 'Search catalog' })}
+              sx={{
+                width: 48,
+                height: 48,
+                color: mode === 'dark' ? '#42baf2' : '#0d5f8a',
+                border: `1px solid ${mode === 'dark' ? 'rgba(66,186,242,0.55)' : 'rgba(13,95,138,0.48)'}`,
+                borderRadius: 1,
+              }}
+            >
+              <Search />
+            </IconButton>
+          </Box>
 
           <List component="nav" aria-label={t({ he: 'ניווט ראשי', en: 'Primary navigation' })} disablePadding>
             {homeItem && renderRouteItem(homeItem)}

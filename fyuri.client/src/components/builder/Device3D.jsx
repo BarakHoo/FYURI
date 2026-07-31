@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows, useGLTF, Center, Html, Line } from '@react-three/drei';
+import { OrbitControls, ContactShadows, useGLTF, Center, Html, Line } from '@react-three/drei';
 import { Box, Chip, CircularProgress, Fade } from '@mui/material';
 import * as THREE from 'three';
 import { useLanguage } from '../../context/LanguageContext';
@@ -71,8 +71,6 @@ const HOTSPOTS = {
     illuminator: { anchor: [-0.4, 0.4, 0.65], label: [-1.5, 1.3, 1.2] },
   },
 };
-
-Object.values(MODELS).forEach((m) => useGLTF.preload(m.url));
 
 function DeviceModel({ url, targetSize, hovered, onPointerOver, onPointerOut }) {
   const { scene } = useGLTF(url);
@@ -265,6 +263,12 @@ export default function Device3D() {
 
   return (
     <Box
+      className="equipment-device-3d"
+      role="img"
+      aria-label={t({
+        he: `דגם תלת־ממד אינטראקטיבי של ${deviceInfo?.nameHe || 'מכשיר ראיית לילה'}`,
+        en: `Interactive 3D model of ${deviceInfo?.nameEn || 'a night vision device'}`,
+      })}
       sx={{
         position: 'relative',
         width: '100%',
@@ -305,8 +309,15 @@ export default function Device3D() {
           </Box>
         }
       >
-        <Canvas key={deviceType} camera={{ position: model.camera, fov: 42 }} dpr={[1, 2]}>
+        <Canvas
+          key={deviceType}
+          camera={{ position: model.camera, fov: 42 }}
+          dpr={[1, 1.5]}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          aria-hidden="true"
+        >
           <ambientLight intensity={0.4} />
+          <hemisphereLight args={['#d9f3ff', '#02070b', 0.65]} />
           <directionalLight position={[4, 6, 4]} intensity={1.2} />
           <directionalLight position={[-4, 2, -3]} intensity={0.35} color={ACCENT} />
           <IdleSpin paused={hovered || Boolean(activeCategory)}>
@@ -332,7 +343,6 @@ export default function Device3D() {
             ))}
           </IdleSpin>
           <ContactShadows position={[0, -1.1, 0]} opacity={0.5} blur={2.4} scale={9} />
-          <Environment preset="city" />
           <OrbitControls
             enablePan={false}
             minDistance={2}

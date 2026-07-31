@@ -3,6 +3,8 @@ import { createTheme } from '@mui/material';
 
 const ThemeContext = createContext();
 
+// Context hooks intentionally live beside their provider.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useThemeMode = () => {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -51,7 +53,7 @@ export const ThemeModeProvider = ({ children }) => {
           },
         },
         typography: {
-          fontFamily: '"Roboto", "Noto Sans Hebrew", "Arial", sans-serif',
+          fontFamily: '"Segoe UI", "Noto Sans Hebrew", Arial, sans-serif',
         },
         components: {
           MuiPaper: {

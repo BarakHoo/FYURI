@@ -113,7 +113,7 @@ test.describe('shared public routes', () => {
     await message.fill('PVS-14 will not power on after a battery change.');
     await page.getByRole('button', { name: 'Send message' }).click();
 
-    await expect(page.getByText('Your message was saved and sent successfully.')).toBeVisible();
+    await expect(page.getByText('Your message was received and saved successfully.')).toBeVisible();
     expect(submittedMessage).toEqual({
       name: 'Test Operator',
       email: 'operator@example.com',

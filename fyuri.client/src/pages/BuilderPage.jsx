@@ -1,410 +1,369 @@
+import { useMemo, useState } from 'react';
 import {
-  Box,
-  Typography,
-  Paper,
+  AddShoppingCart,
+  Architecture,
+  Check,
+  CheckCircle,
+  Close,
+  ErrorOutline,
+  RestartAlt,
+  ViewInAr,
+} from '@mui/icons-material';
+import {
+  Alert,
   Button,
   Chip,
-  Stack,
   Divider,
   IconButton,
+  Paper,
   ToggleButton,
   ToggleButtonGroup,
-  Alert,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useState } from 'react';
-import { Close, RestartAlt, CheckCircle, ErrorOutline, ViewInAr, Architecture, AddShoppingCart } from '@mui/icons-material';
-import { useLanguage } from '../context/LanguageContext';
-import { useCart } from '../context/CartContext';
+import Device3D from '../components/builder/Device3D';
+import PublicPageShell from '../components/PublicPageShell';
 import { BuilderProvider, useBuilder } from '../context/BuilderContext';
+import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   builderCategories,
   deviceTypes,
   getComponentQuantity,
   getOptionsForDevice,
 } from '../data/builderData';
-import Device3D from '../components/builder/Device3D';
+import './EquipmentPages.css';
 
-const ACCENT = '#00C8FF';
-const BG = '#0B0B0B';
-const LINE = 'rgba(255, 255, 255, 0.35)';
+const ACCENT = '#42baf2';
+const BLUEPRINT_LINE = 'rgba(198, 216, 227, 0.62)';
 
-const formatPrice = (n) => `₪${n.toLocaleString()}`;
+const formatPrice = (value, language) => (
+  `₪${new Intl.NumberFormat(language === 'he' ? 'he-IL' : 'en-US', {
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0))}`
+);
 
-/* ------------------------------------------------------------------ */
-/* Schematic monocular scene (SVG blueprint)                           */
-/* ------------------------------------------------------------------ */
 function BlueprintScene() {
-  const { t, language } = useLanguage();
+  const { language, t } = useLanguage();
   const {
     selections,
     activeCategory,
     setActiveCategory,
     hoveredCategory,
     setHoveredCategory,
+    deviceType,
   } = useBuilder();
 
-  const isHighlighted = (id) => hoveredCategory === id || activeCategory === id;
+  const categories = useMemo(() => (
+    builderCategories.filter(
+      (category) => getOptionsForDevice(category, deviceType).length > 0,
+    )
+  ), [deviceType]);
+  const isHighlighted = (categoryId) => (
+    hoveredCategory === categoryId || activeCategory === categoryId
+  );
 
   return (
-    <Box
-      // Blueprint scene is a technical drawing — always LTR, independent of language
-      sx={{ direction: 'ltr', width: '100%' }}
-    >
+    <div className="builder-blueprint" dir="ltr">
       <svg
         viewBox="0 0 1000 600"
-        style={{ width: '100%', height: 'auto', display: 'block' }}
         role="img"
-        aria-label={t({ he: 'תרשים מכשיר ראיית לילה', en: 'Night vision device blueprint' })}
+        aria-label={t({
+          he: 'תרשים טכני של מכשיר ראיית לילה',
+          en: 'Technical blueprint of a night vision device',
+        })}
       >
         <defs>
-          <pattern id="bp-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,200,255,0.06)" strokeWidth="1" />
+          <pattern id="equipment-blueprint-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path
+              d="M 40 0 L 0 0 0 40"
+              fill="none"
+              stroke="rgba(66,186,242,0.08)"
+              strokeWidth="1"
+            />
           </pattern>
-          <filter id="bp-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="6" result="blur" />
+          <filter id="equipment-blueprint-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <style>
-            {`
-              .bp-line {
-                stroke-dasharray: 400;
-                stroke-dashoffset: 400;
-                animation: bp-draw 1.2s ease forwards;
-              }
-              @keyframes bp-draw {
-                to { stroke-dashoffset: 0; }
-              }
-              .bp-label {
-                cursor: pointer;
-                transition: all 0.25s ease;
-              }
-              .bp-part {
-                transition: all 0.25s ease;
-              }
-              @keyframes bp-pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.55; }
-              }
-              .bp-pulse { animation: bp-pulse 1.4s ease-in-out infinite; }
-            `}
-          </style>
         </defs>
 
-        {/* Blueprint grid background */}
-        <rect width="1000" height="600" fill={BG} />
-        <rect width="1000" height="600" fill="url(#bp-grid)" />
+        <rect width="1000" height="600" fill="#041018" />
+        <rect width="1000" height="600" fill="url(#equipment-blueprint-grid)" />
+        <text x="42" y="48" fill="rgba(198,216,227,.46)" fontSize="14" letterSpacing="3">
+          FYURI / OPTICAL ASSEMBLY / REV 01
+        </text>
+        <text x="958" y="48" textAnchor="end" fill="rgba(66,186,242,.72)" fontSize="13">
+          {deviceType.toUpperCase()}
+        </text>
 
-        {/* ------ Schematic monocular ------ */}
-        <g stroke={LINE} strokeWidth="1.5" fill="none">
-          {/* Objective lens */}
+        <g stroke={BLUEPRINT_LINE} strokeWidth="1.5" fill="rgba(6,24,34,.56)">
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('objective') ? ACCENT : LINE,
-              filter: isHighlighted('objective') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('objective') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('objective') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="310" y="270" width="50" height="60" rx="6" />
-            <circle cx="335" cy="300" r="18" />
+            <rect x="300" y="260" width="65" height="80" rx="4" />
+            <circle cx="332" cy="300" r="23" />
+            <circle cx="332" cy="300" r="13" />
           </g>
-
-          {/* Main housing body */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('housing') ? ACCENT : LINE,
-              filter: isHighlighted('housing') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('housing') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('housing') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="360" y="255" width="250" height="90" rx="14" />
-            <line x1="420" y1="255" x2="420" y2="345" />
-            <line x1="560" y1="255" x2="560" y2="345" />
+            <rect x="365" y="245" width="250" height="110" rx="8" />
+            <path d="M405 245v110M568 245v110M385 275h210M385 325h210" opacity=".45" />
           </g>
-
-          {/* Tube (internal, dashed) */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('tube') ? ACCENT : LINE,
-              filter: isHighlighted('tube') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('tube') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('tube') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="430" y="280" width="120" height="40" rx="8" strokeDasharray="6 4" />
+            <rect x="425" y="277" width="125" height="46" rx="5" strokeDasharray="7 5" />
+            <path d="M443 289h89M443 311h89" opacity=".55" />
           </g>
-
-          {/* Eyepiece */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('eyepiece') ? ACCENT : LINE,
-              filter: isHighlighted('eyepiece') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('eyepiece') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('eyepiece') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="610" y="275" width="45" height="50" rx="6" />
-            <circle cx="632" cy="300" r="14" />
+            <rect x="615" y="268" width="58" height="64" rx="4" />
+            <circle cx="644" cy="300" r="18" />
           </g>
-
-          {/* Battery cap on top */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('battery') ? ACCENT : LINE,
-              filter: isHighlighted('battery') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('battery') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('battery') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="498" y="228" width="44" height="28" rx="5" />
+            <rect x="492" y="210" width="55" height="35" rx="4" />
+            <path d="M505 210v-9h29v9" />
           </g>
-
-          {/* Mount rail below */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('mount') ? ACCENT : LINE,
-              filter: isHighlighted('mount') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('mount') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('mount') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="455" y="345" width="90" height="22" rx="4" />
-            <line x1="470" y1="345" x2="470" y2="367" />
-            <line x1="490" y1="345" x2="490" y2="367" />
-            <line x1="510" y1="345" x2="510" y2="367" />
-            <line x1="530" y1="345" x2="530" y2="367" />
+            <rect x="448" y="355" width="105" height="28" rx="3" />
+            <path d="M465 355v28M490 355v28M515 355v28M540 355v28" opacity=".58" />
           </g>
-
-          {/* Illuminator on the side */}
           <g
-            className="bp-part"
             style={{
-              stroke: isHighlighted('illuminator') ? ACCENT : LINE,
-              filter: isHighlighted('illuminator') ? 'url(#bp-glow)' : 'none',
+              stroke: isHighlighted('illuminator') ? ACCENT : BLUEPRINT_LINE,
+              filter: isHighlighted('illuminator') ? 'url(#equipment-blueprint-glow)' : 'none',
             }}
           >
-            <rect x="382" y="228" width="36" height="24" rx="5" />
-            <path d="M 378 240 l -10 -6 v 12 z" />
+            <rect x="380" y="214" width="42" height="28" rx="4" />
+            <path d="M380 220l-14 8 14 8" />
           </g>
         </g>
 
-        {/* ------ Connector lines + labels ------ */}
-        {builderCategories.map((category) => {
+        {categories.map((category) => {
           const highlighted = isHighlighted(category.id);
           const selected = Boolean(selections[category.id]);
-          const name = language === 'he' ? category.nameHe : category.nameEn;
           const { anchor, label } = category;
-          // Elbow connector: horizontal then vertical
           const midX = label.x > anchor.x ? label.x - 60 : label.x + 60;
+          const name = language === 'he' ? category.nameHe : category.nameEn;
 
           return (
-            <g key={category.id}>
+            <g key={category.id} aria-hidden="true">
               <path
-                className="bp-line"
                 d={`M ${anchor.x} ${anchor.y} L ${midX} ${label.y} L ${label.x} ${label.y}`}
                 fill="none"
-                stroke={highlighted ? ACCENT : 'rgba(255,255,255,0.25)'}
-                strokeWidth={highlighted ? 1.8 : 1}
+                stroke={highlighted ? ACCENT : 'rgba(198,216,227,.34)'}
+                strokeWidth={highlighted ? 2 : 1}
               />
               <circle
                 cx={anchor.x}
                 cy={anchor.y}
                 r={highlighted ? 5 : 3.5}
-                fill={highlighted ? ACCENT : 'rgba(255,255,255,0.5)'}
-                className={highlighted ? 'bp-pulse' : undefined}
+                fill={highlighted ? ACCENT : 'rgba(198,216,227,.7)'}
               />
-              <g
-                className="bp-label"
-                onMouseEnter={() => setHoveredCategory(category.id)}
-                onMouseLeave={() => setHoveredCategory(null)}
-                onClick={() => setActiveCategory(category.id)}
+              <rect
+                x={label.x - 78}
+                y={label.y - 19}
+                width="156"
+                height="38"
+                rx="3"
+                fill={highlighted ? 'rgba(66,186,242,.14)' : 'rgba(5,20,29,.88)'}
+                stroke={selected || highlighted ? ACCENT : 'rgba(198,216,227,.28)'}
+              />
+              <text
+                x={label.x}
+                y={label.y + 5}
+                textAnchor="middle"
+                fill={selected || highlighted ? ACCENT : 'rgba(229,238,244,.88)'}
+                fontSize="14"
+                fontFamily="Roboto, Noto Sans Hebrew, sans-serif"
               >
-                <rect
-                  x={label.x - 78}
-                  y={label.y - 20}
-                  width="156"
-                  height="40"
-                  rx="10"
-                  fill={highlighted ? 'rgba(0,200,255,0.12)' : 'rgba(255,255,255,0.04)'}
-                  stroke={selected ? ACCENT : highlighted ? ACCENT : 'rgba(255,255,255,0.2)'}
-                  strokeWidth={selected ? 1.6 : 1}
-                />
-                <text
-                  x={label.x}
-                  y={label.y + 5}
-                  textAnchor="middle"
-                  fill={highlighted || selected ? ACCENT : 'rgba(255,255,255,0.85)'}
-                  fontSize="15"
-                  fontFamily="Roboto, Noto Sans Hebrew, sans-serif"
-                >
-                  {name}
-                </text>
-                {selected && (
-                  <circle cx={label.x + 68} cy={label.y - 12} r="4.5" fill={ACCENT} />
-                )}
-              </g>
+                {name}
+              </text>
             </g>
           );
         })}
       </svg>
-    </Box>
+
+      <div
+        className="builder-blueprint-controls"
+        aria-label={t({ he: 'בחירת רכיב בתרשים', en: 'Blueprint component selection' })}
+      >
+        {categories.map((category) => {
+          const selected = Boolean(selections[category.id]);
+          const active = activeCategory === category.id;
+          return (
+            <button
+              key={category.id}
+              type="button"
+              className={active ? 'is-active' : undefined}
+              aria-pressed={active}
+              onClick={() => setActiveCategory(active ? null : category.id)}
+              onFocus={() => setHoveredCategory(category.id)}
+              onBlur={() => setHoveredCategory(null)}
+              onMouseEnter={() => setHoveredCategory(category.id)}
+              onMouseLeave={() => setHoveredCategory(null)}
+            >
+              {selected && <Check aria-hidden="true" />}
+              <span>{language === 'he' ? category.nameHe : category.nameEn}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Floating configuration panel (glassmorphism)                        */
-/* ------------------------------------------------------------------ */
 function ConfigPanel() {
   const { t, language } = useLanguage();
-  const { activeCategory, setActiveCategory, selections, selectOption, deviceType } = useBuilder();
+  const {
+    activeCategory,
+    setActiveCategory,
+    selections,
+    selectOption,
+    deviceType,
+  } = useBuilder();
 
   if (!activeCategory) return null;
-  const category = builderCategories.find((c) => c.id === activeCategory);
+  const category = builderCategories.find((candidate) => candidate.id === activeCategory);
   if (!category) return null;
 
   const options = getOptionsForDevice(category, deviceType);
   const componentQuantity = getComponentQuantity(deviceType, category.id);
   const perChannelNote = category.perChannel && componentQuantity > 1;
+  const categoryName = language === 'he' ? category.nameHe : category.nameEn;
 
   return (
     <Paper
+      component="section"
+      className="equipment-config-panel"
+      aria-label={t({
+        he: `אפשרויות עבור ${categoryName}`,
+        en: `${categoryName} options`,
+      })}
       elevation={12}
-      sx={{
-        position: { xs: 'fixed', md: 'absolute' },
-        bottom: { xs: 0, md: 24 },
-        left: { xs: 0, md: '50%' },
-        transform: { xs: 'none', md: 'translateX(-50%)' },
-        width: { xs: '100%', md: 520 },
-        maxHeight: { xs: '60vh', md: 420 },
-        overflowY: 'auto',
-        zIndex: 20,
-        p: 3,
-        borderRadius: { xs: '16px 16px 0 0', md: '16px' },
-        bgcolor: 'rgba(11, 20, 30, 0.85)',
-        backdropFilter: 'blur(14px)',
-        border: '1px solid rgba(0, 200, 255, 0.25)',
-        color: '#e8f4fb',
-      }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h6" sx={{ color: ACCENT }}>
-          {language === 'he' ? category.nameHe : category.nameEn}
-        </Typography>
-        <IconButton size="small" onClick={() => setActiveCategory(null)} sx={{ color: 'inherit' }}>
+      <header className="equipment-config-panel__header">
+        <div>
+          <span>{t({ he: 'בחירת רכיב', en: 'COMPONENT SELECT' })}</span>
+          <h2>{categoryName}</h2>
+        </div>
+        <IconButton
+          size="small"
+          onClick={() => setActiveCategory(null)}
+          aria-label={t({
+            he: `סגירת אפשרויות ${categoryName}`,
+            en: `Close ${categoryName} options`,
+          })}
+        >
           <Close fontSize="small" />
         </IconButton>
-      </Stack>
+      </header>
 
       {perChannelNote && (
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block', mb: 1.5 }}>
+        <p className="equipment-config-panel__note">
           {t({
-            he: `המחיר והמשקל מחושבים לפי ${componentQuantity} יחידות במכשיר זה`,
-            en: `Price & weight include ×${componentQuantity} for this device`,
+            he: `המחיר והמשקל כוללים ${componentQuantity} יחידות בתצורה זו.`,
+            en: `Price and weight include ×${componentQuantity} for this configuration.`,
           })}
-        </Typography>
+        </p>
       )}
 
-      <Stack spacing={1.5}>
+      <div className="equipment-option-list">
         {options.map((option) => {
           const isSelected = selections[category.id] === option.id;
+          const optionName = language === 'he' ? option.nameHe : option.nameEn;
           return (
-            <Paper
+            <button
               key={option.id}
-              onClick={() => option.available && selectOption(category.id, option.id)}
-              sx={{
-                p: 2,
-                cursor: option.available ? 'pointer' : 'not-allowed',
-                opacity: option.available ? 1 : 0.45,
-                bgcolor: isSelected ? 'rgba(0,200,255,0.12)' : 'rgba(255,255,255,0.04)',
-                border: '1px solid',
-                borderColor: isSelected ? ACCENT : 'rgba(255,255,255,0.12)',
-                borderRadius: 2,
-                transition: 'all 0.2s ease',
-                color: 'inherit',
-                '&:hover': option.available
-                  ? { borderColor: ACCENT, bgcolor: 'rgba(0,200,255,0.08)' }
-                  : {},
-              }}
+              type="button"
+              className={`equipment-option-button${isSelected ? ' is-selected' : ''}`}
+              onClick={() => selectOption(category.id, option.id)}
+              disabled={!option.available}
+              aria-pressed={isSelected}
             >
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {language === 'he' ? option.nameHe : option.nameEn}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                    {language === 'he' ? option.specsHe : option.specsEn}
-                  </Typography>
-                  {(option.gen || option.fom) && (
-                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
-                      {option.gen && (
-                        <Chip size="small" label={option.gen} sx={{ height: 18, fontSize: 11, bgcolor: 'rgba(0,200,255,0.1)', color: ACCENT }} />
-                      )}
-                      {option.fom && (
-                        <Chip size="small" label={`FOM ${option.fom}`} sx={{ height: 18, fontSize: 11, bgcolor: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }} />
-                      )}
-                      {option.phosphor && (
-                        <Chip
-                          size="small"
-                          label={option.phosphor === 'white' ? t({ he: 'זרחן לבן', en: 'White Phosphor' }) : t({ he: 'זרחן ירוק', en: 'Green Phosphor' })}
-                          sx={{
-                            height: 18,
-                            fontSize: 11,
-                            bgcolor: option.phosphor === 'white' ? 'rgba(255,255,255,0.15)' : 'rgba(80,255,140,0.12)',
-                            color: option.phosphor === 'white' ? '#e8f4fb' : '#7dffa8',
-                          }}
-                        />
-                      )}
-                    </Stack>
-                  )}
-                </Box>
-                <Stack alignItems="flex-end" spacing={0.5}>
-                  <Typography variant="subtitle2" sx={{ color: ACCENT }}>
-                    {formatPrice(option.price)}
-                  </Typography>
-                  {!option.available && (
-                    <Chip
-                      size="small"
-                      label={t({ he: 'לא זמין', en: 'Unavailable' })}
-                      sx={{ bgcolor: 'rgba(255,80,80,0.15)', color: '#ff9e9e', height: 20 }}
-                    />
-                  )}
-                  {option.weightGrams > 0 && (
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                      {option.weightGrams}g
-                    </Typography>
-                  )}
-                </Stack>
-              </Stack>
-            </Paper>
+              <span className="equipment-option-button__copy">
+                <strong>{optionName}</strong>
+                <small>{language === 'he' ? option.specsHe : option.specsEn}</small>
+                {(option.gen || option.fom || option.phosphor) && (
+                  <span className="equipment-option-button__chips">
+                    {option.gen && <i>{option.gen}</i>}
+                    {option.fom && <i>FOM {option.fom}</i>}
+                    {option.phosphor && (
+                      <i>
+                        {option.phosphor === 'white'
+                          ? t({ he: 'זרחן לבן', en: 'White phosphor' })
+                          : t({ he: 'זרחן ירוק', en: 'Green phosphor' })}
+                      </i>
+                    )}
+                  </span>
+                )}
+              </span>
+              <span className="equipment-option-button__metrics">
+                <strong>{formatPrice(option.price, language)}</strong>
+                {componentQuantity > 1 && <small>×{componentQuantity}</small>}
+                {option.weightGrams > 0 && <small>{option.weightGrams}g</small>}
+                {!option.available && (
+                  <em>{t({ he: 'לא זמין', en: 'Unavailable' })}</em>
+                )}
+              </span>
+            </button>
           );
         })}
-      </Stack>
+      </div>
     </Paper>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Live build summary card                                             */
-/* ------------------------------------------------------------------ */
 function SummaryCard() {
   const { t, language } = useLanguage();
   const { summary, resetBuild, deviceType } = useBuilder();
   const { addToCart } = useCart();
   const [adding, setAdding] = useState(false);
-  const [submissionError, setSubmissionError] = useState(null);
-  const { totalPrice, totalWeight, selectedParts, allAvailable, missingRequired, tubeCount } = summary;
+  const [submissionError, setSubmissionError] = useState('');
+  const {
+    totalPrice,
+    totalWeight,
+    selectedParts,
+    allAvailable,
+    missingRequired,
+    tubeCount,
+  } = summary;
   const buildIncomplete = missingRequired.length > 0;
 
   const handleAddToCart = async () => {
-    if (
-      selectedParts.length === 0
-      || missingRequired.length > 0
-      || !allAvailable
-      || adding
-    ) return;
-    setSubmissionError(null);
+    if (selectedParts.length === 0 || buildIncomplete || !allAvailable || adding) return;
+    setSubmissionError('');
     setAdding(true);
     let failureStage = 'build';
+
     try {
       const response = await fetch('/api/builder/custom-build', {
         method: 'POST',
@@ -421,359 +380,322 @@ function SummaryCard() {
         const details = await response.text();
         throw new Error(details || `Build request failed (${response.status})`);
       }
-      const product = await response.json();
+
+      const customProduct = await response.json();
       failureStage = 'cart';
-      const added = await addToCart(product);
+      const added = await addToCart(customProduct);
       if (!added) throw new Error('The configured device was not added to the cart.');
     } catch (error) {
       console.error('Failed to add custom build to cart:', error);
-      const localizedMessage = failureStage === 'cart'
+      const message = failureStage === 'cart'
         ? t({
-          he: 'התצורה נוצרה, אך לא נוספה לעגלה. נסו שוב.',
+          he: 'התצורה נוצרה, אך לא נוספה לסל. נסו שוב.',
           en: 'The configuration was created but could not be added to your cart. Please try again.',
         })
         : t({
           he: 'לא הצלחנו ליצור את התצורה. בדקו את הבחירות ונסו שוב.',
           en: 'We could not create this configuration. Check your selections and try again.',
         });
-      const details = language === 'en' && error instanceof Error
-        ? ` ${error.message}`
-        : '';
-      setSubmissionError(`${localizedMessage}${details}`);
+      setSubmissionError(
+        language === 'en' && error instanceof Error
+          ? `${message} ${error.message}`
+          : message,
+      );
     } finally {
       setAdding(false);
     }
   };
 
   return (
-    <Paper
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        bgcolor: 'rgba(11, 20, 30, 0.75)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(0, 200, 255, 0.2)',
-        color: '#e8f4fb',
-        height: '100%',
-      }}
-    >
-      <Typography variant="h6" gutterBottom sx={{ color: ACCENT }}>
-        {t({ he: 'סיכום הרכבה', en: 'Build Summary' })}
-      </Typography>
+    <Paper component="aside" className="equipment-builder-summary">
+      <header>
+        <span>{t({ he: 'תצורה חיה', en: 'LIVE CONFIGURATION' })}</span>
+        <h2>{t({ he: 'סיכום הרכבה', en: 'Build summary' })}</h2>
+      </header>
 
       {selectedParts.length === 0 ? (
-        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.55)', my: 2 }}>
+        <p className="equipment-builder-summary__empty">
           {t({
-            he: 'לחץ על רכיב בתרשים כדי להתחיל להרכיב את המכשיר שלך',
-            en: 'Click a component on the blueprint to start building your device',
+            he: 'בחרו רכיב מסרגל השלבים כדי להתחיל להרכיב את המכשיר.',
+            en: 'Choose a component from the step rail to start building your device.',
           })}
-        </Typography>
+        </p>
       ) : (
-        <Stack spacing={1} sx={{ my: 2 }}>
+        <ol className="equipment-builder-parts">
           {selectedParts.map(({ category, option, quantity }) => (
-            <Stack key={category.id} direction="row" justifyContent="space-between">
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                {language === 'he' ? category.nameHe : category.nameEn}:{' '}
-                {language === 'he' ? option.nameHe : option.nameEn}
-                {quantity > 1 ? ` ×${quantity}` : ''}
-              </Typography>
-              <Typography variant="body2" sx={{ color: ACCENT, whiteSpace: 'nowrap' }}>
-                {formatPrice(option.price * (quantity ?? 1))}
-              </Typography>
-            </Stack>
+            <li key={category.id}>
+              <span>
+                <small>{language === 'he' ? category.nameHe : category.nameEn}</small>
+                <strong>{language === 'he' ? option.nameHe : option.nameEn}</strong>
+              </span>
+              <span>
+                {quantity > 1 && <small>×{quantity}</small>}
+                <strong>{formatPrice(option.price * (quantity ?? 1), language)}</strong>
+              </span>
+            </li>
           ))}
-        </Stack>
+        </ol>
       )}
 
-      <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)', my: 2 }} />
+      <Divider />
 
-      <Stack spacing={1}>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="subtitle2">{t({ he: 'סה"כ מחיר', en: 'Total Price' })}</Typography>
-          <Typography variant="subtitle1" sx={{ color: ACCENT, fontWeight: 700 }}>
-            {formatPrice(totalPrice)}
-          </Typography>
-        </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="subtitle2">{t({ he: 'משקל משוער', en: 'Est. Weight' })}</Typography>
-          <Typography variant="body2">{totalWeight}g</Typography>
-        </Stack>
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="subtitle2">{t({ he: 'זמינות', en: 'Availability' })}</Typography>
-          {allAvailable ? (
-            <Chip
-              icon={<CheckCircle sx={{ fontSize: 16 }} />}
-              size="small"
-              label={t({ he: 'זמין', en: 'In Stock' })}
-              sx={{ bgcolor: 'rgba(80,255,140,0.12)', color: '#7dffa8' }}
-            />
-          ) : (
-            <Chip
-              icon={<ErrorOutline sx={{ fontSize: 16 }} />}
-              size="small"
-              label={t({ he: 'חלקית', en: 'Partial' })}
-              sx={{ bgcolor: 'rgba(255,190,80,0.12)', color: '#ffd28a' }}
-            />
-          )}
-        </Stack>
-      </Stack>
+      <dl className="equipment-builder-totals">
+        <div>
+          <dt>{t({ he: 'סה״כ מחיר', en: 'Total price' })}</dt>
+          <dd>{formatPrice(totalPrice, language)}</dd>
+        </div>
+        <div>
+          <dt>{t({ he: 'משקל משוער', en: 'Estimated weight' })}</dt>
+          <dd>{totalWeight}g</dd>
+        </div>
+        <div>
+          <dt>{t({ he: 'זמינות', en: 'Availability' })}</dt>
+          <dd className={allAvailable ? 'is-available' : 'is-partial'}>
+            {allAvailable ? <CheckCircle aria-hidden="true" /> : <ErrorOutline aria-hidden="true" />}
+            {allAvailable
+              ? t({ he: 'במלאי', en: 'In stock' })
+              : t({ he: 'חלקית', en: 'Partial' })}
+          </dd>
+        </div>
+      </dl>
 
       {buildIncomplete && selectedParts.length > 0 && (
-        <Alert
-          severity="warning"
-          icon={<ErrorOutline sx={{ fontSize: 18 }} />}
-          sx={{
-            mt: 2,
-            bgcolor: 'rgba(255,190,80,0.1)',
-            color: '#ffd28a',
-            border: '1px solid rgba(255,190,80,0.35)',
-            '& .MuiAlert-icon': { color: '#ffd28a' },
-          }}
-        >
+        <Alert severity="warning" className="equipment-inline-alert">
           {t({
             he: `ההרכבה אינה שלמה — חסרים: ${missingRequired
-              .map((c) => (c.id === 'tube' && tubeCount > 1 ? `${c.nameHe} (×${tubeCount})` : c.nameHe))
+              .map((category) => (
+                category.id === 'tube' && tubeCount > 1
+                  ? `${category.nameHe} (×${tubeCount})`
+                  : category.nameHe
+              ))
               .join(', ')}`,
             en: `Build incomplete — missing: ${missingRequired
-              .map((c) => (c.id === 'tube' && tubeCount > 1 ? `${c.nameEn} (×${tubeCount})` : c.nameEn))
+              .map((category) => (
+                category.id === 'tube' && tubeCount > 1
+                  ? `${category.nameEn} (×${tubeCount})`
+                  : category.nameEn
+              ))
               .join(', ')}`,
           })}
         </Alert>
       )}
 
       {submissionError && (
-        <Alert
-          severity="error"
-          sx={{
-            mt: 2,
-            bgcolor: 'rgba(255,80,80,0.1)',
-            color: '#ffb3b3',
-            border: '1px solid rgba(255,80,80,0.35)',
-            '& .MuiAlert-icon': { color: '#ff8f8f' },
-          }}
-        >
+        <Alert severity="error" className="equipment-inline-alert" role="alert">
           {submissionError}
         </Alert>
       )}
 
-      <Button
-        fullWidth
-        startIcon={<RestartAlt />}
-        onClick={() => {
-          setSubmissionError(null);
-          resetBuild();
-        }}
-        sx={{
-          mt: 3,
-          color: 'rgba(255,255,255,0.7)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          borderRadius: 2,
-          '&:hover': { borderColor: ACCENT, color: ACCENT },
-        }}
-      >
-        {t({ he: 'איפוס הרכבה', en: 'Reset Build' })}
-      </Button>
-
-      <Button
-        fullWidth
-        variant="contained"
-        startIcon={<AddShoppingCart />}
-        disabled={
-          selectedParts.length === 0
-          || missingRequired.length > 0
-          || !allAvailable
-          || adding
-        }
-        onClick={handleAddToCart}
-        sx={{
-          mt: 1.5,
-          bgcolor: ACCENT,
-          color: '#04222e',
-          fontWeight: 700,
-          borderRadius: 2,
-          '&:hover': { bgcolor: '#33d4ff' },
-        }}
-      >
-        {adding
-          ? t({ he: 'מוסיף...', en: 'Adding...' })
-          : t({ he: 'הוסף לעגלה', en: 'Add to Cart' })}
-      </Button>
+      <div className="equipment-builder-summary__actions">
+        <Button
+          fullWidth
+          startIcon={<RestartAlt />}
+          onClick={() => {
+            setSubmissionError('');
+            resetBuild();
+          }}
+          variant="outlined"
+        >
+          {t({ he: 'איפוס הרכבה', en: 'Reset build' })}
+        </Button>
+        <Button
+          fullWidth
+          variant="contained"
+          startIcon={<AddShoppingCart />}
+          disabled={selectedParts.length === 0 || buildIncomplete || !allAvailable || adding}
+          onClick={handleAddToCart}
+        >
+          {adding
+            ? t({ he: 'מוסיף…', en: 'Adding…' })
+            : t({ he: 'הוסף לסל', en: 'Add to cart' })}
+        </Button>
+      </div>
     </Paper>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 function BuilderContent() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const {
+    activeCategory,
     deviceType,
-    setDeviceType,
+    selections,
     setActiveCategory,
+    setDeviceType,
     sourcePreset,
   } = useBuilder();
-  const [viewMode, setViewMode] = useState('3d');
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window === 'undefined') return 'blueprint';
+    const constrained = window.matchMedia('(max-width: 899px)').matches
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || navigator.connection?.saveData === true;
+    return constrained ? 'blueprint' : '3d';
+  });
 
-  const handleDeviceTypeChange = (_, v) => {
-    if (!v) return;
-    setDeviceType(v);
+  const categories = useMemo(() => (
+    builderCategories.filter(
+      (category) => getOptionsForDevice(category, deviceType).length > 0,
+    )
+  ), [deviceType]);
+  const selectedCount = categories.filter((category) => selections[category.id]).length;
+  const device = deviceTypes.find((candidate) => candidate.id === deviceType);
+
+  const handleDeviceTypeChange = (_, nextDeviceType) => {
+    if (!nextDeviceType) return;
+    setDeviceType(nextDeviceType);
     setActiveCategory(null);
   };
 
-  const handleViewModeChange = (_, v) => {
-    if (!v) return;
-    setViewMode(v);
+  const handleViewModeChange = (_, nextViewMode) => {
+    if (!nextViewMode) return;
+    setViewMode(nextViewMode);
     setActiveCategory(null);
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        bgcolor: BG,
-        pt: { xs: 14, md: 18 },
-        pb: 8,
-        px: { xs: 2, md: 6 },
-      }}
+    <PublicPageShell
+      eyebrow={t({ he: 'FYURI / מעבדת תצורה', en: 'FYURI / CONFIGURATION LAB' })}
+      breadcrumbLabel={t({ he: 'בנה מכשיר', en: 'Build your device' })}
+      title={t({ he: 'בנה את מערכת ראיית הלילה שלך', en: 'BUILD YOUR NIGHT VISION DEVICE' })}
+      description={t({
+        he: 'בחרו פלטפורמה, התאימו כל רכיב ועקבו אחר המחיר, המשקל והזמינות בזמן אמת.',
+        en: 'Choose a platform, tune every component, and track price, weight, and availability in real time.',
+      })}
+      heroImage="/images/banners/catalog-night-ops.webp"
+      contentClassName="equipment-page equipment-builder-page"
     >
-      <Typography
-        variant="h3"
-        component="h1"
-        sx={{
-          color: '#e8f4fb',
-          textAlign: 'center',
-          fontWeight: 300,
-          letterSpacing: 4,
-          mb: 1,
-        }}
-      >
-        {t({ he: 'בנה מכשיר ראיית לילה', en: 'BUILD YOUR NIGHT VISION DEVICE' })}
-      </Typography>
-      <Typography
-        variant="body1"
-        sx={{ color: 'rgba(255,255,255,0.5)', textAlign: 'center', mb: 5 }}
-      >
-        {t({
-          he: 'בחר רכיבים בתרשים והרכב את התצורה המושלמת עבורך',
-          en: 'Select components on the blueprint to configure your perfect setup',
-        })}
-      </Typography>
+      <section className="equipment-builder-toolbar" aria-label={t({
+        he: 'בקרות תצורה',
+        en: 'Configuration controls',
+      })}>
+        <div className="equipment-builder-toolbar__group">
+          <span>{t({ he: '01 / פלטפורמה', en: '01 / PLATFORM' })}</span>
+          <ToggleButtonGroup
+            value={deviceType}
+            exclusive
+            onChange={handleDeviceTypeChange}
+            aria-label={t({ he: 'סוג מכשיר', en: 'Device type' })}
+          >
+            {deviceTypes.map((candidate) => (
+              <ToggleButton
+                key={candidate.id}
+                value={candidate.id}
+                aria-label={t({ he: candidate.nameHe, en: candidate.nameEn })}
+              >
+                {t({ he: candidate.nameHe, en: candidate.nameEn })}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </div>
 
-      {sourcePreset && (
-        <Stack direction="row" justifyContent="center" sx={{ mt: -3, mb: 4 }}>
-          <Chip
-            label={t({
-              he: `תצורת בסיס: ${sourcePreset.nameHe}`,
-              en: `Starting configuration: ${sourcePreset.nameEn}`,
-            })}
-            sx={{
-              color: ACCENT,
-              bgcolor: 'rgba(0,200,255,0.08)',
-              border: '1px solid rgba(0,200,255,0.3)',
-              fontWeight: 600,
-            }}
-          />
-        </Stack>
-      )}
+        <div className="equipment-builder-toolbar__status">
+          {sourcePreset && (
+            <Chip
+              label={t({
+                he: `תצורת בסיס: ${sourcePreset.nameHe}`,
+                en: `Starting configuration: ${sourcePreset.nameEn}`,
+              })}
+            />
+          )}
+          <span>{t({
+            he: `${selectedCount} מתוך ${categories.length} רכיבים נבחרו`,
+            en: `${selectedCount} of ${categories.length} components selected`,
+          })}</span>
+        </div>
 
-      {/* Device type + view mode selectors */}
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="center"
-        alignItems="center"
-        sx={{ mb: 4 }}
-      >
-        <ToggleButtonGroup
-          value={deviceType}
-          exclusive
-          onChange={handleDeviceTypeChange}
-          sx={{
-            '& .MuiToggleButton-root': {
-              color: 'rgba(255,255,255,0.6)',
-              borderColor: 'rgba(255,255,255,0.2)',
-              px: 2.5,
-              textTransform: 'none',
-              '&.Mui-selected': {
-                color: ACCENT,
-                bgcolor: 'rgba(0,200,255,0.08)',
-                borderColor: ACCENT,
-              },
-            },
-          }}
-        >
-          {deviceTypes.map((dt) => (
-            <ToggleButton key={dt.id} value={dt.id}>
-              {t({ he: dt.nameHe, en: dt.nameEn })}
+        <div className="equipment-builder-toolbar__group equipment-builder-toolbar__view">
+          <span>{t({ he: '02 / תצוגה', en: '02 / VIEW' })}</span>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={handleViewModeChange}
+            aria-label={t({ he: 'מצב תצוגה', en: 'View mode' })}
+          >
+            <ToggleButton value="3d" aria-label={t({ he: 'תצוגת תלת־ממד', en: '3D view' })}>
+              <ViewInAr aria-hidden="true" />
+              3D
             </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+            <ToggleButton
+              value="blueprint"
+              aria-label={t({ he: 'תצוגת תרשים', en: 'Blueprint view' })}
+            >
+              <Architecture aria-hidden="true" />
+              {t({ he: 'תרשים', en: 'Blueprint' })}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+      </section>
 
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={handleViewModeChange}
-          size="small"
-          sx={{
-            '& .MuiToggleButton-root': {
-              color: 'rgba(255,255,255,0.6)',
-              borderColor: 'rgba(255,255,255,0.2)',
-              '&.Mui-selected': {
-                color: ACCENT,
-                bgcolor: 'rgba(0,200,255,0.08)',
-                borderColor: ACCENT,
-              },
-            },
-          }}
+      <p className="equipment-builder-description">
+        <strong>{t({ he: device?.nameHe, en: device?.nameEn })}</strong>
+        <span>{t({ he: device?.descriptionHe, en: device?.descriptionEn })}</span>
+        {viewMode === '3d' && (
+          <span>{t({
+            he: 'גררו לסיבוב, גללו להתקרבות, או השתמשו בסרגל השלבים לבחירת רכיב.',
+            en: 'Drag to rotate, scroll to zoom, or use the step rail to choose a component.',
+          })}</span>
+        )}
+      </p>
+
+      <div className="equipment-builder-workspace">
+        <nav
+          className="equipment-builder-step-rail"
+          aria-label={t({ he: 'שלבי בניית המכשיר', en: 'Device build steps' })}
         >
-          <ToggleButton value="3d">
-            <ViewInAr sx={{ fontSize: 18, mr: 0.5 }} />
-            {t({ he: 'תלת-ממד', en: '3D' })}
-          </ToggleButton>
-          <ToggleButton value="blueprint">
-            <Architecture sx={{ fontSize: 18, mr: 0.5 }} />
-            {t({ he: 'תרשים', en: 'Blueprint' })}
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Stack>
+          <header>
+            <span>{t({ he: 'רכיבים', en: 'COMPONENTS' })}</span>
+            <strong>{String(selectedCount).padStart(2, '0')} / {String(categories.length).padStart(2, '0')}</strong>
+          </header>
+          <ol>
+            {categories.map((category, index) => {
+              const active = activeCategory === category.id;
+              const selection = category.options.find(
+                (option) => option.id === selections[category.id],
+              );
+              return (
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className={active ? 'is-active' : undefined}
+                    onClick={() => setActiveCategory(active ? null : category.id)}
+                    aria-pressed={active}
+                  >
+                    <i>{String(index + 1).padStart(2, '0')}</i>
+                    <span>
+                      <strong>{language === 'he' ? category.nameHe : category.nameEn}</strong>
+                      <small>
+                        {selection
+                          ? (language === 'he' ? selection.nameHe : selection.nameEn)
+                          : t({ he: 'לא נבחר', en: 'Not selected' })}
+                      </small>
+                    </span>
+                    {selection && <Check aria-hidden="true" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
 
-      <Typography
-        variant="caption"
-        display="block"
-        sx={{ color: 'rgba(255,255,255,0.35)', textAlign: 'center', mb: 3 }}
-      >
-        {t({
-          he: deviceTypes.find((d) => d.id === deviceType)?.descriptionHe,
-          en: deviceTypes.find((d) => d.id === deviceType)?.descriptionEn,
-        })}
-        {viewMode === '3d' &&
-          ' — ' +
-            t({ he: 'גרור לסיבוב, גלול להתקרבות, לחץ על רכיב לבחירה', en: 'Drag to rotate, scroll to zoom, click a part to configure' })}
-      </Typography>
-
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          gap: 4,
-          maxWidth: 1400,
-          mx: 'auto',
-          position: 'relative',
-        }}
-      >
-        <Box sx={{ flex: 2.2, position: 'relative' }}>
+        <section className="equipment-builder-stage" aria-label={t({
+          he: 'תצוגת מכשיר',
+          en: 'Device visualization',
+        })}>
+          <header>
+            <span>FYURI / {deviceType.toUpperCase()}</span>
+            <span>{viewMode === '3d' ? 'INTERACTIVE MODEL' : 'TECHNICAL BLUEPRINT'}</span>
+          </header>
           {viewMode === '3d' ? <Device3D /> : <BlueprintScene />}
           {!isMobile && <ConfigPanel />}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: { md: 320 } }}>
-          <SummaryCard />
-        </Box>
-      </Box>
+        </section>
+
+        <SummaryCard />
+      </div>
+
       {isMobile && <ConfigPanel />}
-    </Box>
+    </PublicPageShell>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Add, Delete, Inventory2Outlined, Remove, ShoppingCart } from '@mui/icons-material';
-import { Box, Button, CircularProgress, Grid, IconButton, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Grid, IconButton, Paper, Stack, Typography } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router';
 import PublicPageShell from '../components/PublicPageShell';
 import { useCart } from '../context/CartContext';
@@ -11,12 +11,18 @@ function CartPage() {
   const {
     cart,
     cartLoading = false,
+    cartError,
+    cartMutationError,
+    clearCartMutationError,
+    retryCart,
     updateQuantity,
     removeFromCart,
     getCartTotal,
   } = useCart();
   const { language, t } = useLanguage();
   const [products, setProducts] = useState({});
+  const [pendingItemId, setPendingItemId] = useState(null);
+  const [failedMutation, setFailedMutation] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,6 +30,11 @@ function CartPage() {
     const fetchProducts = async () => {
       const productMap = {};
       for (const item of cart) {
+        if (item.product) {
+          productMap[item.productId] = item.product;
+          continue;
+        }
+
         if (!productMap[item.productId]) {
           try {
             const response = await fetch(`/api/products/${item.productId}`);
@@ -44,6 +55,19 @@ function CartPage() {
     };
   }, [cart]);
 
+  const mutateCart = async (operation) => {
+    setPendingItemId(operation.itemId);
+    setFailedMutation(null);
+    clearCartMutationError?.();
+
+    const succeeded = operation.type === 'remove'
+      ? await removeFromCart(operation.itemId)
+      : await updateQuantity(operation.itemId, operation.quantity);
+
+    if (!succeeded) setFailedMutation(operation);
+    setPendingItemId(null);
+  };
+
   if (cartLoading) {
     return (
       <PublicPageShell
@@ -53,6 +77,34 @@ function CartPage() {
         <Box className="fy-panel fy-public-empty">
           <CircularProgress aria-label={t({ he: 'טוען סל', en: 'Loading cart' })} />
         </Box>
+      </PublicPageShell>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / סל', en: 'FYURI / CART' })}
+        title={t({ he: 'לא הצלחנו לטעון את הסל.', en: 'We could not load your cart.' })}
+        description={t({
+          he: 'הפריטים שלכם לא אבדו. בדקו את החיבור ונסו לטעון אותם שוב.',
+          en: 'Your saved items have not been discarded. Check your connection and retry.',
+        })}
+      >
+        <Alert
+          severity="error"
+          className="fy-panel"
+          action={(
+            <Button color="inherit" size="small" onClick={retryCart}>
+              {t({ he: 'נסו שוב', en: 'Retry' })}
+            </Button>
+          )}
+        >
+          {t({
+            he: 'שירות הסל אינו זמין כרגע.',
+            en: 'The cart service is temporarily unavailable.',
+          })}
+        </Alert>
       </PublicPageShell>
     );
   }
@@ -86,6 +138,15 @@ function CartPage() {
   }
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const stockIssues = cart.filter((item) => {
+    const product = products[item.productId] || item.product;
+    if (!product) return false;
+    const availableStock = Number(product.stockQuantity);
+    return !product.inStock
+      || !Number.isFinite(availableStock)
+      || availableStock <= 0
+      || item.quantity > availableStock;
+  });
 
   return (
     <PublicPageShell
@@ -101,13 +162,49 @@ function CartPage() {
         </Button>
       )}
     >
+      {cartMutationError && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2.5 }}
+          role="alert"
+          action={failedMutation && (
+            <Button
+              color="inherit"
+              size="small"
+              disabled={pendingItemId !== null}
+              onClick={() => mutateCart(failedMutation)}
+            >
+              {t({ he: 'נסו שוב', en: 'Retry' })}
+            </Button>
+          )}
+        >
+          {cartMutationError}
+        </Alert>
+      )}
+
+      {stockIssues.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2.5 }} role="alert">
+          {t({
+            he: 'המלאי השתנה. עדכנו או הסירו את הפריטים המסומנים לפני שתמשיכו.',
+            en: 'Stock has changed. Update or remove the flagged items before continuing.',
+          })}
+        </Alert>
+      )}
+
       <Box className="fy-public-grid">
         <Box className="fy-public-grid__main">
           {cart.map((item) => {
-            const product = products[item.productId];
+            const product = products[item.productId] || item.product;
             const productName = language === 'he'
               ? (product?.nameHebrew || product?.name)
               : product?.name;
+            const stockQuantity = product && Number.isFinite(Number(product.stockQuantity))
+              ? Math.max(0, Number(product.stockQuantity))
+              : 0;
+            const hasStockIssue = Boolean(product)
+              && (!product.inStock || stockQuantity === 0 || item.quantity > stockQuantity);
+            const mutationPending = pendingItemId === item.id;
+            const mutationLocked = pendingItemId !== null;
 
             return (
               <Paper key={item.id} className="fy-panel fy-panel--interactive fy-cart-item">
@@ -122,6 +219,16 @@ function CartPage() {
                       {productName || t({ he: 'טוען מוצר...', en: 'Loading product…' })}
                     </Typography>
                     <Typography variant="body2" className="fy-muted">{product?.sku}</Typography>
+                    {hasStockIssue && (
+                      <Typography variant="caption" color="warning.main" role="status">
+                        {stockQuantity > 0
+                          ? t({
+                              he: `נותרו רק ${stockQuantity} יחידות במלאי.`,
+                              en: `Only ${stockQuantity} unit(s) are currently available.`,
+                            })
+                          : t({ he: 'המוצר אזל מהמלאי.', en: 'This product is out of stock.' })}
+                      </Typography>
+                    )}
                   </Grid>
                   <Grid item xs={5} sm={2}>
                     <Typography sx={{ color: '#42baf2', fontWeight: 800 }}>
@@ -132,8 +239,12 @@ function CartPage() {
                     <Stack direction="row" alignItems="center" justifyContent={{ xs: 'flex-end', sm: 'flex-start' }}>
                       <IconButton
                         size="small"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
+                        onClick={() => mutateCart({
+                          type: 'quantity',
+                          itemId: item.id,
+                          quantity: item.quantity - 1,
+                        })}
+                        disabled={item.quantity <= 1 || mutationLocked}
                         aria-label={t({ he: `הפחת כמות של ${productName || ''}`, en: `Decrease quantity of ${productName || 'item'}` })}
                       >
                         <Remove />
@@ -141,9 +252,26 @@ function CartPage() {
                       <Typography sx={{ mx: 1.5, minWidth: 24, textAlign: 'center', fontWeight: 800 }}>
                         {item.quantity}
                       </Typography>
+                      {mutationPending && (
+                        <CircularProgress
+                          size={16}
+                          aria-label={t({ he: 'מעדכן סל', en: 'Updating cart' })}
+                          sx={{ mx: 0.5 }}
+                        />
+                      )}
                       <IconButton
                         size="small"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() => mutateCart({
+                          type: 'quantity',
+                          itemId: item.id,
+                          quantity: item.quantity + 1,
+                        })}
+                        disabled={
+                          mutationLocked
+                          || !product
+                          || !product.inStock
+                          || item.quantity >= stockQuantity
+                        }
                         aria-label={t({ he: `הגדל כמות של ${productName || ''}`, en: `Increase quantity of ${productName || 'item'}` })}
                       >
                         <Add />
@@ -153,7 +281,8 @@ function CartPage() {
                   <Grid item xs={12} sm={1} sx={{ textAlign: { xs: 'end', sm: 'center' } }}>
                     <IconButton
                       color="error"
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => mutateCart({ type: 'remove', itemId: item.id })}
+                      disabled={mutationLocked}
                       aria-label={t({ he: `הסר ${productName || 'מוצר'} מהסל`, en: `Remove ${productName || 'item'} from cart` })}
                     >
                       <Delete />
@@ -183,7 +312,13 @@ function CartPage() {
                 </Stack>
               </Box>
             </Stack>
-            <Button variant="contained" fullWidth size="large" onClick={() => navigate('/checkout')}>
+            <Button
+              variant="contained"
+              fullWidth
+              size="large"
+              onClick={() => navigate('/checkout')}
+              disabled={stockIssues.length > 0 || pendingItemId !== null}
+            >
               {t({ he: 'המשך להשארת פרטים', en: 'Continue to details' })}
             </Button>
             <Typography variant="caption" className="fy-muted" sx={{ display: 'block', mt: 1.5, lineHeight: 1.5 }}>

@@ -41,15 +41,31 @@ public class OrdersController : ControllerBase
                 return BadRequest($"Item quantities must be between 1 and {MaxQuantityPerItem}");
             }
 
+            // Aggregate repeated product lines before checking inventory so a
+            // crafted payload cannot bypass a per-product stock limit.
+            var requestedItems = request.Items
+                .GroupBy(item => item.ProductId)
+                .Select(group => new
+                {
+                    ProductId = group.Key,
+                    Quantity = group.Sum(item => item.Quantity),
+                })
+                .ToList();
+
+            if (requestedItems.Any(i => i.Quantity > MaxQuantityPerItem))
+            {
+                return BadRequest($"Item quantities must be between 1 and {MaxQuantityPerItem}");
+            }
+
             // Resolve every product server-side — names, SKUs and prices are
             // never taken from the client payload.
-            var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
+            var productIds = requestedItems.Select(i => i.ProductId).ToList();
             var products = await _context.Products
                 .Where(p => productIds.Contains(p.Id))
                 .ToDictionaryAsync(p => p.Id);
 
             var orderItems = new List<OrderItem>();
-            foreach (var item in request.Items)
+            foreach (var item in requestedItems)
             {
                 if (!products.TryGetValue(item.ProductId, out var product))
                 {
@@ -61,9 +77,15 @@ public class OrdersController : ControllerBase
                     return BadRequest($"Product '{product.Name}' is not available for purchase");
                 }
 
-                if (!product.InStock)
+                var availableStock = Math.Max(0, product.StockQuantity);
+                if (!product.InStock || availableStock == 0)
                 {
                     return BadRequest($"Product '{product.Name}' is out of stock");
+                }
+
+                if (item.Quantity > availableStock)
+                {
+                    return BadRequest($"Only {availableStock} unit(s) of '{product.Name}' are available");
                 }
 
                 orderItems.Add(new OrderItem
@@ -130,6 +152,9 @@ public class OrdersController : ControllerBase
     [HttpGet("{orderNumber}")]
     public async Task<ActionResult<OrderRequest>> GetOrder(string orderNumber)
     {
+        Response.Headers.CacheControl = "no-store";
+        Response.Headers.Pragma = "no-cache";
+
         try
         {
             var order = await _context.OrderRequests

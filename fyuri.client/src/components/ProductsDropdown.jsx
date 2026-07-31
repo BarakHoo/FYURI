@@ -8,7 +8,6 @@ import {
 import { ArrowForward } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
-import { useThemeMode } from '../context/ThemeContext';
 import { productNavigationGroups } from './navigationConfig';
 
 function ProductsDropdown({
@@ -18,9 +17,8 @@ function ProductsDropdown({
   open,
 }) {
   const { t, language } = useLanguage();
-  const { mode } = useThemeMode();
   const isRtl = language === 'he';
-  const accentColor = mode === 'dark' ? '#42baf2' : '#0d5f8a';
+  const accentColor = '#42baf2';
   const cyanColor = accentColor;
 
   return (
@@ -38,16 +36,14 @@ function ProductsDropdown({
           dir: isRtl ? 'rtl' : 'ltr',
           sx: {
             width: 'min(960px, calc(100vw - 32px))',
-            mt: 1,
-            color: mode === 'dark' ? '#e8f4fb' : '#0d1b2a',
+            mt: 0.5,
+            color: '#e8f4fb',
             background:
-              mode === 'dark'
-                ? 'linear-gradient(145deg, rgba(7,18,29,0.98), rgba(15,39,54,0.98))'
-                : 'linear-gradient(145deg, rgba(255,255,255,0.99), rgba(235,244,249,0.99))',
+              'linear-gradient(145deg, rgba(7,19,27,0.995), rgba(5,16,24,0.995))',
             border: '1px solid rgba(79, 195, 247, 0.32)',
-            borderTop: `3px solid ${cyanColor}`,
-            borderRadius: 2,
-            boxShadow: '0 24px 70px rgba(0, 0, 0, 0.42)',
+            borderTop: `2px solid ${cyanColor}`,
+            borderRadius: 1,
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.48)',
             maxHeight: 'calc(100vh - 96px)',
             overflowX: 'hidden',
             overflowY: 'auto',
@@ -68,7 +64,7 @@ function ProductsDropdown({
               position: 'absolute',
               inset: 0,
               pointerEvents: 'none',
-              opacity: mode === 'dark' ? 0.16 : 0.08,
+              opacity: 0.13,
               backgroundImage:
                 'linear-gradient(rgba(79,195,247,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.16) 1px, transparent 1px)',
               backgroundSize: '28px 28px',
@@ -119,9 +115,10 @@ function ProductsDropdown({
               minHeight: 44,
               flexShrink: 0,
               color: accentColor,
-              border: `1px solid ${mode === 'dark' ? 'rgba(66,186,242,0.46)' : 'rgba(13,95,138,0.48)'}`,
+              border: '1px solid rgba(66,186,242,0.46)',
+              borderRadius: 0.5,
               '&:hover, &:focus-visible': {
-                bgcolor: mode === 'dark' ? 'rgba(66,186,242,0.1)' : 'rgba(13,95,138,0.09)',
+                bgcolor: 'rgba(66,186,242,0.1)',
                 borderColor: accentColor,
                 outline: `2px solid ${accentColor}`,
                 outlineOffset: 2,
@@ -173,22 +170,17 @@ function ProductsDropdown({
                         p: 1.25,
                         color: 'inherit',
                         textDecoration: 'none',
-                        borderRadius: 1.5,
+                        borderRadius: 0.75,
                         border: '1px solid transparent',
                         transition: 'background-color 160ms ease, border-color 160ms ease, transform 160ms ease',
                         '&:hover, &:focus-visible': {
-                          bgcolor:
-                            mode === 'dark'
-                              ? 'rgba(79,195,247,0.09)'
-                              : 'rgba(13,71,161,0.06)',
+                          bgcolor: 'rgba(79,195,247,0.09)',
                           borderColor: 'rgba(79,195,247,0.3)',
                           outline: 'none',
                           transform: `translateX(${isRtl ? '-3px' : '3px'})`,
                           '& .product-nav-icon': {
                             color: accentColor,
-                            borderColor: mode === 'dark'
-                              ? 'rgba(66,186,242,0.45)'
-                              : 'rgba(13,95,138,0.48)',
+                            borderColor: 'rgba(66,186,242,0.45)',
                           },
                         },
                         '@media (prefers-reduced-motion: reduce)': {
@@ -221,7 +213,7 @@ function ProductsDropdown({
                         </Typography>
                         <Typography
                           variant="caption"
-                          sx={{ display: 'block', mt: 0.25, color: 'text.secondary', lineHeight: 1.35 }}
+                          sx={{ display: 'block', mt: 0.25, color: '#91a4b0', lineHeight: 1.35 }}
                         >
                           {t(item.description)}
                         </Typography>

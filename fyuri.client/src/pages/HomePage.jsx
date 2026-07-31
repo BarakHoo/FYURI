@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
+import CatalogCapabilityStrip from '../components/CatalogCapabilityStrip';
 import { productCategories } from '../components/navigationConfig';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
@@ -591,12 +592,14 @@ function HomePage() {
         </Container>
       </Box>
 
+      <CatalogCapabilityStrip />
+
       <Container
         maxWidth="xl"
         sx={{
           position: 'relative',
           zIndex: 3,
-          mt: { xs: -5, md: -6 },
+          py: { xs: 3, md: 4 },
         }}
       >
         <Box

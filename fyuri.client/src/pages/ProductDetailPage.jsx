@@ -1,35 +1,75 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useParams, useNavigate } from 'react-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Typography,
+  Alert,
   Box,
   Button,
-  Grid,
-  Paper,
-  Chip,
-  TextField,
-  MenuItem,
   Checkbox,
-  FormControlLabel,
-  Divider,
-  Alert,
   CircularProgress,
+  Divider,
+  FormControlLabel,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
 } from '@mui/material';
-import { ShoppingCart, ArrowBack } from '@mui/icons-material';
+import {
+  ArrowBack,
+  BuildOutlined,
+  ImageNotSupportedOutlined,
+  ShoppingCart,
+} from '@mui/icons-material';
+import {
+  Link as RouterLink,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router';
+import { resolveAssetUrl } from '../apiConfig';
+import PublicPageShell from '../components/PublicPageShell';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
-import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
-import PublicPageShell from '../components/PublicPageShell';
-
-// Label stored as "English|Hebrew" in specifications.VariantLabel
-const variantLabel = (p, language) => {
-  const raw = p?.specifications?.VariantLabel;
-  if (!raw) return p?.name || '';
-  const [en, he] = raw.split('|');
-  return language === 'he' ? (he || en) : en;
-};
+import { getBuilderUrl } from '../data/builderPresets';
+import { formatGeneration } from '../utils/generationUtils';
+import './EquipmentPages.css';
 
 const G24_SKU = 'BLD-MOUNT-G24';
+const hiddenSpecificationKeys = new Set(['variantgroup', 'variantlabel']);
+
+const variantLabel = (product, language) => {
+  const raw = product?.specifications?.VariantLabel;
+  if (!raw) {
+    return language === 'he'
+      ? (product?.nameHebrew || product?.name || '')
+      : (product?.name || product?.nameHebrew || '');
+  }
+
+  const [english, hebrew] = raw.split('|');
+  return language === 'he' ? (hebrew || english) : english;
+};
+
+const displaySpecificationValue = (value, t) => {
+  if (typeof value === 'boolean') {
+    return value
+      ? t({ he: 'כן', en: 'Yes' })
+      : t({ he: 'לא', en: 'No' });
+  }
+  if (Array.isArray(value)) return value.filter(Boolean).join(' · ');
+  if (typeof value === 'number') return value.toLocaleString();
+  if (typeof value === 'string') return value.trim();
+  return '';
+};
+
+const humanizeSpecificationKey = (key) => String(key)
+  .replace(/([a-z])([A-Z])/g, '$1 $2')
+  .replace(/[_-]+/g, ' ')
+  .replace(/\b\w/g, (character) => character.toUpperCase());
+
+const productImages = (product) => {
+  const paths = [product?.thumbnailUrl, ...(product?.imageUrls || [])]
+    .filter((path) => typeof path === 'string' && path.trim())
+    .map((path) => resolveAssetUrl(path.trim()));
+  return [...new Set(paths)];
+};
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -43,6 +83,8 @@ function ProductDetailPage() {
   const [includeG24, setIncludeG24] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [selectedImage, setSelectedImage] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const { addToCart } = useCart();
@@ -58,6 +100,8 @@ function ProductDetailPage() {
       setVariants([]);
       setTubes([]);
       setG24Mount(null);
+      setSelectedImage('');
+      setAddError('');
 
       try {
         const response = await fetch(`/api/products/${id}`);
@@ -74,25 +118,28 @@ function ProductDetailPage() {
 
         const group = data.specifications?.VariantGroup;
         if (group && data.productType) {
-          const listRes = await fetch(`/api/products?productType=${encodeURIComponent(data.productType)}`);
-          if (listRes.ok) {
-            const all = await listRes.json();
+          const listResponse = await fetch(
+            `/api/products?productType=${encodeURIComponent(data.productType)}`,
+          );
+          if (listResponse.ok) {
+            const all = await listResponse.json();
             nextVariants = all
               .filter((candidate) => candidate.specifications?.VariantGroup === group)
-              .sort((a, b) => a.price - b.price);
+              .sort((left, right) => Number(left.price || 0) - Number(right.price || 0));
           }
         }
 
         if (data.productType === 'housing') {
-          const [tubesRes, accessoriesRes] = await Promise.all([
+          const [tubesResponse, accessoriesResponse] = await Promise.all([
             fetch('/api/products?productType=intensifier'),
             fetch('/api/products?productType=accessories'),
           ]);
-          if (tubesRes.ok) {
-            nextTubes = (await tubesRes.json()).sort((a, b) => a.price - b.price);
+          if (tubesResponse.ok) {
+            nextTubes = (await tubesResponse.json())
+              .sort((left, right) => Number(left.price || 0) - Number(right.price || 0));
           }
-          if (accessoriesRes.ok) {
-            const accessories = await accessoriesRes.json();
+          if (accessoriesResponse.ok) {
+            const accessories = await accessoriesResponse.json();
             nextG24Mount = accessories.find((candidate) => candidate.sku === G24_SKU) || null;
           }
         }
@@ -118,21 +165,10 @@ function ProductDetailPage() {
     };
 
     loadProduct();
-
     return () => {
       cancelled = true;
     };
   }, [id]);
-
-  const handleVariantChange = (e) => {
-    const newId = e.target.value;
-    if (String(newId) !== String(id)) {
-      navigate(`/products/${newId}`, {
-        replace: true,
-        state: location.state,
-      });
-    }
-  };
 
   const catalogUrl = (
     typeof location.state?.catalogUrl === 'string'
@@ -141,45 +177,29 @@ function ProductDetailPage() {
     ? location.state.catalogUrl
     : '/products';
 
-  // Tubes are per-channel parts (same rule as the custom builder):
-  // monocular = 1, binocular = 2, panoramic = 4 — derived from the housing's Form Factor spec.
-  const channelCount = (() => {
-    const ff = (product?.specifications?.['Form Factor'] || '').toLowerCase();
-    if (ff.includes('panoramic')) return 4;
-    if (ff.includes('binocular')) return 2;
-    return 1;
-  })();
-
-  const selectedTube = tubes.find((tb) => tb.id === selectedTubeId) || null;
-  const tubeQuantity = quantity * channelCount;
-  const bundleTotal =
-    (product?.price || 0) * quantity +
-    (selectedTube ? selectedTube.price * tubeQuantity : 0) +
-    (includeG24 && g24Mount ? g24Mount.price : 0);
-
-  const handleAddToCart = async () => {
-    if (!product || adding) return;
-    setAdding(true);
-    try {
-      await addToCart(product, quantity);
-      if (selectedTube) {
-        await addToCart(selectedTube, tubeQuantity);
-      }
-      if (includeG24 && g24Mount) {
-        await addToCart(g24Mount, 1);
-      }
-    } finally {
-      setAdding(false);
+  const handleVariantChange = (event) => {
+    const newId = event.target.value;
+    if (String(newId) !== String(id)) {
+      navigate(`/products/${newId}`, {
+        replace: true,
+        state: location.state,
+      });
     }
   };
+
+  const images = useMemo(() => productImages(product), [product]);
+  const currentImage = selectedImage && images.includes(selectedImage)
+    ? selectedImage
+    : images[0];
 
   if (loading) {
     return (
       <PublicPageShell
         eyebrow={t({ he: 'FYURI / מוצר', en: 'FYURI / PRODUCT' })}
         title={t({ he: 'טוען את פרטי המוצר…', en: 'Loading product details…' })}
+        contentClassName="equipment-page"
       >
-        <Box className="fy-panel fy-public-empty">
+        <Box className="equipment-state-panel" role="status">
           <CircularProgress aria-label={t({ he: 'טוען מוצר', en: 'Loading product' })} />
         </Box>
       </PublicPageShell>
@@ -198,6 +218,7 @@ function ProductDetailPage() {
           he: 'אפשר לחזור לקטלוג ולבחור מוצר אחר, או ליצור איתנו קשר לקבלת עזרה.',
           en: 'Return to the catalog to choose another product, or contact us for help.',
         })}
+        contentClassName="equipment-page"
         actions={(
           <>
             <Button variant="contained" onClick={() => navigate('/products')}>
@@ -209,10 +230,16 @@ function ProductDetailPage() {
           </>
         )}
       >
-        <Alert severity={notFound ? 'warning' : 'error'} className="fy-panel">
+        <Alert severity={notFound ? 'warning' : 'error'} className="equipment-state-panel">
           {notFound
-            ? t({ he: 'ייתכן שהמוצר הוסר או שהקישור שגוי.', en: 'The product may have been removed or the link may be incorrect.' })
-            : t({ he: 'אירעה שגיאת תקשורת. נסו שוב בעוד מספר רגעים.', en: 'A network error occurred. Please try again in a moment.' })}
+            ? t({
+              he: 'ייתכן שהמוצר הוסר או שהקישור שגוי.',
+              en: 'The product may have been removed or the link may be incorrect.',
+            })
+            : t({
+              he: 'אירעה שגיאת תקשורת. נסו שוב בעוד מספר רגעים.',
+              en: 'A network error occurred. Please try again in a moment.',
+            })}
         </Alert>
       </PublicPageShell>
     );
@@ -220,16 +247,108 @@ function ProductDetailPage() {
 
   const productName = language === 'he'
     ? (product.nameHebrew || product.name)
-    : product.name;
+    : (product.name || product.nameHebrew);
   const productDescription = language === 'he'
     ? (product.descriptionHebrew || product.description)
-    : product.description;
+    : (product.description || product.descriptionHebrew);
+  const builderUrl = getBuilderUrl(product);
+
+  const rawStockQuantity = product.stockQuantity;
+  const tracksStock = rawStockQuantity !== null
+    && rawStockQuantity !== undefined
+    && rawStockQuantity !== ''
+    && Number.isFinite(Number(rawStockQuantity));
+  const stockQuantity = tracksStock ? Math.max(0, Math.floor(Number(rawStockQuantity))) : null;
+  const isAvailable = product.inStock === true && (!tracksStock || stockQuantity > 0);
+  const isLowStock = isAvailable && tracksStock && stockQuantity <= 3;
+  const maxQuantity = tracksStock ? stockQuantity : 99;
+
+  const channelCount = (() => {
+    const formFactor = String(product.specifications?.['Form Factor'] || '').toLowerCase();
+    if (formFactor.includes('panoramic')) return 4;
+    if (formFactor.includes('binocular')) return 2;
+    return 1;
+  })();
+
+  const selectedTube = tubes.find((tube) => String(tube.id) === String(selectedTubeId)) || null;
+  const tubeQuantity = quantity * channelCount;
+  const bundleTotal =
+    Number(product.price || 0) * quantity
+    + (selectedTube ? Number(selectedTube.price || 0) * tubeQuantity : 0)
+    + (includeG24 && g24Mount ? Number(g24Mount.price || 0) : 0);
+
+  const priceFormatter = new Intl.NumberFormat(language === 'he' ? 'he-IL' : 'en-US', {
+    maximumFractionDigits: 0,
+  });
+
+  const standardSpecifications = [
+    ['SKU', product.sku],
+    [t({ he: 'קטגוריה', en: 'Category' }), product.productType],
+    [t({ he: 'דור', en: 'Generation' }), product.generation && formatGeneration(product.generation)],
+    [t({ he: 'סוג שפופרת', en: 'Tube type' }), product.tubeType],
+    ['FOM', product.fom],
+    [t({ he: 'רזולוציה', en: 'Resolution' }), product.resolution],
+  ];
+  const standardKeys = new Set(
+    standardSpecifications
+      .map(([label]) => String(label).trim().toLowerCase()),
+  );
+  const specificationRows = [
+    ...standardSpecifications,
+    ...Object.entries(product.specifications || {})
+      .filter(([key]) => !hiddenSpecificationKeys.has(key.toLowerCase()))
+      .map(([key, value]) => [humanizeSpecificationKey(key), value]),
+  ]
+    .map(([label, value]) => [label, displaySpecificationValue(value, t)])
+    .filter(([label, value], index, all) => {
+      if (!value) return false;
+      const normalized = String(label).trim().toLowerCase();
+      if (index < standardSpecifications.length) return true;
+      if (standardKeys.has(normalized)) return false;
+      return all.findIndex(([otherLabel]) => (
+        String(otherLabel).trim().toLowerCase() === normalized
+      )) === index;
+    });
+
+  const handleAddToCart = async () => {
+    if (!product || adding || !isAvailable) return;
+    setAdding(true);
+    setAddError('');
+    try {
+      const productAdded = await addToCart(product, quantity);
+      if (!productAdded) throw new Error('product');
+
+      if (selectedTube) {
+        const tubeAdded = await addToCart(selectedTube, tubeQuantity);
+        if (!tubeAdded) throw new Error('bundle');
+      }
+      if (includeG24 && g24Mount) {
+        const mountAdded = await addToCart(g24Mount, 1);
+        if (!mountAdded) throw new Error('bundle');
+      }
+    } catch (error) {
+      setAddError(error.message === 'bundle'
+        ? t({
+          he: 'חלק מהחבילה לא נוסף. בדקו את הסל לפני ניסיון נוסף כדי למנוע כפילות.',
+          en: 'Part of the bundle was not added. Check your cart before retrying to avoid duplicates.',
+        })
+        : t({
+          he: 'לא הצלחנו להוסיף את המוצר לסל. נסו שוב בעוד רגע.',
+          en: 'We could not add this product to the cart. Please try again.',
+        }));
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <PublicPageShell
-      eyebrow={`${product.productType || 'FYURI'} / ${product.sku}`}
+      eyebrow={`${String(product.productType || 'FYURI').toUpperCase()} / ${product.sku}`}
+      breadcrumbLabel={productName}
       title={productName}
       description={productDescription}
+      contentClassName="equipment-page equipment-product-detail"
+      heroImage="/images/banners/catalog-night-ops.webp"
       actions={(
         <Button
           startIcon={<ArrowBack />}
@@ -240,213 +359,253 @@ function ProductDetailPage() {
         </Button>
       )}
     >
-
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
-          <Paper
-            className="fy-panel fy-product-media"
-            sx={{
-              width: '100%',
-              position: 'relative',
-              overflow: 'hidden',
-              minHeight: { xs: 360, md: 560 },
-              backgroundImage: product.thumbnailUrl || product.imageUrls?.[0] 
-                ? `url(${product.thumbnailUrl || product.imageUrls[0]})` 
-                : 'none',
-              backgroundSize: 'contain',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          >
-            {!product.thumbnailUrl && !product.imageUrls?.[0] && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  color: 'grey.500',
-                  textAlign: 'center',
-                }}
-              >
-                <Typography variant="body2">
-                  {t({ he: 'אין תמונה', en: 'No Image' })}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper className="fy-panel" sx={{ p: { xs: 2.5, md: 3.5 }, textAlign: 'start' }}>
-          <span className="fy-section-kicker">{t({ he: 'סקירת מוצר', en: 'Product overview' })}</span>
-
-          <Box sx={{ mb: 3 }}>
-            {product.generation && (
-              <Chip 
-                label={formatGeneration(product.generation)} 
-                {...getGenerationColor(product.generation)}
-                sx={{ mr: 1, ...getGenerationColor(product.generation).sx }} 
+      <div className="equipment-detail-layout">
+        <section className="equipment-panel equipment-media-panel" aria-label={t({
+          he: `תמונות ${productName}`,
+          en: `${productName} images`,
+        })}>
+          <div className="equipment-media-panel__main">
+            {currentImage ? (
+              <img
+                src={currentImage}
+                alt={productName}
+                decoding="async"
+                fetchPriority="high"
               />
-            )}
-            {product.inStock ? (
-              <Chip label={t({ he: 'במלאי', en: 'In Stock' })} color="success" />
             ) : (
-              <Chip label={t({ he: 'אזל מהמלאי', en: 'Out of Stock' })} color="error" />
+              <div className="equipment-image-fallback">
+                <ImageNotSupportedOutlined aria-hidden="true" />
+                <span>{t({ he: 'אין תמונה זמינה', en: 'No image available' })}</span>
+              </div>
             )}
-          </Box>
+            <span className="equipment-media-panel__index">
+              {String(product.productType || 'optical system').toUpperCase()} / {product.sku}
+            </span>
+          </div>
 
-          <Typography variant="body1" className="fy-muted" paragraph sx={{ lineHeight: 1.7 }}>
-            {productDescription}
-          </Typography>
+          {images.length > 1 && (
+            <div className="equipment-thumbnail-list" role="list">
+              {images.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  className={image === currentImage ? 'is-active' : undefined}
+                  onClick={() => setSelectedImage(image)}
+                  aria-pressed={image === currentImage}
+                  aria-label={t({
+                    he: `הצגת תמונה ${index + 1} מתוך ${images.length}`,
+                    en: `Show image ${index + 1} of ${images.length}`,
+                  })}
+                  data-testid="product-gallery-thumbnail"
+                >
+                  <img src={image} alt="" loading="lazy" decoding="async" />
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="equipment-panel equipment-purchase-panel">
+          <span className="equipment-section-kicker">
+            {t({ he: 'סקירת מערכת', en: 'SYSTEM OVERVIEW' })}
+          </span>
+
+          <div className="equipment-chip-row">
+            {product.generation && (
+              <span className="equipment-chip equipment-chip--generation">
+                {formatGeneration(product.generation)}
+              </span>
+            )}
+            <span className={`equipment-chip equipment-chip--${isAvailable ? (isLowStock ? 'low' : 'available') : 'unavailable'}`}>
+              {isAvailable
+                ? (isLowStock
+                  ? t({
+                    he: `מלאי נמוך · ${stockQuantity} נותרו`,
+                    en: `Low stock · ${stockQuantity} left`,
+                  })
+                  : t({ he: 'במלאי', en: 'In stock' }))
+                : t({ he: 'אזל מהמלאי', en: 'Out of stock' })}
+            </span>
+          </div>
+
+          <p className="equipment-purchase-panel__description">{productDescription}</p>
 
           {variants.length > 1 && (
             <TextField
               select
+              fullWidth
+              className="equipment-select"
               label={t({ he: 'דגם / חומר', en: 'Variant / Material' })}
               value={product.id}
               onChange={handleVariantChange}
-              sx={{ minWidth: 260, mb: 1 }}
             >
-              {variants.map((v) => (
-                <MenuItem key={v.id} value={v.id}>
-                  {variantLabel(v, language)} — ₪{v.price.toLocaleString()}
+              {variants.map((variant) => (
+                <MenuItem key={variant.id} value={variant.id}>
+                  {variantLabel(variant, language)} — ₪{priceFormatter.format(variant.price)}
                 </MenuItem>
               ))}
             </TextField>
           )}
 
-          <Typography className="fy-product-price" sx={{ my: 3 }}>
-            ₪{product.price.toLocaleString()}
-          </Typography>
+          <div className="equipment-price-block">
+            <span>{t({ he: 'מחיר מערכת', en: 'System price' })}</span>
+            <strong><i>₪</i>{priceFormatter.format(product.price)}</strong>
+          </div>
 
           {product.productType === 'housing' && tubes.length > 0 && (
-            <Paper variant="outlined" className="fy-panel" sx={{ p: 2, mb: 2 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
-                {t({ he: 'השלם למכשיר מלא', en: 'Complete Your Device' })}
+            <Paper variant="outlined" className="equipment-bundle-panel">
+              <Typography component="h2">
+                {t({ he: 'השלימו למכשיר מלא', en: 'Complete your device' })}
               </Typography>
               <TextField
                 select
                 fullWidth
-                label={t({ he: 'הוסף שפופרת מגבר אור', en: 'Add an Intensifier Tube' })}
+                className="equipment-select"
+                label={t({ he: 'הוספת שפופרת מגבר אור', en: 'Add an intensifier tube' })}
                 value={selectedTubeId}
-                onChange={(e) => {
-                  setSelectedTubeId(e.target.value);
-                  if (e.target.value === '') setIncludeG24(false);
+                onChange={(event) => {
+                  setSelectedTubeId(event.target.value);
+                  setAddError('');
+                  if (event.target.value === '') setIncludeG24(false);
                 }}
-                helperText={
-                  channelCount > 1
-                    ? t({
-                        he: `גוף זה דורש ${channelCount} שפופרות (אחת לכל ערוץ) — המחיר והכמות יוכפלו בהתאם`,
-                        en: `This housing requires ${channelCount} tubes (one per channel) — price and quantity multiply accordingly`,
-                      })
-                    : t({
-                        he: 'השפופרת תתווסף לסל בנפרד בהתאם לכמות הגופים',
-                        en: 'The tube is added per housing quantity',
-                      })
-                }
+                helperText={channelCount > 1
+                  ? t({
+                    he: `גוף זה דורש ${channelCount} שפופרות — המחיר והכמות מוכפלים בהתאם.`,
+                    en: `This housing requires ${channelCount} tubes; price and quantity are multiplied accordingly.`,
+                  })
+                  : t({
+                    he: 'השפופרת מתווספת בנפרד לכל גוף.',
+                    en: 'The tube is added separately for each housing.',
+                  })}
               >
                 <MenuItem value="">
                   {t({ he: 'ללא שפופרת — גוף בלבד', en: 'No tube — housing only' })}
                 </MenuItem>
                 {tubes.map((tube) => (
-                  <MenuItem key={tube.id} value={tube.id}>
+                  <MenuItem
+                    key={tube.id}
+                    value={tube.id}
+                    disabled={tube.inStock === false || Number(tube.stockQuantity) === 0}
+                  >
                     {language === 'he' ? (tube.nameHebrew || tube.name) : tube.name}
                     {' — '}
                     {channelCount > 1
-                      ? `₪${tube.price.toLocaleString()} ×${channelCount} = ₪${(tube.price * channelCount).toLocaleString()}`
-                      : `₪${tube.price.toLocaleString()}`}
+                      ? `₪${priceFormatter.format(tube.price)} ×${channelCount} = ₪${priceFormatter.format(tube.price * channelCount)}`
+                      : `₪${priceFormatter.format(tube.price)}`}
                   </MenuItem>
                 ))}
               </TextField>
 
               {selectedTube && g24Mount && (
-                <Box sx={{ mt: 1.5 }}>
-                  <Divider sx={{ mb: 1.5 }} />
+                <>
+                  <Divider />
                   <FormControlLabel
-                    control={
+                    disabled={g24Mount.inStock === false || Number(g24Mount.stockQuantity) === 0}
+                    control={(
                       <Checkbox
                         checked={includeG24}
-                        onChange={(e) => setIncludeG24(e.target.checked)}
+                        onChange={(event) => {
+                          setIncludeG24(event.target.checked);
+                          setAddError('');
+                        }}
                       />
-                    }
-                    label={
-                      <Typography variant="body2">
-                        {t({
-                          he: `מרכיב מכשיר מלא? הוסף מתקן קסדה ${g24Mount.nameHebrew || g24Mount.name} — ₪${g24Mount.price.toLocaleString()}`,
-                          en: `Building a complete device? Add a ${g24Mount.name} — ₪${g24Mount.price.toLocaleString()}`,
-                        })}
-                      </Typography>
-                    }
+                    )}
+                    label={t({
+                      he: `הוספת ${g24Mount.nameHebrew || g24Mount.name} — ₪${priceFormatter.format(g24Mount.price)}`,
+                      en: `Add ${g24Mount.name} — ₪${priceFormatter.format(g24Mount.price)}`,
+                    })}
                   />
-                </Box>
+                </>
               )}
 
               {(selectedTube || (includeG24 && g24Mount)) && (
-                <Typography variant="subtitle1" color="primary" sx={{ mt: 1.5, fontWeight: 600 }}>
-                  {t({ he: 'סה״כ חבילה:', en: 'Bundle total:' })} ₪{bundleTotal.toLocaleString()}
-                  {selectedTube && tubeQuantity > 1 && (
-                    <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                      {t({
-                        he: `(כולל ${tubeQuantity} שפופרות)`,
-                        en: `(includes ${tubeQuantity} tubes)`,
-                      })}
-                    </Typography>
-                  )}
-                </Typography>
+                <div className="equipment-bundle-total">
+                  <span>{t({ he: 'סה״כ חבילה', en: 'Bundle total' })}</span>
+                  <strong>₪{priceFormatter.format(bundleTotal)}</strong>
+                </div>
               )}
             </Paper>
           )}
 
-          {product.inStock && (
-            <Box sx={{ mb: 3 }}>
+          <div className="equipment-purchase-actions">
+            {isAvailable && (
               <TextField
                 type="number"
                 label={t({ he: 'כמות', en: 'Quantity' })}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.min(
-                  product.stockQuantity || 99,
-                  Math.max(1, parseInt(e.target.value) || 1),
-                ))}
-                InputProps={{ inputProps: { min: 1, max: product.stockQuantity } }}
-                sx={{ width: 100, mr: 2 }}
+                onChange={(event) => {
+                  setAddError('');
+                  setQuantity(Math.min(
+                    maxQuantity,
+                    Math.max(1, Number.parseInt(event.target.value, 10) || 1),
+                  ));
+                }}
+                slotProps={{ htmlInput: { min: 1, max: maxQuantity } }}
               />
+            )}
+            <Button
+              variant="contained"
+              startIcon={<ShoppingCart />}
+              onClick={handleAddToCart}
+              disabled={!isAvailable || adding}
+            >
+              {adding
+                ? t({ he: 'מוסיף…', en: 'Adding…' })
+                : (isAvailable
+                  ? t({ he: 'הוסף לסל', en: 'Add to Cart' })
+                  : t({ he: 'אזל מהמלאי', en: 'Out of stock' }))}
+            </Button>
+            {builderUrl && (
               <Button
-                variant="contained"
-                size="large"
-                startIcon={<ShoppingCart />}
-                onClick={handleAddToCart}
-                disabled={adding}
+                component={RouterLink}
+                to={builderUrl}
+                variant="outlined"
+                startIcon={<BuildOutlined />}
+                data-testid="configure-product-detail"
               >
-                {adding
-                  ? t({ he: 'מוסיף...', en: 'Adding…' })
-                  : t({ he: 'הוסף לסל', en: 'Add to Cart' })}
+                {t({ he: 'התאם בממשק הבנייה', en: 'Configure' })}
               </Button>
-            </Box>
-          )}
+            )}
+          </div>
 
-          <Paper className="fy-panel" sx={{ p: 2, mt: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              {t({ he: 'מפרט טכני', en: 'Technical Specifications' })}
-            </Typography>
-            <Typography variant="body2">SKU: {product.sku}</Typography>
-            {product.generation && (
-              <Typography variant="body2">
-                {t({ he: 'דור:', en: 'Generation:' })} {formatGeneration(product.generation)}
-              </Typography>
-            )}
-            {product.fom && (
-              <Typography variant="body2">FOM: {product.fom}</Typography>
-            )}
-            {product.resolution && (
-              <Typography variant="body2">
-                {t({ he: 'רזולוציה:', en: 'Resolution:' })} {product.resolution}
-              </Typography>
-            )}
-          </Paper>
-          </Paper>
-        </Grid>
-      </Grid>
+          {addError && (
+            <Alert severity="error" className="equipment-inline-alert" role="alert">
+              {addError}
+            </Alert>
+          )}
+        </section>
+      </div>
+
+      <section className="equipment-panel equipment-specification-panel">
+        <div className="equipment-section-heading">
+          <span className="equipment-section-kicker">
+            {t({ he: 'נתוני מערכת', en: 'SYSTEM DATA' })}
+          </span>
+          <h2>{t({ he: 'מפרט טכני', en: 'Technical specifications' })}</h2>
+          <p>{t({
+            he: 'המידע הטכני המלא שסופק עבור תצורה זו.',
+            en: 'Complete technical information supplied for this configuration.',
+          })}</p>
+        </div>
+
+        {specificationRows.length > 0 ? (
+          <dl className="equipment-spec-grid">
+            {specificationRows.map(([label, value]) => (
+              <div key={`${label}-${value}`}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p className="equipment-empty-copy">
+            {t({
+              he: 'המפרט המלא זמין מצוות FYURI.',
+              en: 'The complete specification is available from the FYURI team.',
+            })}
+          </p>
+        )}
+      </section>
     </PublicPageShell>
   );
 }

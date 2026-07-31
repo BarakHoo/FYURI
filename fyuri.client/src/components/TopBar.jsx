@@ -7,9 +7,9 @@ import {
   Facebook,
   HeadsetMicOutlined,
   Instagram,
-  LockOutlined,
   Phone,
-  PublicOutlined,
+  PrecisionManufacturingOutlined,
+  ReceiptLongOutlined,
   ScienceOutlined,
   WhatsApp,
 } from '@mui/icons-material';
@@ -92,14 +92,14 @@ function TopBar({ variant = 'default' }) {
             alignItems="center"
             justifyContent="flex-end"
           >
-            <Box sx={utilityItemSx}>
-              <PublicOutlined aria-hidden="true" />
-              <span>{t({ he: 'משלוחים לכל העולם', en: 'Worldwide Shipping' })}</span>
+            <Box component={RouterLink} to="/builder" sx={utilityItemSx}>
+              <PrecisionManufacturingOutlined aria-hidden="true" />
+              <span>{t({ he: 'תצורה בהתאמה', en: 'Custom Configuration' })}</span>
             </Box>
             <Box sx={{ width: '1px', height: 19, bgcolor: '#172631' }} />
-            <Box sx={utilityItemSx}>
-              <LockOutlined aria-hidden="true" />
-              <span>{t({ he: 'תשלום מאובטח', en: 'Secure Checkout' })}</span>
+            <Box component={RouterLink} to="/cart" sx={utilityItemSx}>
+              <ReceiptLongOutlined aria-hidden="true" />
+              <span>{t({ he: 'הזמנה ללא חיוב מקוון', en: 'Request-Based Ordering' })}</span>
             </Box>
           </Stack>
         </Box>

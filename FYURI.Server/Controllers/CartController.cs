@@ -64,7 +64,8 @@ public class CartController : ControllerBase
                 return BadRequest("Product is not available for purchase");
             }
 
-            if (!product.InStock)
+            var availableStock = Math.Max(0, product.StockQuantity);
+            if (!product.InStock || availableStock == 0)
             {
                 return BadRequest("Product is out of stock");
             }
@@ -74,10 +75,26 @@ public class CartController : ControllerBase
 
             if (existingItem != null)
             {
-                existingItem.Quantity = Math.Min(existingItem.Quantity + request.Quantity, MaxQuantityPerItem);
+                var requestedQuantity = existingItem.Quantity + request.Quantity;
+                if (requestedQuantity > MaxQuantityPerItem)
+                {
+                    return BadRequest($"Quantity must be between 1 and {MaxQuantityPerItem}");
+                }
+
+                if (requestedQuantity > availableStock)
+                {
+                    return BadRequest($"Only {availableStock} unit(s) of '{product.Name}' are available");
+                }
+
+                existingItem.Quantity = requestedQuantity;
                 existingItem.PriceAtAddTime = product.Price;
                 await _context.SaveChangesAsync();
                 return Ok(existingItem);
+            }
+
+            if (request.Quantity > availableStock)
+            {
+                return BadRequest($"Only {availableStock} unit(s) of '{product.Name}' are available");
             }
 
             var newItem = new CartItem
@@ -106,6 +123,7 @@ public class CartController : ControllerBase
         try
         {
             var item = await _context.CartItems
+                .Include(i => i.Product)
                 .FirstOrDefaultAsync(i => i.Id == itemId && i.SessionId == sessionId);
 
             if (item == null)
@@ -116,6 +134,27 @@ public class CartController : ControllerBase
             if (request.Quantity < 1 || request.Quantity > MaxQuantityPerItem)
             {
                 return BadRequest($"Quantity must be between 1 and {MaxQuantityPerItem}");
+            }
+
+            if (item.Product == null)
+            {
+                return BadRequest("Product not found");
+            }
+
+            if (!item.Product.IsActive && item.Product.ProductType != "custom-build")
+            {
+                return BadRequest("Product is not available for purchase");
+            }
+
+            var availableStock = Math.Max(0, item.Product.StockQuantity);
+            if (!item.Product.InStock || availableStock == 0)
+            {
+                return BadRequest("Product is out of stock");
+            }
+
+            if (request.Quantity > availableStock)
+            {
+                return BadRequest($"Only {availableStock} unit(s) of '{item.Product.Name}' are available");
             }
 
             item.Quantity = request.Quantity;

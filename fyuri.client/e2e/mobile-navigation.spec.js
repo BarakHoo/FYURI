@@ -125,6 +125,22 @@ test.describe('responsive site navigation', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('mobile catalog search closes the drawer and preserves the query in the URL', async ({ page }) => {
+    await visitPublicPage(page, mobileViewport);
+
+    const menuButton = page.getByTestId('mobile-menu-button');
+    const drawer = page.getByTestId('mobile-nav-paper');
+
+    await menuButton.click();
+    await drawer.getByRole('textbox', { name: 'Search products' }).fill('pvs 14 pro');
+    await drawer.getByRole('button', { name: 'Search' }).click();
+
+    await expect(page).toHaveURL(/\/products\?q=pvs\+14\+pro$/);
+    await expect(drawer).toBeHidden();
+    await expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('history navigation cannot resurrect a previously open drawer', async ({ page }) => {
     await visitPublicPage(page, mobileViewport, '/contact');
 
@@ -261,7 +277,7 @@ test.describe('responsive site navigation', () => {
     const languageButton = page.getByTestId('language-toggle');
     const searchButton = page.getByTestId('catalog-search-button');
     const supportLink = page.getByTestId('catalog-support-link');
-    const cartLink = page.locator('a[href="/cart"]').first();
+    const cartLink = page.locator('header a[href="/cart"]');
     const referenceHeader = page.locator('header.MuiPaper-root');
 
     await expect(root).toHaveAttribute('lang', 'en');

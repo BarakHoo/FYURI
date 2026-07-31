@@ -37,6 +37,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [cartLoading, setCartLoading] = useState(true);
   const [cartError, setCartError] = useState(null);
+  const [cartMutationError, setCartMutationError] = useState(null);
   const [sessionId] = useState(getOrCreateSessionId);
   const { showToast } = useToast();
   const { language, t } = useLanguage();
@@ -48,9 +49,11 @@ export const CartProvider = ({ children }) => {
       if (!response.ok) throw new Error(`Cart request failed (${response.status})`);
       const data = await response.json();
       setCart(data);
+      return true;
     } catch (error) {
       console.error('Failed to load cart:', error);
       setCartError(error instanceof Error ? error.message : 'Failed to load cart');
+      return false;
     } finally {
       setCartLoading(false);
     }
@@ -61,6 +64,11 @@ export const CartProvider = ({ children }) => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCart(sessionId);
   }, [loadCart, sessionId]);
+
+  const retryCart = async () => {
+    setCartLoading(true);
+    return loadCart(sessionId);
+  };
 
   const addToCart = async (product, quantity = 1) => {
     try {
@@ -107,6 +115,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = async (itemId, quantity) => {
+    setCartMutationError(null);
     try {
       const response = await fetch(`/api/cart/${sessionId}/items/${itemId}`, {
         method: 'PUT',
@@ -118,13 +127,23 @@ export const CartProvider = ({ children }) => {
         await loadCart(sessionId);
         return true;
       }
+
+      setCartMutationError(t({
+        he: 'לא ניתן היה לעדכן את הכמות. ייתכן שהמלאי השתנה.',
+        en: 'The quantity could not be updated. Available stock may have changed.',
+      }));
     } catch (error) {
       console.error('Failed to update cart:', error);
+      setCartMutationError(t({
+        he: 'לא ניתן היה לעדכן את הכמות. בדקו את החיבור ונסו שוב.',
+        en: 'The quantity could not be updated. Check your connection and retry.',
+      }));
     }
     return false;
   };
 
   const removeFromCart = async (itemId) => {
+    setCartMutationError(null);
     try {
       const response = await fetch(`/api/cart/${sessionId}/items/${itemId}`, {
         method: 'DELETE',
@@ -134,13 +153,23 @@ export const CartProvider = ({ children }) => {
         await loadCart(sessionId);
         return true;
       }
+
+      setCartMutationError(t({
+        he: 'לא ניתן היה להסיר את הפריט. נסו שוב.',
+        en: 'The item could not be removed. Please retry.',
+      }));
     } catch (error) {
       console.error('Failed to remove from cart:', error);
+      setCartMutationError(t({
+        he: 'לא ניתן היה להסיר את הפריט. בדקו את החיבור ונסו שוב.',
+        en: 'The item could not be removed. Check your connection and retry.',
+      }));
     }
     return false;
   };
 
   const clearCart = async () => {
+    setCartMutationError(null);
     try {
       const response = await fetch(`/api/cart/${sessionId}`, {
         method: 'DELETE',
@@ -150,8 +179,17 @@ export const CartProvider = ({ children }) => {
         setCart([]);
         return true;
       }
+
+      setCartMutationError(t({
+        he: 'ההזמנה נשמרה, אך לא הצלחנו לרענן את הסל.',
+        en: 'The order was saved, but the cart could not be refreshed.',
+      }));
     } catch (error) {
       console.error('Failed to clear cart:', error);
+      setCartMutationError(t({
+        he: 'ההזמנה נשמרה, אך לא הצלחנו לרענן את הסל.',
+        en: 'The order was saved, but the cart could not be refreshed.',
+      }));
     }
     return false;
   };
@@ -170,6 +208,9 @@ export const CartProvider = ({ children }) => {
         cart,
         cartLoading,
         cartError,
+        cartMutationError,
+        clearCartMutationError: () => setCartMutationError(null),
+        retryCart,
         addToCart,
         updateQuantity,
         removeFromCart,

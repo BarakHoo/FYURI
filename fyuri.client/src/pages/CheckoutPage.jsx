@@ -8,6 +8,7 @@ import {
   Button,
   Grid,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -15,7 +16,14 @@ import PublicPageShell from '../components/PublicPageShell';
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { cart, getCartTotal, clearCart } = useCart();
+  const {
+    cart,
+    cartLoading,
+    cartError,
+    retryCart,
+    getCartTotal,
+    clearCart,
+  } = useCart();
   const { language, t } = useLanguage();
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(false);
@@ -42,8 +50,12 @@ function CheckoutPage() {
   useEffect(() => {
     let cancelled = false;
 
+    if (cartLoading || cartError) {
+      return undefined;
+    }
+
     if (cart.length === 0 && !orderSubmitted) {
-      navigate('/cart');
+      navigate('/cart', { replace: true });
       return undefined;
     }
 
@@ -51,6 +63,11 @@ function CheckoutPage() {
       const loadProducts = async () => {
         const productMap = {};
         for (const item of cart) {
+          if (item.product) {
+            productMap[item.productId] = item.product;
+            continue;
+          }
+
           try {
             const response = await fetch(`/api/products/${item.productId}`);
             if (response.ok) {
@@ -69,7 +86,17 @@ function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [cart, navigate, orderSubmitted]);
+  }, [cart, cartError, cartLoading, navigate, orderSubmitted]);
+
+  const stockIssues = cart.filter((item) => {
+    const product = products[item.productId] || item.product;
+    if (!product) return false;
+    const availableStock = Number(product.stockQuantity);
+    return !product.inStock
+      || !Number.isFinite(availableStock)
+      || availableStock <= 0
+      || item.quantity > availableStock;
+  });
 
   const validateField = (name, value) => {
     let error = '';
@@ -164,8 +191,25 @@ function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    if (cartLoading || cartError || cart.length === 0) {
+      setError(t({
+        he: 'הסל עדיין אינו מוכן. טענו אותו מחדש לפני שליחת הבקשה.',
+        en: 'The cart is not ready. Reload it before submitting the request.',
+      }));
+      return;
+    }
+
+    if (stockIssues.length > 0) {
+      setError(t({
+        he: 'המלאי השתנה. חזרו לסל ועדכנו את הכמויות לפני השליחה.',
+        en: 'Stock has changed. Return to the cart and update quantities before submitting.',
+      }));
+      return;
+    }
+
+    setLoading(true);
 
     // Validate form before submission
     if (!validateForm()) {
@@ -198,9 +242,10 @@ function CheckoutPage() {
         await clearCart();
         navigate(`/order-confirmation/${order.orderNumber}`);
       } else {
+        const responseMessage = (await response.text()).replace(/^"|"$/g, '');
         setError(t({
           he: 'אירעה שגיאה בשליחת ההזמנה. אנא נסה שנית.',
-          en: 'An error occurred while submitting your order. Please try again.'
+          en: responseMessage || 'An error occurred while submitting your order. Please try again.'
         }));
       }
     } catch (err) {
@@ -213,6 +258,59 @@ function CheckoutPage() {
       setLoading(false);
     }
   };
+
+  if (cartLoading) {
+    return (
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / פרטי הזמנה', en: 'FYURI / ORDER DETAILS' })}
+        title={t({ he: 'טוען את פרטי ההזמנה…', en: 'Loading your order details…' })}
+      >
+        <Box className="fy-panel fy-public-empty">
+          <CircularProgress aria-label={t({ he: 'טוען סל', en: 'Loading cart' })} />
+        </Box>
+      </PublicPageShell>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / פרטי הזמנה', en: 'FYURI / ORDER DETAILS' })}
+        title={t({ he: 'לא הצלחנו לאמת את הסל.', en: 'We could not verify your cart.' })}
+        description={t({
+          he: 'יש לטעון את הסל מחדש לפני שנוכל לקבל את בקשת ההזמנה.',
+          en: 'Reload the cart before we can accept an order request.',
+        })}
+      >
+        <Alert
+          severity="error"
+          action={(
+            <Button color="inherit" size="small" onClick={retryCart}>
+              {t({ he: 'נסו שוב', en: 'Retry' })}
+            </Button>
+          )}
+        >
+          {t({
+            he: 'שירות הסל אינו זמין כרגע.',
+            en: 'The cart service is temporarily unavailable.',
+          })}
+        </Alert>
+      </PublicPageShell>
+    );
+  }
+
+  if (cart.length === 0 && !orderSubmitted) {
+    return (
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / פרטי הזמנה', en: 'FYURI / ORDER DETAILS' })}
+        title={t({ he: 'מחזיר אתכם לסל…', en: 'Returning to your cart…' })}
+      >
+        <Box className="fy-panel fy-public-empty">
+          <CircularProgress aria-label={t({ he: 'מחזיר לסל', en: 'Returning to cart' })} />
+        </Box>
+      </PublicPageShell>
+    );
+  }
 
   return (
     <PublicPageShell
@@ -227,6 +325,23 @@ function CheckoutPage() {
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
+        </Alert>
+      )}
+
+      {stockIssues.length > 0 && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, textAlign: 'start' }}
+          action={(
+            <Button color="inherit" size="small" onClick={() => navigate('/cart')}>
+              {t({ he: 'חזרה לסל', en: 'Back to cart' })}
+            </Button>
+          )}
+        >
+          {t({
+            he: 'אחד או יותר מהפריטים אינם זמינים בכמות שבסל.',
+            en: 'One or more items are no longer available in the quantity shown.',
+          })}
         </Alert>
       )}
 
@@ -250,6 +365,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'שם מלא', en: 'Full Name' })}
                 name="customerName"
+                disabled={loading}
                 value={formData.customerName}
                 onChange={handleChange}
                 margin="normal"
@@ -263,6 +379,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'אימייל', en: 'Email' })}
                 name="customerEmail"
+                disabled={loading}
                 type="email"
                 value={formData.customerEmail}
                 onChange={handleChange}
@@ -277,6 +394,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'טלפון', en: 'Phone' })}
                 name="customerPhone"
+                disabled={loading}
                 value={formData.customerPhone}
                 onChange={handleChange}
                 margin="normal"
@@ -290,6 +408,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'כתובת', en: 'Address' })}
                 name="customerAddress"
+                disabled={loading}
                 value={formData.customerAddress}
                 onChange={handleChange}
                 margin="normal"
@@ -302,6 +421,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'עיר', en: 'City' })}
                 name="customerCity"
+                disabled={loading}
                 value={formData.customerCity}
                 onChange={handleChange}
                 margin="normal"
@@ -314,6 +434,7 @@ function CheckoutPage() {
                 fullWidth
                 label={t({ he: 'הערות', en: 'Notes' })}
                 name="customerNotes"
+                disabled={loading}
                 value={formData.customerNotes}
                 onChange={handleChange}
                 multiline
@@ -326,7 +447,7 @@ function CheckoutPage() {
                 variant="contained"
                 size="large"
                 fullWidth
-                disabled={loading}
+                disabled={loading || stockIssues.length > 0}
                 sx={{ mt: 3 }}
               >
                 {loading 
@@ -352,7 +473,7 @@ function CheckoutPage() {
             </Typography>
             <Box sx={{ my: 2 }}>
               {cart.map((item) => {
-                const product = products[item.productId];
+                const product = products[item.productId] || item.product;
                 return (
                   <Box key={item.id} sx={{ mb: 2 }}>
                     <Typography variant="body2">

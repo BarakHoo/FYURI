@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router';
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from '@mui/material';
 import { CacheProvider } from '@emotion/react';
 import { CartProvider } from './context/CartContext';
@@ -9,6 +9,7 @@ import { rtlCache, ltrCache } from './rtlCache';
 import { AdminAuthProvider } from './context/AdminAuthContext';
 import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
+import PublicErrorBoundary from './components/PublicErrorBoundary';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminProtectedRoute from './components/admin/AdminProtectedRoute';
 import HomePage from './pages/HomePage';
@@ -34,6 +35,31 @@ const RouteFallback = () => (
     <CircularProgress />
   </Box>
 );
+
+function PublicRoutes({ language }) {
+  const location = useLocation();
+
+  return (
+    <PublicErrorBoundary
+      language={language}
+      resetKey={`${language}:${location.pathname}`}
+    >
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/services" element={<LabServicesPage />} />
+        <Route path="/builder" element={<BuilderPage />} />
+        <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmationPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </PublicErrorBoundary>
+  );
+}
 
 function AppContent() {
   const { theme } = useThemeMode();
@@ -114,19 +140,7 @@ function AppContent() {
                 <ToastProvider>
                   <CartProvider>
                     <Layout>
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/products" element={<ProductsPage />} />
-                        <Route path="/products/:id" element={<ProductDetailPage />} />
-                        <Route path="/cart" element={<CartPage />} />
-                        <Route path="/checkout" element={<CheckoutPage />} />
-                        <Route path="/about" element={<AboutPage />} />
-                        <Route path="/contact" element={<ContactPage />} />
-                        <Route path="/services" element={<LabServicesPage />} />
-                        <Route path="/builder" element={<BuilderPage />} />
-                        <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmationPage />} />
-                        <Route path="*" element={<NotFoundPage />} />
-                      </Routes>
+                      <PublicRoutes language={language} />
                     </Layout>
                   </CartProvider>
                 </ToastProvider>

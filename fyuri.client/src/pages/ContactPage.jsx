@@ -30,29 +30,33 @@ function ContactPage() {
   const [searchParams] = useSearchParams();
   const serviceContext = searchParams.get('service');
   const productContext = (searchParams.get('product') || '').trim().slice(0, 120);
-  const [formData, setFormData] = useState(() => ({
+  const contextTemplate = productContext
+    ? t({
+        he: `אני מעוניין/ת לקבל מידע על ${productContext}. השאלה שלי:`,
+        en: `I would like expert guidance about ${productContext}. My question is:`,
+      })
+    : (
+      serviceContext === 'lab'
+        ? t({
+            he: 'אני מעוניין/ת בשירות מעבדה עבור מכשיר ראיית לילה. פרטי המכשיר והתקלה:',
+            en: 'I would like to request lab service for a night-vision device. Device and issue details:',
+          })
+        : ''
+    );
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: productContext
-      ? t({
-          he: `אני מעוניין/ת לקבל מידע על ${productContext}. השאלה שלי:`,
-          en: `I would like expert guidance about ${productContext}. My question is:`,
-        })
-      : (
-        serviceContext === 'lab'
-          ? t({
-              he: 'אני מעוניין/ת בשירות מעבדה עבור מכשיר ראיית לילה. פרטי המכשיר והתקלה:',
-              en: 'I would like to request lab service for a night-vision device. Device and issue details:',
-            })
-          : ''
-      ),
-  }));
+    message: '',
+  });
+  const [messageTouched, setMessageTouched] = useState(false);
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState(null);
+  const messageValue = messageTouched ? formData.message : contextTemplate;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    if (name === 'message') setMessageTouched(true);
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
@@ -64,11 +68,12 @@ function ContactPage() {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, message: messageValue }),
       });
       if (response.ok) {
         setStatus('success');
         setFormData({ name: '', email: '', phone: '', message: '' });
+        setMessageTouched(false);
       } else if (response.status === 429) {
         setStatus('rate-limited');
       } else {
@@ -119,7 +124,7 @@ function ContactPage() {
             <Box component="form" onSubmit={handleSubmit} noValidate={false}>
               {status === 'success' && (
                 <Alert severity="success" sx={{ my: 2 }}>
-                  {t({ he: 'הודעתך נשמרה ונשלחה בהצלחה.', en: 'Your message was saved and sent successfully.' })}
+                  {t({ he: 'ההודעה התקבלה ונשמרה בהצלחה.', en: 'Your message was received and saved successfully.' })}
                 </Alert>
               )}
               {status === 'rate-limited' && (
@@ -129,7 +134,7 @@ function ContactPage() {
               )}
               {status === 'error' && (
                 <Alert severity="error" sx={{ my: 2 }}>
-                  {t({ he: 'שליחת ההודעה נכשלה. נסו שוב או צרו קשר טלפונית.', en: 'The message could not be sent. Please retry or contact us by phone.' })}
+                  {t({ he: 'לא הצלחנו לקבל את ההודעה. נסו שוב או צרו קשר טלפונית.', en: 'The message could not be received. Please retry or contact us by phone.' })}
                 </Alert>
               )}
 
@@ -172,7 +177,7 @@ function ContactPage() {
                 fullWidth
                 label={t({ he: 'הודעה', en: 'Message' })}
                 name="message"
-                value={formData.message}
+                value={messageValue}
                 onChange={handleChange}
                 multiline
                 rows={7}

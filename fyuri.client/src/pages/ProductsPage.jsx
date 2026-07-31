@@ -12,10 +12,10 @@ import {
   HeadsetMicOutlined,
   List as ListIcon,
   MemoryOutlined,
+  ReceiptLongOutlined,
   Remove,
   ScienceOutlined,
   SettingsOutlined,
-  ShieldOutlined,
   ThermostatOutlined,
   TuneOutlined,
   ViewColumnOutlined,
@@ -182,6 +182,18 @@ const categoryContent = {
   },
 };
 
+const categoryHeroImages = {
+  all: '/images/catalog/catalog-monocular-hero-v2.webp',
+  monocular: '/images/catalog/catalog-monocular-hero-v2.webp',
+  binocular: '/images/products/pvs-31.jpg',
+  panoramic: '/images/products/quads.jpg',
+  intensifier: '/images/banners/image-intensifier.jpg',
+  optics: '/images/banners/optics.jpg',
+  thermal: '/images/banners/catalog-night-ops.webp',
+  housing: '/images/banners/night-vision.jpg',
+  accessories: '/images/banners/accessories.jpg',
+};
+
 const referenceImages = {
   'pvs-14': '/images/catalog/pvs-14-reference.webp',
   'pvs-14 pro': '/images/catalog/pvs-14-pro-reference.webp',
@@ -219,8 +231,8 @@ const localizedDescription = (product, language, t) => {
   if (specValues.length > 0) return specValues.slice(0, 2).join(' · ');
 
   return t({
-    he: 'ציוד מקצועי שנבחר ונבדק על ידי צוות FYURI.',
-    en: 'Professional equipment selected and tested by the FYURI team.',
+    he: 'ציוד מקצועי עם הכוונה להתאמה ולתאימות רכיבים.',
+    en: 'Professional equipment with guidance on fit and component compatibility.',
   });
 };
 
@@ -532,6 +544,7 @@ function ProductsPage() {
     ? searchParams.get('sort')
     : 'featured';
   const viewMode = searchParams.get('view') === 'list' ? 'list' : 'grid';
+  const showFavorites = searchParams.get('favorites') === '1';
   // React Router keeps the URLSearchParams object stable while updating its
   // contents, so these controlled-filter sets must be derived on every render.
   const selectedGenerations = new Set(searchParams.getAll('gen'));
@@ -621,10 +634,16 @@ function ProductsPage() {
       : products
   ), [activeCategory, products]);
 
+  const favoriteProducts = useMemo(() => (
+    showFavorites
+      ? categoryProducts.filter((product) => favorites.has(product.id))
+      : categoryProducts
+  ), [categoryProducts, favorites, showFavorites]);
+
   const searchedProducts = useMemo(() => {
-    if (!query) return categoryProducts;
+    if (!query) return favoriteProducts;
     const needle = query.toLocaleLowerCase(language === 'he' ? 'he' : 'en');
-    return categoryProducts.filter((product) => {
+    return favoriteProducts.filter((product) => {
       const haystack = [
         product.name,
         product.nameHebrew,
@@ -635,7 +654,7 @@ function ProductsPage() {
       ].join(' ').toLocaleLowerCase(language === 'he' ? 'he' : 'en');
       return haystack.includes(needle);
     });
-  }, [categoryProducts, language, query]);
+  }, [favoriteProducts, language, query]);
 
   const generationCounts = useMemo(() => {
     const counts = Object.fromEntries(generationOptions.map((option) => [option.key, 0]));
@@ -686,8 +705,8 @@ function ProductsPage() {
   const capabilities = [
     {
       icon: SettingsOutlined,
-      title: t({ he: 'שפופרות נבדקות בנפרד', en: 'Individually Tested Tubes' }),
-      detail: t({ he: 'כל מכשיר נבדק במעבדה', en: 'Every device tested in-house' }),
+      title: t({ he: 'מערכות ורכיבים', en: 'Systems & Components' }),
+      detail: t({ he: 'מכשירים, אופטיקה וחלקים', en: 'Devices, optics and professional parts' }),
     },
     {
       icon: ScienceOutlined,
@@ -695,9 +714,9 @@ function ProductsPage() {
       detail: t({ he: 'תחזוקה, תיקונים ושדרוגים', en: 'Maintenance, repairs, upgrades' }),
     },
     {
-      icon: ShieldOutlined,
-      title: t({ he: 'אחריות לשנתיים', en: '2 Year Warranty' }),
-      detail: t({ he: 'בנוי להחזיק מעמד', en: 'Built to last. We stand behind it.' }),
+      icon: TuneOutlined,
+      title: t({ he: 'התאמת רכיבים', en: 'Compatibility First' }),
+      detail: t({ he: 'כל רכיב מותאם למערכת', en: 'Every component matched to the system' }),
     },
     {
       icon: HeadsetMicOutlined,
@@ -705,15 +724,15 @@ function ProductsPage() {
       detail: t({ he: 'אנשים אמיתיים. מומחיות אמיתית.', en: 'Real people. Real expertise.' }),
     },
     {
-      icon: TuneOutlined,
-      title: t({ he: 'אפשרויות בנייה מותאמות', en: 'Custom Build Options' }),
-      detail: t({ he: 'התאמה מדויקת למשימה', en: 'Configure to your mission' }),
+      icon: ReceiptLongOutlined,
+      title: t({ he: 'הזמנה בתיאום', en: 'Request-Based Ordering' }),
+      detail: t({ he: 'ללא חיוב מקוון באתר', en: 'No online payment is processed' }),
     },
   ];
 
   const resultSummary = t({
-    he: `מציג ${displayProducts.length} מתוך ${categoryProducts.length} תוצאות`,
-    en: `Showing ${displayProducts.length} of ${categoryProducts.length} results`,
+    he: `מציג ${displayProducts.length} מתוך ${favoriteProducts.length} תוצאות`,
+    en: `Showing ${displayProducts.length} of ${favoriteProducts.length} results`,
   });
 
   return (
@@ -721,7 +740,7 @@ function ProductsPage() {
       <section className="reference-catalog-hero" aria-labelledby="reference-catalog-title">
         <img
           className="reference-catalog-hero__image"
-          src="/images/catalog/catalog-monocular-hero-v2.webp"
+          src={categoryHeroImages[activeCategory] || categoryHeroImages.all}
           alt=""
           width="1969"
           height="799"
@@ -796,6 +815,22 @@ function ProductsPage() {
 
             <div className="reference-catalog-summary" aria-live="polite">
               <span>{resultSummary}</span>
+              <button
+                type="button"
+                className={`reference-favorites-toggle${showFavorites ? ' is-active' : ''}`}
+                onClick={() => updateSearchParams((next) => {
+                  if (showFavorites) next.delete('favorites');
+                  else next.set('favorites', '1');
+                })}
+                aria-pressed={showFavorites}
+                aria-label={t({
+                  he: showFavorites ? 'הצג את כל המוצרים' : 'הצג מוצרים שמורים',
+                  en: showFavorites ? 'Show all products' : 'Show saved products',
+                })}
+              >
+                {showFavorites ? <Favorite aria-hidden="true" /> : <FavoriteBorder aria-hidden="true" />}
+                {t({ he: `שמורים ${favorites.size}`, en: `Saved ${favorites.size}` })}
+              </button>
               {query && (
                 <button
                   type="button"
@@ -871,14 +906,35 @@ function ProductsPage() {
           {!loading && !loadError && displayProducts.length === 0 && (
             <div className="reference-catalog-state reference-catalog-state--empty">
               <VisibilityOutlined aria-hidden="true" />
-              <strong>{t({ he: 'לא נמצאו מוצרים מתאימים', en: 'No matching products found' })}</strong>
-              <span>{t({ he: 'שנו את המסננים או נקו את החיפוש.', en: 'Adjust the filters or clear the search.' })}</span>
-              <button
-                type="button"
-                onClick={() => setSearchParams(activeCategory ? { category: activeCategory } : {})}
-              >
-                {t({ he: 'ניקוי מסננים', en: 'CLEAR FILTERS' })}
-              </button>
+              <strong>
+                {activeCategory && categoryProducts.length === 0
+                  ? t({ he: 'הקטגוריה זמינה בהתאמה אישית', en: 'This category is available by consultation' })
+                  : t({ he: 'לא נמצאו מוצרים מתאימים', en: 'No matching products found' })}
+              </strong>
+              <span>
+                {activeCategory && categoryProducts.length === 0
+                  ? t({
+                      he: 'דברו עם הצוות לגבי מערכת מתאימה, או חזרו לכל הקטלוג.',
+                      en: 'Talk with the team about the right system, or return to the complete catalog.',
+                    })
+                  : t({ he: 'שנו את המסננים או נקו את החיפוש.', en: 'Adjust the filters or clear the search.' })}
+              </span>
+              <div className="reference-catalog-state__actions">
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({})}
+                >
+                  {t({ he: 'הצגת כל המוצרים', en: 'VIEW ALL PRODUCTS' })}
+                </button>
+                {activeCategory && categoryProducts.length === 0 && (
+                  <RouterLink
+                    to={`/contact?product=${encodeURIComponent(t(hero.category))}`}
+                    className="reference-catalog-state__link"
+                  >
+                    {t({ he: 'דברו עם מומחה', en: 'ASK AN EXPERT' })}
+                  </RouterLink>
+                )}
+              </div>
             </div>
           )}
 

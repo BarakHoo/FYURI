@@ -536,17 +536,10 @@ function Navbar({ variant = 'default' }) {
         elevation={0}
         sx={{
           color: '#f4fbff',
-          background: isScrolled
-            ? (
-              mode === 'dark'
-                ? 'linear-gradient(100deg, rgba(6,18,29,0.98), rgba(13,47,66,0.98))'
-                : 'linear-gradient(100deg, rgba(7,40,76,0.98), rgba(13,71,120,0.98))'
-            )
-            : 'linear-gradient(180deg, rgba(2,9,15,0.9) 0%, rgba(2,9,15,0.62) 70%, rgba(2,9,15,0.34) 100%)',
-          backdropFilter: 'blur(10px)',
+          background: 'linear-gradient(180deg, #07131b 0%, #041018 100%)',
           boxShadow: isScrolled
-            ? '0 10px 32px rgba(0,0,0,0.28), inset 0 -1px 0 rgba(79,195,247,0.22)'
-            : 'inset 0 -1px 0 rgba(255,255,255,0.08)',
+            ? '0 10px 32px rgba(0,0,0,0.28), inset 0 -1px 0 rgba(66,186,242,0.24)'
+            : 'inset 0 -1px 0 rgba(66,186,242,0.16)',
           transition: 'background 220ms ease, box-shadow 220ms ease',
           '@media (prefers-reduced-motion: reduce)': {
             transition: 'none',

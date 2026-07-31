@@ -14,6 +14,8 @@ function Footer() {
   const productLinks = [
     { to: '/products', label: t({ he: 'כל המוצרים', en: 'All Products' }) },
     { to: '/products?category=monocular', label: t({ he: 'חד עיניות', en: 'Monoculars' }) },
+    { to: '/products?category=binocular', label: t({ he: 'דו עיניות', en: 'Binoculars' }) },
+    { to: '/products?category=thermal', label: t({ he: 'מערכות תרמיות', en: 'Thermal Systems' }) },
     { to: '/builder', label: t({ he: 'בניית מכשיר', en: 'Build Your Device' }) },
   ];
 
@@ -23,15 +25,29 @@ function Footer() {
         <Box className="fy-public-footer__grid">
           <Box>
             <Box
-              component="img"
-              className="fy-public-footer__logo"
-              src="/images/logos/fyuri-logo-transparent.png"
-              alt="FYURI"
-              width="230"
-              height="64"
-              loading="lazy"
-              decoding="async"
-            />
+              component={RouterLink}
+              to="/"
+              aria-label={t({ he: 'FYURI, דף הבית', en: 'FYURI, home' })}
+              sx={{
+                display: 'block',
+                width: 'fit-content',
+                '&:focus-visible': {
+                  outline: '2px solid #42baf2',
+                  outlineOffset: 4,
+                },
+              }}
+            >
+              <Box
+                component="img"
+                className="fy-public-footer__logo"
+                src="/images/logos/fyuri-logo-transparent.png"
+                alt="FYURI"
+                width="230"
+                height="64"
+                loading="lazy"
+                decoding="async"
+              />
+            </Box>
             <Typography sx={{ mt: 1.5, maxWidth: 360, color: '#91a5b0', lineHeight: 1.65 }}>
               {t({
                 he: 'מערכות ראיית לילה, רכיבים ושירותי מעבדה מקצועיים — עם ליווי אמיתי לפני ואחרי הרכישה.',
