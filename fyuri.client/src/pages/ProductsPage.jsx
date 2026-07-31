@@ -27,10 +27,13 @@ import {
   useLocation,
   useSearchParams,
 } from 'react-router';
-import { resolveAssetUrl } from '../apiConfig';
 import { productCategories } from '../components/navigationConfig';
 import { useLanguage } from '../context/LanguageContext';
 import { getBuilderUrl } from '../data/builderPresets';
+import {
+  getCuratedProductImage,
+  getProductImageCandidates,
+} from '../data/productImages';
 import './ProductsPage.css';
 
 const categoryOrder = [
@@ -194,16 +197,6 @@ const categoryHeroImages = {
   accessories: '/images/banners/accessories.jpg',
 };
 
-const referenceImages = {
-  'pvs-14': '/images/catalog/pvs-14-reference.webp',
-  'pvs-14 pro': '/images/catalog/pvs-14-pro-reference.webp',
-  'pvs-14 lite': '/images/catalog/pvs-14-lite-reference.webp',
-  'an/pvs-7': '/images/catalog/pvs-7-reference.webp',
-  'pvs-7': '/images/catalog/pvs-7-reference.webp',
-};
-
-const normalizeName = (value) => String(value || '').trim().toLowerCase();
-
 const normalizeGeneration = (value) => {
   const normalized = String(value || '').toLowerCase().replace(/\s/g, '');
   if (normalized.includes('3')) return '3';
@@ -234,16 +227,6 @@ const localizedDescription = (product, language, t) => {
     he: 'ציוד מקצועי עם הכוונה להתאמה ולתאימות רכיבים.',
     en: 'Professional equipment with guidance on fit and component compatibility.',
   });
-};
-
-const productImage = (product) => {
-  const reference = referenceImages[normalizeName(product.name)];
-  if (reference) return { src: reference, reference: true };
-
-  return {
-    src: resolveAssetUrl(product.thumbnailUrl || product.imageUrls?.[0]),
-    reference: false,
-  };
 };
 
 const productStock = (product, t) => {
@@ -392,10 +375,19 @@ function FilterPanel({
 }
 
 function ProductImage({ name, product }) {
-  const [failed, setFailed] = useState(false);
-  const image = productImage(product);
+  const candidates = useMemo(() => getProductImageCandidates(product), [product]);
+  const candidateSignature = candidates.join('|');
+  const [candidateState, setCandidateState] = useState({
+    index: 0,
+    signature: candidateSignature,
+  });
+  const candidateIndex = candidateState.signature === candidateSignature
+    ? candidateState.index
+    : 0;
+  const currentImage = candidates[candidateIndex];
+  const curatedImage = getCuratedProductImage(product);
 
-  if (!image.src || failed) {
+  if (!currentImage) {
     return (
       <div className="reference-product-card__image-fallback" role="img" aria-label={name}>
         <VisibilityOutlined aria-hidden="true" />
@@ -406,13 +398,16 @@ function ProductImage({ name, product }) {
 
   return (
     <img
-      className={image.reference ? undefined : 'reference-product-card__source-image'}
-      src={image.src}
+      className={currentImage === curatedImage ? undefined : 'reference-product-card__source-image'}
+      src={currentImage}
       alt={name}
       width="1600"
       height="960"
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => setCandidateState({
+        index: candidateIndex + 1,
+        signature: candidateSignature,
+      })}
     />
   );
 }

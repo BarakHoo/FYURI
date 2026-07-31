@@ -16,10 +16,10 @@ const product = {
   inStock: true,
   stockQuantity: 2,
   isActive: true,
-  thumbnailUrl: '/images/products/pvs-14-front.webp',
+  thumbnailUrl: '/images/products/pvs-14.jpg',
   imageUrls: [
-    '/images/products/pvs-14-front.webp',
-    '/images/products/pvs-14-side.webp',
+    '/images/products/pvs-14.jpg',
+    '/images/products/pvs-31.jpg',
   ],
   specifications: {
     Weight: '350 g',
@@ -57,7 +57,7 @@ async function mockProduct(page, value = product) {
 }
 
 test.describe('catalogue-style equipment pages', () => {
-  test('renders the complete API gallery, specifications, and product builder link', async ({ page }) => {
+  test('renders curated art with the complete API gallery, specifications, and builder link', async ({ page }) => {
     await mockBaseApis(page);
     await mockProduct(page);
     await page.goto('/products/42');
@@ -65,9 +65,9 @@ test.describe('catalogue-style equipment pages', () => {
     await expect(page.getByRole('heading', { name: 'PVS-14' })).toBeVisible();
     await expect(page.getByAltText('PVS-14')).toHaveAttribute(
       'src',
-      '/images/products/pvs-14-front.webp',
+      '/images/catalog/pvs-14-reference.webp',
     );
-    await expect(page.getByTestId('product-gallery-thumbnail')).toHaveCount(2);
+    await expect(page.getByTestId('product-gallery-thumbnail')).toHaveCount(3);
     await expect(page.getByText('350 g')).toBeVisible();
     await expect(page.getByText('IP67')).toBeVisible();
 
@@ -76,6 +76,27 @@ test.describe('catalogue-style equipment pages', () => {
     await configure.click();
     await expect(page).toHaveURL(/\/builder\?.*preset=pvs-14/);
     await expect(page.getByText('Starting configuration: PVS-14')).toBeVisible();
+  });
+
+  test('replaces a mismatched backend placeholder with generated SKU art', async ({ page }) => {
+    const barak = {
+      ...product,
+      id: 44,
+      sku: 'BNVD-BARAK',
+      name: 'BNVD - Barak',
+      productType: 'binocular',
+      thumbnailUrl: '/images/products/pvs-31.jpg',
+      imageUrls: [],
+    };
+    await mockBaseApis(page);
+    await mockProduct(page, barak);
+    await page.goto('/products/44');
+
+    await expect(page.getByAltText('BNVD - Barak')).toHaveAttribute(
+      'src',
+      '/images/catalog/products/bnvd-barak-v1.webp',
+    );
+    await expect(page.getByTestId('product-gallery-thumbnail')).toHaveCount(0);
   });
 
   test('does not offer an impossible quantity when tracked stock is zero', async ({ page }) => {

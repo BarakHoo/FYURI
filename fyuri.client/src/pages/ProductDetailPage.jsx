@@ -24,11 +24,14 @@ import {
   useNavigate,
   useParams,
 } from 'react-router';
-import { resolveAssetUrl } from '../apiConfig';
 import PublicPageShell from '../components/PublicPageShell';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getBuilderUrl } from '../data/builderPresets';
+import {
+  getProductGalleryImages,
+  getProductImageCandidates,
+} from '../data/productImages';
 import { formatGeneration } from '../utils/generationUtils';
 import './EquipmentPages.css';
 
@@ -64,13 +67,6 @@ const humanizeSpecificationKey = (key) => String(key)
   .replace(/[_-]+/g, ' ')
   .replace(/\b\w/g, (character) => character.toUpperCase());
 
-const productImages = (product) => {
-  const paths = [product?.thumbnailUrl, ...(product?.imageUrls || [])]
-    .filter((path) => typeof path === 'string' && path.trim())
-    .map((path) => resolveAssetUrl(path.trim()));
-  return [...new Set(paths)];
-};
-
 function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -85,6 +81,7 @@ function ProductDetailPage() {
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
   const [selectedImage, setSelectedImage] = useState('');
+  const [failedImages, setFailedImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const { addToCart } = useCart();
@@ -101,6 +98,7 @@ function ProductDetailPage() {
       setTubes([]);
       setG24Mount(null);
       setSelectedImage('');
+      setFailedImages([]);
       setAddError('');
 
       try {
@@ -187,10 +185,15 @@ function ProductDetailPage() {
     }
   };
 
-  const images = useMemo(() => productImages(product), [product]);
-  const currentImage = selectedImage && images.includes(selectedImage)
+  const imageCandidates = useMemo(() => getProductImageCandidates(product), [product]);
+  const galleryImages = useMemo(() => getProductGalleryImages(product), [product]);
+  const availableGalleryImages = galleryImages.filter((image) => !failedImages.includes(image));
+  const availableImages = availableGalleryImages.length > 0
+    ? availableGalleryImages
+    : imageCandidates.filter((image) => !failedImages.includes(image));
+  const currentImage = selectedImage && availableImages.includes(selectedImage)
     ? selectedImage
-    : images[0];
+    : availableImages[0];
 
   if (loading) {
     return (
@@ -367,10 +370,16 @@ function ProductDetailPage() {
           <div className="equipment-media-panel__main">
             {currentImage ? (
               <img
+                key={currentImage}
                 src={currentImage}
                 alt={productName}
                 decoding="async"
                 fetchPriority="high"
+                onError={() => setFailedImages((current) => (
+                  current.includes(currentImage)
+                    ? current
+                    : [...current, currentImage]
+                ))}
               />
             ) : (
               <div className="equipment-image-fallback">
@@ -383,9 +392,9 @@ function ProductDetailPage() {
             </span>
           </div>
 
-          {images.length > 1 && (
+          {availableImages.length > 1 && (
             <div className="equipment-thumbnail-list" role="list">
-              {images.map((image, index) => (
+              {availableImages.map((image, index) => (
                 <button
                   key={image}
                   type="button"
@@ -393,12 +402,20 @@ function ProductDetailPage() {
                   onClick={() => setSelectedImage(image)}
                   aria-pressed={image === currentImage}
                   aria-label={t({
-                    he: `הצגת תמונה ${index + 1} מתוך ${images.length}`,
-                    en: `Show image ${index + 1} of ${images.length}`,
+                    he: `הצגת תמונה ${index + 1} מתוך ${availableImages.length}`,
+                    en: `Show image ${index + 1} of ${availableImages.length}`,
                   })}
                   data-testid="product-gallery-thumbnail"
                 >
-                  <img src={image} alt="" loading="lazy" decoding="async" />
+                  <img
+                    src={image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setFailedImages((current) => (
+                      current.includes(image) ? current : [...current, image]
+                    ))}
+                  />
                 </button>
               ))}
             </div>
