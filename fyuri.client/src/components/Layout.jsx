@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Container, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import TopBar from './TopBar';
 import { useLocation } from 'react-router';
+import '../PublicSite.css';
 
-function Layout({ children, fullWidth = false }) {
+function Layout({ children }) {
   const location = useLocation();
-  const catalogReferenceHeader = location.pathname === '/products';
+  const referenceHeader = true;
   const [topBarCollapsed, setTopBarCollapsed] = useState(
     () => typeof window !== 'undefined' && window.scrollY > 12,
-  );
-  const useFullWidthContent = (
-    fullWidth
-    || location.pathname === '/'
-    || location.pathname === '/products'
   );
 
   useEffect(() => {
@@ -42,31 +38,36 @@ function Layout({ children, fullWidth = false }) {
     };
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
   return (
     <Box 
+      className="fy-public-shell"
       sx={{ 
         '--site-topbar-height': {
           xs: '0px',
-          md: catalogReferenceHeader ? '38px' : '44px',
+          md: referenceHeader ? '38px' : '44px',
         },
         '--site-navbar-height': {
           xs: '64px',
           md: '64px',
-          lg: catalogReferenceHeader ? '93px' : '64px',
+          lg: referenceHeader ? '93px' : '64px',
         },
         '--site-header-height': {
           xs: '64px',
           md: topBarCollapsed
             ? '64px'
-            : (catalogReferenceHeader ? '102px' : '108px'),
+            : (referenceHeader ? '102px' : '108px'),
           lg: topBarCollapsed
-            ? (catalogReferenceHeader ? '93px' : '64px')
-            : (catalogReferenceHeader ? '131px' : '108px'),
+            ? (referenceHeader ? '93px' : '64px')
+            : (referenceHeader ? '131px' : '108px'),
         },
         '--site-header-reserved-height': {
           xs: '64px',
-          md: catalogReferenceHeader ? '102px' : '108px',
-          lg: catalogReferenceHeader ? '131px' : '108px',
+          md: referenceHeader ? '102px' : '108px',
+          lg: referenceHeader ? '131px' : '108px',
         },
         display: 'flex', 
         flexDirection: 'column', 
@@ -78,9 +79,15 @@ function Layout({ children, fullWidth = false }) {
           position: 'sticky',
           top: 0,
           zIndex: 'appBar',
-          height: 'var(--site-header-reserved-height)',
+          height: topBarCollapsed
+            ? 'var(--site-navbar-height)'
+            : 'var(--site-header-reserved-height)',
           flexShrink: 0,
           pointerEvents: 'none',
+          transition: 'height 220ms ease',
+          '@media (prefers-reduced-motion: reduce)': {
+            transition: 'none',
+          },
         }}
       >
         <Box
@@ -102,24 +109,18 @@ function Layout({ children, fullWidth = false }) {
             },
           }}
         >
-          <TopBar variant={catalogReferenceHeader ? 'catalog-reference' : 'default'} />
+          <TopBar variant={referenceHeader ? 'catalog-reference' : 'default'} />
         </Box>
         <Box sx={{ pointerEvents: 'auto' }}>
           <Navbar
-            key={`${location.key}:${location.pathname}:${location.search}`}
-            variant={catalogReferenceHeader ? 'catalog-reference' : 'default'}
+            key={location.pathname}
+            variant={referenceHeader ? 'catalog-reference' : 'default'}
           />
         </Box>
       </Box>
-      {useFullWidthContent ? (
-        <Box component="main" sx={{ flex: 1 }}>
-          {children}
-        </Box>
-      ) : (
-        <Container component="main" sx={{ flex: 1, py: 4 }}>
-          {children}
-        </Container>
-      )}
+      <Box component="main" className="fy-site-main" sx={{ flex: 1 }}>
+        {children}
+      </Box>
       <Footer />
     </Box>
   );

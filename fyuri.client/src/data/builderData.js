@@ -12,6 +12,16 @@ export const deviceTypes = [
     descriptionHe: 'ערוץ יחיד — קל וקומפקטי',
     descriptionEn: 'Single channel — light & compact',
     tubes: 1,
+    componentQuantities: { tube: 1, objective: 1, eyepiece: 1 },
+  },
+  {
+    id: 'biocular',
+    nameHe: 'דו-עיני, שפופרת יחידה',
+    nameEn: 'Bi-ocular',
+    descriptionHe: 'שפופרת אחת ושתי עיניות — תצורת PVS-7',
+    descriptionEn: 'Single tube with dual eyepieces — PVS-7 configuration',
+    tubes: 1,
+    componentQuantities: { tube: 1, objective: 1, eyepiece: 2 },
   },
   {
     id: 'binocular',
@@ -20,6 +30,7 @@ export const deviceTypes = [
     descriptionHe: 'שני ערוצים — תפיסת עומק מלאה',
     descriptionEn: 'Dual channel — full depth perception',
     tubes: 2,
+    componentQuantities: { tube: 2, objective: 2, eyepiece: 2 },
   },
   {
     id: 'panoramic',
@@ -28,6 +39,7 @@ export const deviceTypes = [
     descriptionHe: 'ארבעה ערוצים — שדה ראייה רחב',
     descriptionEn: 'Quad channel — extended field of view',
     tubes: 4,
+    componentQuantities: { tube: 4, objective: 4, eyepiece: 4 },
   },
 ];
 
@@ -65,6 +77,17 @@ export const builderCategories = [
         available: true,
         specsHe: 'קלה במיוחד להרכבת קסדה, תואמת אופטיקת PVS-14',
         specsEn: 'Minimal weight for helmet use, PVS-14 spec optics',
+      },
+      {
+        id: 'housing-pvs7',
+        deviceTypes: ['biocular'],
+        nameHe: 'גוף AN/PVS-7 דו-עיני',
+        nameEn: 'AN/PVS-7 Bi-ocular Housing',
+        price: 2900,
+        weightGrams: 390,
+        available: true,
+        specsHe: 'תצורה צבאית מוכחת עם שפופרת יחידה ושתי עיניות',
+        specsEn: 'Proven military configuration with one tube and two eyepieces',
       },
       // --- Binocular housings ---
       {
@@ -335,6 +358,7 @@ export const builderCategories = [
     options: [
       {
         id: 'mount-dovetail-only',
+        deviceTypes: ['monocular', 'binocular', 'panoramic'],
         nameHe: 'Dovetail בלבד (כלול)',
         nameEn: 'Dovetail Only (Included)',
         price: 0,
@@ -345,6 +369,7 @@ export const builderCategories = [
       },
       {
         id: 'mount-g24',
+        deviceTypes: ['monocular', 'binocular', 'panoramic'],
         nameHe: 'הוסף תושבת G24',
         nameEn: 'Add G24 Mount',
         price: 2600,
@@ -352,6 +377,17 @@ export const builderCategories = [
         available: true,
         specsHe: 'תושבת קסדה פרופיל נמוך, כוונון גובה מדויק, שחרור מהיר',
         specsEn: 'Low-profile helmet mount, fine height adjust, quick release',
+      },
+      {
+        id: 'mount-pvs7-bayonet',
+        deviceTypes: ['biocular'],
+        nameHe: 'חיבור Bayonet ל-PVS-7 (כלול)',
+        nameEn: 'PVS-7 Bayonet Interface (Included)',
+        price: 0,
+        weightGrams: 0,
+        available: true,
+        specsHe: 'ממשק הקסדה הסטנדרטי של AN/PVS-7',
+        specsEn: 'Standard AN/PVS-7 helmet interface',
       },
     ],
   },
@@ -410,3 +446,10 @@ export const getOptionsForDevice = (category, deviceTypeId) =>
 
 export const getTubeCount = (deviceTypeId) =>
   deviceTypes.find((d) => d.id === deviceTypeId)?.tubes ?? 1;
+
+// Component quantity is device-specific. Most multi-channel devices use the
+// same count for tubes and optics, while bi-ocular systems such as the PVS-7
+// use one tube/objective and two eyepieces.
+export const getComponentQuantity = (deviceTypeId, categoryId) =>
+  deviceTypes.find((d) => d.id === deviceTypeId)
+    ?.componentQuantities?.[categoryId] ?? 1;

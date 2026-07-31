@@ -29,13 +29,36 @@ public static class BuilderCatalog
     public static readonly IReadOnlyDictionary<string, int> DeviceTypes = new Dictionary<string, int>
     {
         ["monocular"] = 1,
+        ["biocular"] = 1,
         ["binocular"] = 2,
         ["panoramic"] = 4,
     };
 
+    /// <summary>
+    /// Quantities for device-specific repeated components. Bi-ocular systems
+    /// use a single tube and objective but feed two eyepieces.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<(string DeviceType, string CategoryId), int> ComponentQuantities =
+        new Dictionary<(string, string), int>
+        {
+            [("monocular", "tube")] = 1,
+            [("monocular", "objective")] = 1,
+            [("monocular", "eyepiece")] = 1,
+            [("biocular", "tube")] = 1,
+            [("biocular", "objective")] = 1,
+            [("biocular", "eyepiece")] = 2,
+            [("binocular", "tube")] = 2,
+            [("binocular", "objective")] = 2,
+            [("binocular", "eyepiece")] = 2,
+            [("panoramic", "tube")] = 4,
+            [("panoramic", "objective")] = 4,
+            [("panoramic", "eyepiece")] = 4,
+        };
+
     public static readonly IReadOnlyDictionary<string, string> DeviceTypeNamesEn = new Dictionary<string, string>
     {
         ["monocular"] = "Monocular",
+        ["biocular"] = "Bi-ocular",
         ["binocular"] = "Binocular",
         ["panoramic"] = "Panoramic",
     };
@@ -43,6 +66,7 @@ public static class BuilderCatalog
     public static readonly IReadOnlyDictionary<string, string> DeviceTypeNamesHe = new Dictionary<string, string>
     {
         ["monocular"] = "חד עיניים",
+        ["biocular"] = "דו-עיני, שפופרת יחידה",
         ["binocular"] = "דו עיניים",
         ["panoramic"] = "ארבע-עיניים",
     };
@@ -53,6 +77,7 @@ public static class BuilderCatalog
         [
             new("housing-pvs14", "PVS-14 Mil-Spec Housing", "גוף PVS-14 Mil-Spec", 2900m, 180, true, ["monocular"]),
             new("housing-mono-ultralight", "Nocturn Talon Ultralight", "גוף Nocturn Talon אולטרה-קל", 4400m, 130, true, ["monocular"]),
+            new("housing-pvs7", "AN/PVS-7 Bi-ocular Housing", "גוף AN/PVS-7 דו-עיני", 2900m, 390, true, ["biocular"]),
             new("housing-rnvg", "RNVG — Rugged Fixed Bridge", "RNVG — גשר קשיח", 7400m, 460, true, ["binocular"]),
             new("housing-dtnvs", "DTNVS — Articulating Bridge", "DTNVS — גשר מתקפל", 9250m, 420, true, ["binocular"]),
             new("housing-argus-bnvd", "Argus MK2 BNVD 1431", "Argus MK2 BNVD 1431", 8600m, 440, true, ["binocular"]),
@@ -87,8 +112,9 @@ public static class BuilderCatalog
         ]),
         new BuilderCategory("mount", "Mount", "תושבת", Required: false, PerChannel: false,
         [
-            new("mount-dovetail-only", "Dovetail Only (Included)", "Dovetail בלבד (כלול)", 0m, 0, true),
-            new("mount-g24", "Add G24 Mount", "הוסף תושבת G24", 2600m, 115, true),
+            new("mount-dovetail-only", "Dovetail Only (Included)", "Dovetail בלבד (כלול)", 0m, 0, true, ["monocular", "binocular", "panoramic"]),
+            new("mount-g24", "Add G24 Mount", "הוסף תושבת G24", 2600m, 115, true, ["monocular", "binocular", "panoramic"]),
+            new("mount-pvs7-bayonet", "PVS-7 Bayonet Interface (Included)", "חיבור Bayonet ל-PVS-7 (כלול)", 0m, 0, true, ["biocular"]),
         ]),
         new BuilderCategory("illuminator", "IR Illuminator", "מאיר IR", Required: false, PerChannel: false,
         [
@@ -104,4 +130,9 @@ public static class BuilderCatalog
     public static BuilderOption? FindOption(BuilderCategory category, string optionId, string deviceType) =>
         category.Options.FirstOrDefault(o =>
             o.Id == optionId && (o.DeviceTypes == null || o.DeviceTypes.Contains(deviceType)));
+
+    public static int GetComponentQuantity(string deviceType, string categoryId) =>
+        ComponentQuantities.TryGetValue((deviceType, categoryId), out var quantity)
+            ? quantity
+            : 1;
 }

@@ -51,8 +51,8 @@ function MobileNavigationDrawer({
 }) {
   const closeButtonRef = useRef(null);
   const isRtl = language === 'he';
-  const accentColor = mode === 'dark' ? '#b8ff3d' : '#2d6500';
-  const accentTextColor = mode === 'dark' ? '#e9ffc7' : '#173900';
+  const accentColor = mode === 'dark' ? '#42baf2' : '#0d5f8a';
+  const accentTextColor = mode === 'dark' ? '#d8f3ff' : '#0d4663';
   const cyanColor = mode === 'dark' ? '#4fc3f7' : '#0d5f8a';
 
   useEffect(() => {
@@ -376,16 +376,16 @@ function MobileNavigationDrawer({
                 justifyContent: 'flex-start',
                 borderRadius: 1.5,
                 color: accentTextColor,
-                border: `1px solid ${mode === 'dark' ? 'rgba(184, 255, 61, 0.64)' : 'rgba(45, 101, 0, 0.62)'}`,
+                border: `1px solid ${mode === 'dark' ? 'rgba(66, 186, 242, 0.64)' : 'rgba(13, 95, 138, 0.62)'}`,
                 background:
-                  'linear-gradient(110deg, rgba(184,255,61,0.14), rgba(79,195,247,0.08))',
-                boxShadow: `inset 3px 0 0 ${accentColor}, 0 0 20px rgba(184,255,61,0.08)`,
+                  'linear-gradient(110deg, rgba(66,186,242,0.14), rgba(79,195,247,0.08))',
+                boxShadow: `inset 3px 0 0 ${accentColor}, 0 0 20px rgba(66,186,242,0.08)`,
                 fontWeight: 800,
                 '&:hover, &:focus-visible': {
                   borderColor: accentColor,
                   backgroundColor: mode === 'dark'
-                    ? 'rgba(184,255,61,0.16)'
-                    : 'rgba(45,101,0,0.13)',
+                    ? 'rgba(66,186,242,0.16)'
+                    : 'rgba(13,95,138,0.13)',
                   outline: `2px solid ${accentColor}`,
                   outlineOffset: 2,
                 },

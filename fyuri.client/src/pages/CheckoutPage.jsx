@@ -11,11 +11,12 @@ import {
 } from '@mui/material';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
+import PublicPageShell from '../components/PublicPageShell';
 
 function CheckoutPage() {
   const navigate = useNavigate();
   const { cart, getCartTotal, clearCart } = useCart();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [products, setProducts] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,30 +40,36 @@ function CheckoutPage() {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     if (cart.length === 0 && !orderSubmitted) {
       navigate('/cart');
-      return;
+      return undefined;
     }
-    if (cart.length > 0) {
-      fetchProducts();
-    }
-  }, [cart, navigate, orderSubmitted]);
 
-  const fetchProducts = async () => {
-    const productMap = {};
-    for (const item of cart) {
-      try {
-        const response = await fetch(`/api/products/${item.productId}`);
-        if (response.ok) {
-          const product = await response.json();
-          productMap[item.productId] = product;
+    if (cart.length > 0) {
+      const loadProducts = async () => {
+        const productMap = {};
+        for (const item of cart) {
+          try {
+            const response = await fetch(`/api/products/${item.productId}`);
+            if (response.ok) {
+              productMap[item.productId] = await response.json();
+            }
+          } catch (error) {
+            console.error('Failed to fetch product:', error);
+          }
         }
-      } catch (error) {
-        console.error('Failed to fetch product:', error);
-      }
+        if (!cancelled) setProducts(productMap);
+      };
+
+      loadProducts();
     }
-    setProducts(productMap);
-  };
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart, navigate, orderSubmitted]);
 
   const validateField = (name, value) => {
     let error = '';
@@ -208,10 +215,14 @@ function CheckoutPage() {
   };
 
   return (
-    <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        {t({ he: 'השלמת הזמנה', en: 'Checkout' })}
-      </Typography>
+    <PublicPageShell
+      eyebrow={t({ he: 'FYURI / פרטי הזמנה', en: 'FYURI / ORDER DETAILS' })}
+      title={t({ he: 'השאירו פרטים להשלמת ההזמנה.', en: 'Leave your details to finalize the order.' })}
+      description={t({
+        he: 'לא מתבצע תשלום באתר. לאחר שליחת הבקשה נציג יחזור אליכם לאימות המפרט, המחיר והמשלוח.',
+        en: 'No payment is processed online. After submission, our team will verify the configuration, price and delivery with you.',
+      })}
+    >
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -219,7 +230,7 @@ function CheckoutPage() {
         </Alert>
       )}
 
-      <Alert severity="info" sx={{ mb: 3 }}>
+      <Alert severity="info" sx={{ mb: 3, textAlign: 'start' }}>
         {t({
           he: 'שימו לב: תשלום לא מתבצע באתר. נציג שלנו יצור איתכם קשר לסיום ההזמנה ותיאום משלוח. נשמח לענות על כל שאלה ולעזור לכם לבחור את הציוד המושלם.',
           en: 'Note: No payment is processed on the website. Our representative will contact you to finalize your order and arrange delivery. We\'re happy to answer any questions and help you choose the perfect equipment.'
@@ -228,8 +239,9 @@ function CheckoutPage() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
+          <Paper className="fy-panel" sx={{ p: { xs: 2.5, sm: 3.5 }, textAlign: 'start' }}>
+            <span className="fy-section-kicker">{t({ he: 'פרטי קשר', en: 'Contact details' })}</span>
+            <Typography component="h2" variant="h5" gutterBottom sx={{ fontWeight: 800 }}>
               {t({ he: 'פרטי הלקוח', en: 'Customer Information' })}
             </Typography>
             <Box component="form" onSubmit={handleSubmit}>
@@ -243,6 +255,8 @@ function CheckoutPage() {
                 margin="normal"
                 error={!!formErrors.customerName}
                 helperText={formErrors.customerName}
+                autoComplete="name"
+                inputProps={{ maxLength: 200 }}
               />
               <TextField
                 required
@@ -255,6 +269,8 @@ function CheckoutPage() {
                 margin="normal"
                 error={!!formErrors.customerEmail}
                 helperText={formErrors.customerEmail}
+                autoComplete="email"
+                inputProps={{ maxLength: 200 }}
               />
               <TextField
                 required
@@ -267,6 +283,8 @@ function CheckoutPage() {
                 error={!!formErrors.customerPhone}
                 helperText={formErrors.customerPhone}
                 placeholder={t({ he: '050-1234567', en: '050-1234567' })}
+                autoComplete="tel"
+                inputProps={{ maxLength: 50 }}
               />
               <TextField
                 fullWidth
@@ -277,6 +295,8 @@ function CheckoutPage() {
                 margin="normal"
                 error={!!formErrors.customerAddress}
                 helperText={formErrors.customerAddress}
+                autoComplete="street-address"
+                inputProps={{ maxLength: 500 }}
               />
               <TextField
                 fullWidth
@@ -287,6 +307,8 @@ function CheckoutPage() {
                 margin="normal"
                 error={!!formErrors.customerCity}
                 helperText={formErrors.customerCity}
+                autoComplete="address-level2"
+                inputProps={{ maxLength: 100 }}
               />
               <TextField
                 fullWidth
@@ -297,6 +319,7 @@ function CheckoutPage() {
                 multiline
                 rows={4}
                 margin="normal"
+                inputProps={{ maxLength: 2000 }}
               />
               <Button
                 type="submit"
@@ -317,17 +340,14 @@ function CheckoutPage() {
 
         <Grid item xs={12} md={4}>
           <Paper
+            className="fy-panel fy-sticky-summary"
             sx={{
               p: 3,
-              position: 'sticky',
-              top: 'calc(var(--site-header-height) + 16px)',
-              transition: (theme) => theme.transitions.create(
-                'top',
-                { duration: theme.transitions.duration.shorter },
-              ),
+              textAlign: 'start',
             }}
           >
-            <Typography variant="h5" gutterBottom>
+            <span className="fy-section-kicker">{t({ he: 'סיכום', en: 'Summary' })}</span>
+            <Typography component="h2" variant="h5" gutterBottom sx={{ fontWeight: 800 }}>
               {t({ he: 'סיכום הזמנה', en: 'Order Summary' })}
             </Typography>
             <Box sx={{ my: 2 }}>
@@ -336,7 +356,9 @@ function CheckoutPage() {
                 return (
                   <Box key={item.id} sx={{ mb: 2 }}>
                     <Typography variant="body2">
-                      {product?.nameHebrew || product?.name} x{item.quantity}
+                      {language === 'he'
+                        ? (product?.nameHebrew || product?.name)
+                        : product?.name} ×{item.quantity}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       ₪{(item.priceAtAddTime * item.quantity).toLocaleString()}
@@ -362,7 +384,7 @@ function CheckoutPage() {
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </PublicPageShell>
   );
 }
 

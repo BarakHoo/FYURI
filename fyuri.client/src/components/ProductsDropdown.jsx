@@ -20,8 +20,8 @@ function ProductsDropdown({
   const { t, language } = useLanguage();
   const { mode } = useThemeMode();
   const isRtl = language === 'he';
-  const accentColor = mode === 'dark' ? '#b8ff3d' : '#2d6500';
-  const cyanColor = mode === 'dark' ? '#4fc3f7' : '#0d5f8a';
+  const accentColor = mode === 'dark' ? '#42baf2' : '#0d5f8a';
+  const cyanColor = accentColor;
 
   return (
     <Popover
@@ -119,9 +119,9 @@ function ProductsDropdown({
               minHeight: 44,
               flexShrink: 0,
               color: accentColor,
-              border: `1px solid ${mode === 'dark' ? 'rgba(184,255,61,0.46)' : 'rgba(45,101,0,0.48)'}`,
+              border: `1px solid ${mode === 'dark' ? 'rgba(66,186,242,0.46)' : 'rgba(13,95,138,0.48)'}`,
               '&:hover, &:focus-visible': {
-                bgcolor: mode === 'dark' ? 'rgba(184,255,61,0.1)' : 'rgba(45,101,0,0.09)',
+                bgcolor: mode === 'dark' ? 'rgba(66,186,242,0.1)' : 'rgba(13,95,138,0.09)',
                 borderColor: accentColor,
                 outline: `2px solid ${accentColor}`,
                 outlineOffset: 2,
@@ -187,8 +187,8 @@ function ProductsDropdown({
                           '& .product-nav-icon': {
                             color: accentColor,
                             borderColor: mode === 'dark'
-                              ? 'rgba(184,255,61,0.45)'
-                              : 'rgba(45,101,0,0.48)',
+                              ? 'rgba(66,186,242,0.45)'
+                              : 'rgba(13,95,138,0.48)',
                           },
                         },
                         '@media (prefers-reduced-motion: reduce)': {

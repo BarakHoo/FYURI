@@ -65,6 +65,9 @@ test.describe('homepage positioning and conversion', () => {
     const builderCta = page.getByTestId('hero-builder-cta');
     const whatsappCta = page.getByTestId('hero-whatsapp-cta');
     const labServicesCta = page.getByTestId('lab-services-cta');
+    const allCategoriesCta = page.getByTestId('home-all-categories-cta');
+    const builderSectionCta = page.getByTestId('home-builder-section-cta');
+    const contactPageCta = page.getByTestId('contact-page-cta');
 
     await expect(headings).toHaveCount(1);
     await expect(headings).toContainText(/\S/);
@@ -73,8 +76,38 @@ test.describe('homepage positioning and conversion', () => {
     await expect(builderCta).toHaveAttribute('href', '/builder');
     await expect(whatsappCta).toHaveAttribute('href', 'https://wa.me/972544770200');
     await expect(labServicesCta).toHaveAttribute('href', '/services');
+    await expect(allCategoriesCta).toHaveAttribute('href', '/products');
+    await expect(builderSectionCta).toHaveAttribute('href', '/builder');
+    await expect(contactPageCta).toHaveAttribute('href', '/contact');
 
-    for (const cta of [catalogCta, builderCta, whatsappCta, labServicesCta]) {
+    const capabilityPaths = await page
+      .getByTestId('home-capability-paths')
+      .getByRole('link')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+    expect(capabilityPaths).toEqual(['/products', '/builder', '/services']);
+
+    const categoryPaths = {
+      monocular: '/products?category=monocular',
+      binocular: '/products?category=binocular',
+      panoramic: '/products?category=panoramic',
+      intensifier: '/products?category=intensifier',
+    };
+
+    for (const [category, path] of Object.entries(categoryPaths)) {
+      const categoryLink = page.getByTestId(`home-category-${category}`);
+      await expect(categoryLink).toHaveAttribute('href', path);
+      await expect(categoryLink).toHaveAccessibleName(/\S/);
+    }
+
+    for (const cta of [
+      catalogCta,
+      builderCta,
+      whatsappCta,
+      labServicesCta,
+      allCategoriesCta,
+      builderSectionCta,
+      contactPageCta,
+    ]) {
       await expect(cta).toBeVisible();
       await expect(cta).toHaveAccessibleName(/\S/);
     }
@@ -83,8 +116,8 @@ test.describe('homepage positioning and conversion', () => {
   test('serves the responsive FYURI identity system and installable-site assets', async ({ page, request }) => {
     await visitHome(page);
 
-    const headerLogo = page.getByTestId('site-logo-link').getByTestId('fyuri-logo');
-    await expect(headerLogo).toHaveAttribute('src', '/brand/fyuri-lockup-on-dark.svg');
+    const headerLogo = page.getByTestId('site-logo-link').locator('img');
+    await expect(headerLogo).toHaveAttribute('src', '/images/logos/fyuri-logo-transparent.png');
 
     const renderedLogo = await headerLogo.evaluate((image) => ({
       complete: image.complete,
@@ -92,8 +125,8 @@ test.describe('homepage positioning and conversion', () => {
       naturalHeight: image.naturalHeight,
     }));
     expect(renderedLogo.complete).toBe(true);
-    expect(renderedLogo.naturalWidth).toBe(222);
-    expect(renderedLogo.naturalHeight).toBe(64);
+    expect(renderedLogo.naturalWidth).toBeGreaterThan(0);
+    expect(renderedLogo.naturalHeight).toBeGreaterThan(0);
 
     const assetPaths = [
       '/favicon.svg',
@@ -252,36 +285,41 @@ test.describe('homepage positioning and conversion', () => {
     await expect(page.locator('main svg[role="img"]')).toHaveAttribute('aria-label', /\S/);
   });
 
-  test('switches localized content and document direction between Hebrew and English', async ({ page }) => {
+  test('starts in English and switches localized content and document direction to Hebrew', async ({ page }) => {
     await visitHome(page);
 
     const root = page.locator('html');
-
-    await expect(root).toHaveAttribute('lang', 'he');
-    await expect(root).toHaveAttribute('dir', 'rtl');
-
-    await page.getByTestId('language-toggle').click();
+    const heroHeading = page.locator('main h1');
+    const englishHeading = await heroHeading.textContent();
 
     await expect(root).toHaveAttribute('lang', 'en');
     await expect(root).toHaveAttribute('dir', 'ltr');
-    await expect(page.locator('main h1')).toContainText(/Night vision systems/i);
+    await expect(heroHeading).toContainText(/Night vision systems/i);
     await expect(page.getByTestId('hero-catalog-cta')).toHaveAccessibleName(/View catalog/i);
+
+    await page.getByTestId('language-toggle').click();
+
+    await expect(root).toHaveAttribute('lang', 'he');
+    await expect(root).toHaveAttribute('dir', 'rtl');
+    await expect(heroHeading).toContainText(/[\u0590-\u05ff]/);
+    await expect(heroHeading).not.toHaveText(englishHeading ?? '');
+    await expect(page.getByTestId('hero-catalog-cta')).toHaveAccessibleName(/[\u0590-\u05ff]/);
+    await expect(page.getByTestId('home-category-monocular')).toHaveAccessibleName(/[\u0590-\u05ff]/);
   });
 
   test('keeps light-theme section labels and keyboard focus visibly contrasted', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('themeMode', 'light'));
     await visitHome(page);
 
-    await page.getByRole('button', { name: /מצב בהיר|light/i }).click();
-
     const sectionLabel = page.getByText('CATALOG / 01', { exact: true });
-    const categoriesLink = page.getByRole('link', { name: 'כל הקטגוריות' });
+    const categoriesLink = page.getByRole('link', { name: 'All categories' });
 
     await expect(sectionLabel).toHaveCSS('color', 'rgb(13, 95, 138)');
 
     await page.getByTestId('home-capability-paths').getByRole('link').last().focus();
     await page.keyboard.press('Tab');
     await expect(categoriesLink).toBeFocused();
-    await expect(categoriesLink).toHaveCSS('outline-color', 'rgb(45, 101, 0)');
+    await expect(categoriesLink).toHaveCSS('outline-color', 'rgb(13, 95, 138)');
     await expect(categoriesLink).toHaveCSS('outline-style', 'solid');
   });
 

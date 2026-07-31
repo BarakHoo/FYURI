@@ -18,7 +18,12 @@ import { Close, RestartAlt, CheckCircle, ErrorOutline, ViewInAr, Architecture, A
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { BuilderProvider, useBuilder } from '../context/BuilderContext';
-import { builderCategories, deviceTypes, getOptionsForDevice, getTubeCount } from '../data/builderData';
+import {
+  builderCategories,
+  deviceTypes,
+  getComponentQuantity,
+  getOptionsForDevice,
+} from '../data/builderData';
 import Device3D from '../components/builder/Device3D';
 
 const ACCENT = '#00C8FF';
@@ -258,8 +263,8 @@ function ConfigPanel() {
   if (!category) return null;
 
   const options = getOptionsForDevice(category, deviceType);
-  const tubeCount = getTubeCount(deviceType);
-  const perChannelNote = category.perChannel && tubeCount > 1;
+  const componentQuantity = getComponentQuantity(deviceType, category.id);
+  const perChannelNote = category.perChannel && componentQuantity > 1;
 
   return (
     <Paper
@@ -293,8 +298,8 @@ function ConfigPanel() {
       {perChannelNote && (
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.55)', display: 'block', mb: 1.5 }}>
           {t({
-            he: `המחיר והמשקל מוכפלים ב-${tubeCount} ערוצים`,
-            en: `Price & weight are per channel — ×${tubeCount} for this device`,
+            he: `המחיר והמשקל מחושבים לפי ${componentQuantity} יחידות במכשיר זה`,
+            en: `Price & weight include ×${componentQuantity} for this device`,
           })}
         </Typography>
       )}
@@ -386,12 +391,20 @@ function SummaryCard() {
   const { summary, resetBuild, deviceType } = useBuilder();
   const { addToCart } = useCart();
   const [adding, setAdding] = useState(false);
+  const [submissionError, setSubmissionError] = useState(null);
   const { totalPrice, totalWeight, selectedParts, allAvailable, missingRequired, tubeCount } = summary;
   const buildIncomplete = missingRequired.length > 0;
 
   const handleAddToCart = async () => {
-    if (selectedParts.length === 0 || adding) return;
+    if (
+      selectedParts.length === 0
+      || missingRequired.length > 0
+      || !allAvailable
+      || adding
+    ) return;
+    setSubmissionError(null);
     setAdding(true);
+    let failureStage = 'build';
     try {
       const response = await fetch('/api/builder/custom-build', {
         method: 'POST',
@@ -404,11 +417,29 @@ function SummaryCard() {
           })),
         }),
       });
-      if (!response.ok) throw new Error('Failed to create custom build');
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(details || `Build request failed (${response.status})`);
+      }
       const product = await response.json();
-      await addToCart(product);
+      failureStage = 'cart';
+      const added = await addToCart(product);
+      if (!added) throw new Error('The configured device was not added to the cart.');
     } catch (error) {
       console.error('Failed to add custom build to cart:', error);
+      const localizedMessage = failureStage === 'cart'
+        ? t({
+          he: 'התצורה נוצרה, אך לא נוספה לעגלה. נסו שוב.',
+          en: 'The configuration was created but could not be added to your cart. Please try again.',
+        })
+        : t({
+          he: 'לא הצלחנו ליצור את התצורה. בדקו את הבחירות ונסו שוב.',
+          en: 'We could not create this configuration. Check your selections and try again.',
+        });
+      const details = language === 'en' && error instanceof Error
+        ? ` ${error.message}`
+        : '';
+      setSubmissionError(`${localizedMessage}${details}`);
     } finally {
       setAdding(false);
     }
@@ -510,10 +541,28 @@ function SummaryCard() {
         </Alert>
       )}
 
+      {submissionError && (
+        <Alert
+          severity="error"
+          sx={{
+            mt: 2,
+            bgcolor: 'rgba(255,80,80,0.1)',
+            color: '#ffb3b3',
+            border: '1px solid rgba(255,80,80,0.35)',
+            '& .MuiAlert-icon': { color: '#ff8f8f' },
+          }}
+        >
+          {submissionError}
+        </Alert>
+      )}
+
       <Button
         fullWidth
         startIcon={<RestartAlt />}
-        onClick={resetBuild}
+        onClick={() => {
+          setSubmissionError(null);
+          resetBuild();
+        }}
         sx={{
           mt: 3,
           color: 'rgba(255,255,255,0.7)',
@@ -529,7 +578,12 @@ function SummaryCard() {
         fullWidth
         variant="contained"
         startIcon={<AddShoppingCart />}
-        disabled={selectedParts.length === 0 || adding}
+        disabled={
+          selectedParts.length === 0
+          || missingRequired.length > 0
+          || !allAvailable
+          || adding
+        }
         onClick={handleAddToCart}
         sx={{
           mt: 1.5,
@@ -555,7 +609,12 @@ function BuilderContent() {
   const { t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { deviceType, setDeviceType, setActiveCategory } = useBuilder();
+  const {
+    deviceType,
+    setDeviceType,
+    setActiveCategory,
+    sourcePreset,
+  } = useBuilder();
   const [viewMode, setViewMode] = useState('3d');
 
   const handleDeviceTypeChange = (_, v) => {
@@ -602,6 +661,23 @@ function BuilderContent() {
           en: 'Select components on the blueprint to configure your perfect setup',
         })}
       </Typography>
+
+      {sourcePreset && (
+        <Stack direction="row" justifyContent="center" sx={{ mt: -3, mb: 4 }}>
+          <Chip
+            label={t({
+              he: `תצורת בסיס: ${sourcePreset.nameHe}`,
+              en: `Starting configuration: ${sourcePreset.nameEn}`,
+            })}
+            sx={{
+              color: ACCENT,
+              bgcolor: 'rgba(0,200,255,0.08)',
+              border: '1px solid rgba(0,200,255,0.3)',
+              fontWeight: 600,
+            }}
+          />
+        </Stack>
+      )}
 
       {/* Device type + view mode selectors */}
       <Stack

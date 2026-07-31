@@ -1,14 +1,21 @@
 import { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   builderCategories,
   getDefaultSelections,
   getOptionsForDevice,
-  getTubeCount,
+  getComponentQuantity,
   DEFAULT_DEVICE_TYPE,
 } from '../data/builderData';
+import {
+  parseBuilderSearchParams,
+  serializeBuilderConfiguration,
+} from '../data/builderPresets';
 
 const BuilderContext = createContext();
 
+// Context hooks intentionally live beside their provider for a single public API.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useBuilder = () => {
   const context = useContext(BuilderContext);
   if (!context) {
@@ -18,50 +25,61 @@ export const useBuilder = () => {
 };
 
 export const BuilderProvider = ({ children }) => {
-  const [selections, setSelections] = useState(getDefaultSelections);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState(null);
   const [hoveredCategory, setHoveredCategory] = useState(null);
-  const [deviceType, setDeviceTypeState] = useState(DEFAULT_DEVICE_TYPE);
+  const parsedConfiguration = useMemo(
+    () => parseBuilderSearchParams(searchParams),
+    [searchParams]
+  );
+  const {
+    deviceType = DEFAULT_DEVICE_TYPE,
+    selections = getDefaultSelections(),
+    presetId,
+    preset: sourcePreset,
+  } = parsedConfiguration;
 
-  // Changing form factor clears selections that don't fit the new device type
   const setDeviceType = useCallback((newType) => {
-    setDeviceTypeState(newType);
-    setSelections((prev) => {
-      const next = { ...prev };
-      for (const category of builderCategories) {
-        const optionId = next[category.id];
-        if (!optionId) continue;
-        const valid = getOptionsForDevice(category, newType).some((o) => o.id === optionId);
-        if (!valid) next[category.id] = null;
-      }
-      return next;
-    });
-  }, []);
+    const nextPresetId = sourcePreset?.deviceType === newType ? presetId : null;
+    setSearchParams(
+      serializeBuilderConfiguration({
+        deviceType: newType,
+        selections,
+        presetId: nextPresetId,
+      }),
+      { replace: true }
+    );
+  }, [presetId, selections, setSearchParams, sourcePreset]);
 
   const selectOption = useCallback((categoryId, optionId) => {
-    setSelections((prev) => ({ ...prev, [categoryId]: optionId }));
-  }, []);
+    if (!builderCategories.some((category) => category.id === categoryId)) return;
+    setSearchParams(
+      serializeBuilderConfiguration({
+        deviceType,
+        selections: { ...selections, [categoryId]: optionId },
+        presetId,
+      }),
+      { replace: true }
+    );
+  }, [deviceType, presetId, selections, setSearchParams]);
 
   const resetBuild = useCallback(() => {
-    setSelections(getDefaultSelections());
+    setSearchParams(new URLSearchParams(), { replace: true });
     setActiveCategory(null);
-    setDeviceTypeState(DEFAULT_DEVICE_TYPE);
-  }, []);
+  }, [setSearchParams]);
 
   const summary = useMemo(() => {
     let totalPrice = 0;
     let totalWeight = 0;
     const selectedParts = [];
     let allAvailable = true;
-    const tubeCount = getTubeCount(deviceType);
 
     for (const category of builderCategories) {
       const optionId = selections[category.id];
       if (!optionId) continue;
       const option = category.options.find((o) => o.id === optionId);
       if (!option) continue;
-      // Per-channel parts (tubes, lenses) multiply by the number of channels
-      const qty = category.perChannel ? tubeCount : 1;
+      const qty = getComponentQuantity(deviceType, category.id);
       totalPrice += option.price * qty;
       totalWeight += option.weightGrams * qty;
       if (!option.available) allAvailable = false;
@@ -76,6 +94,7 @@ export const BuilderProvider = ({ children }) => {
         !selections[category.id]
     );
 
+    const tubeCount = getComponentQuantity(deviceType, 'tube');
     return { totalPrice, totalWeight, selectedParts, allAvailable, missingRequired, tubeCount };
   }, [selections, deviceType]);
 
@@ -91,6 +110,8 @@ export const BuilderProvider = ({ children }) => {
         setHoveredCategory,
         deviceType,
         setDeviceType,
+        presetId,
+        sourcePreset,
         summary,
       }}
     >

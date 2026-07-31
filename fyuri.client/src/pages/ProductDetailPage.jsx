@@ -12,11 +12,14 @@ import {
   Checkbox,
   FormControlLabel,
   Divider,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { ShoppingCart, ArrowBack } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
+import PublicPageShell from '../components/PublicPageShell';
 
 // Label stored as "English|Hebrew" in specifications.VariantLabel
 const variantLabel = (p, language) => {
@@ -39,61 +42,87 @@ function ProductDetailPage() {
   const [g24Mount, setG24Mount] = useState(null);
   const [includeG24, setIncludeG24] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const { addToCart } = useCart();
   const { language, t } = useLanguage();
 
   useEffect(() => {
-    fetchProduct();
-    // Reset add-on selections when navigating between products
-    setSelectedTubeId('');
-    setIncludeG24(false);
-  }, [id]);
+    let cancelled = false;
 
-  const fetchProduct = async () => {
-    try {
-      const response = await fetch(`/api/products/${id}`);
-      if (response.ok) {
+    const loadProduct = async () => {
+      setLoading(true);
+      setLoadError(null);
+      setProduct(null);
+      setVariants([]);
+      setTubes([]);
+      setG24Mount(null);
+
+      try {
+        const response = await fetch(`/api/products/${id}`);
+        if (!response.ok) {
+          const error = new Error('Product request failed');
+          error.status = response.status;
+          throw error;
+        }
+
         const data = await response.json();
-        setProduct(data);
+        let nextVariants = [];
+        let nextTubes = [];
+        let nextG24Mount = null;
 
-        // If this product belongs to a variant group, load its siblings
         const group = data.specifications?.VariantGroup;
         if (group && data.productType) {
           const listRes = await fetch(`/api/products?productType=${encodeURIComponent(data.productType)}`);
           if (listRes.ok) {
             const all = await listRes.json();
-            const siblings = all
-              .filter((p) => p.specifications?.VariantGroup === group)
+            nextVariants = all
+              .filter((candidate) => candidate.specifications?.VariantGroup === group)
               .sort((a, b) => a.price - b.price);
-            setVariants(siblings);
           }
-        } else {
-          setVariants([]);
         }
 
-        // Housings: offer intensifier tubes and the G24 mount bundle
         if (data.productType === 'housing') {
-          const [tubesRes, accRes] = await Promise.all([
+          const [tubesRes, accessoriesRes] = await Promise.all([
             fetch('/api/products?productType=intensifier'),
             fetch('/api/products?productType=accessories'),
           ]);
           if (tubesRes.ok) {
-            const tubeList = await tubesRes.json();
-            setTubes(tubeList.sort((a, b) => a.price - b.price));
+            nextTubes = (await tubesRes.json()).sort((a, b) => a.price - b.price);
           }
-          if (accRes.ok) {
-            const accessories = await accRes.json();
-            setG24Mount(accessories.find((p) => p.sku === G24_SKU) || null);
+          if (accessoriesRes.ok) {
+            const accessories = await accessoriesRes.json();
+            nextG24Mount = accessories.find((candidate) => candidate.sku === G24_SKU) || null;
           }
-        } else {
-          setTubes([]);
-          setG24Mount(null);
         }
+
+        if (!cancelled) {
+          setSelectedTubeId('');
+          setIncludeG24(false);
+          setQuantity(1);
+          setAdding(false);
+          setProduct(data);
+          setVariants(nextVariants);
+          setTubes(nextTubes);
+          setG24Mount(nextG24Mount);
+        }
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+        if (!cancelled) {
+          setLoadError(error.status === 400 || error.status === 404 ? 'not-found' : 'error');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch product:', error);
-    }
-  };
+    };
+
+    loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const handleVariantChange = (e) => {
     const newId = e.target.value;
@@ -129,47 +158,102 @@ function ProductDetailPage() {
     (includeG24 && g24Mount ? g24Mount.price : 0);
 
   const handleAddToCart = async () => {
-    if (!product) return;
-    await addToCart(product, quantity);
-    if (selectedTube) {
-      await addToCart(selectedTube, tubeQuantity);
-    }
-    if (includeG24 && g24Mount) {
-      await addToCart(g24Mount, 1);
+    if (!product || adding) return;
+    setAdding(true);
+    try {
+      await addToCart(product, quantity);
+      if (selectedTube) {
+        await addToCart(selectedTube, tubeQuantity);
+      }
+      if (includeG24 && g24Mount) {
+        await addToCart(g24Mount, 1);
+      }
+    } finally {
+      setAdding(false);
     }
   };
 
-  if (!product) {
+  if (loading) {
     return (
-      <Typography>
-        {t({ he: 'טוען...', en: 'Loading...' })}
-      </Typography>
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / מוצר', en: 'FYURI / PRODUCT' })}
+        title={t({ he: 'טוען את פרטי המוצר…', en: 'Loading product details…' })}
+      >
+        <Box className="fy-panel fy-public-empty">
+          <CircularProgress aria-label={t({ he: 'טוען מוצר', en: 'Loading product' })} />
+        </Box>
+      </PublicPageShell>
     );
   }
 
-  return (
-    <Box>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate(catalogUrl)}
-        sx={{ mb: 3 }}
+  if (loadError || !product) {
+    const notFound = loadError === 'not-found';
+    return (
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / מוצר', en: 'FYURI / PRODUCT' })}
+        title={notFound
+          ? t({ he: 'המוצר לא נמצא.', en: 'Product not found.' })
+          : t({ he: 'לא הצלחנו לטעון את המוצר.', en: 'We could not load this product.' })}
+        description={t({
+          he: 'אפשר לחזור לקטלוג ולבחור מוצר אחר, או ליצור איתנו קשר לקבלת עזרה.',
+          en: 'Return to the catalog to choose another product, or contact us for help.',
+        })}
+        actions={(
+          <>
+            <Button variant="contained" onClick={() => navigate('/products')}>
+              {t({ he: 'חזרה לקטלוג', en: 'Back to catalog' })}
+            </Button>
+            <Button variant="outlined" onClick={() => navigate('/contact')}>
+              {t({ he: 'צור קשר', en: 'Contact us' })}
+            </Button>
+          </>
+        )}
       >
-        {t({ he: 'חזור לקטלוג', en: 'Back to Catalog' })}
-      </Button>
+        <Alert severity={notFound ? 'warning' : 'error'} className="fy-panel">
+          {notFound
+            ? t({ he: 'ייתכן שהמוצר הוסר או שהקישור שגוי.', en: 'The product may have been removed or the link may be incorrect.' })
+            : t({ he: 'אירעה שגיאת תקשורת. נסו שוב בעוד מספר רגעים.', en: 'A network error occurred. Please try again in a moment.' })}
+        </Alert>
+      </PublicPageShell>
+    );
+  }
+
+  const productName = language === 'he'
+    ? (product.nameHebrew || product.name)
+    : product.name;
+  const productDescription = language === 'he'
+    ? (product.descriptionHebrew || product.description)
+    : product.description;
+
+  return (
+    <PublicPageShell
+      eyebrow={`${product.productType || 'FYURI'} / ${product.sku}`}
+      title={productName}
+      description={productDescription}
+      actions={(
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate(catalogUrl)}
+          variant="outlined"
+        >
+          {t({ he: 'חזרה לקטלוג', en: 'Back to catalog' })}
+        </Button>
+      )}
+    >
 
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
           <Paper
+            className="fy-panel fy-product-media"
             sx={{
               width: '100%',
-              paddingTop: '100%',
-              bgcolor: 'grey.800',
               position: 'relative',
               overflow: 'hidden',
+              minHeight: { xs: 360, md: 560 },
               backgroundImage: product.thumbnailUrl || product.imageUrls?.[0] 
                 ? `url(${product.thumbnailUrl || product.imageUrls[0]})` 
                 : 'none',
-              backgroundSize: 'cover',
+              backgroundSize: 'contain',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat',
             }}
@@ -194,9 +278,8 @@ function ProductDetailPage() {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Typography variant="h3" component="h1" gutterBottom>
-            {language === 'he' ? (product.nameHebrew || product.name) : product.name}
-          </Typography>
+          <Paper className="fy-panel" sx={{ p: { xs: 2.5, md: 3.5 }, textAlign: 'start' }}>
+          <span className="fy-section-kicker">{t({ he: 'סקירת מוצר', en: 'Product overview' })}</span>
 
           <Box sx={{ mb: 3 }}>
             {product.generation && (
@@ -213,11 +296,8 @@ function ProductDetailPage() {
             )}
           </Box>
 
-          <Typography variant="body1" color="text.secondary" paragraph>
-            {language === 'he' 
-              ? (product.descriptionHebrew || product.description)
-              : product.description
-            }
+          <Typography variant="body1" className="fy-muted" paragraph sx={{ lineHeight: 1.7 }}>
+            {productDescription}
           </Typography>
 
           {variants.length > 1 && (
@@ -236,12 +316,12 @@ function ProductDetailPage() {
             </TextField>
           )}
 
-          <Typography variant="h4" color="primary" sx={{ my: 3 }}>
+          <Typography className="fy-product-price" sx={{ my: 3 }}>
             ₪{product.price.toLocaleString()}
           </Typography>
 
           {product.productType === 'housing' && tubes.length > 0 && (
-            <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+            <Paper variant="outlined" className="fy-panel" sx={{ p: 2, mb: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
                 {t({ he: 'השלם למכשיר מלא', en: 'Complete Your Device' })}
               </Typography>
@@ -324,7 +404,10 @@ function ProductDetailPage() {
                 type="number"
                 label={t({ he: 'כמות', en: 'Quantity' })}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => setQuantity(Math.min(
+                  product.stockQuantity || 99,
+                  Math.max(1, parseInt(e.target.value) || 1),
+                ))}
                 InputProps={{ inputProps: { min: 1, max: product.stockQuantity } }}
                 sx={{ width: 100, mr: 2 }}
               />
@@ -333,13 +416,16 @@ function ProductDetailPage() {
                 size="large"
                 startIcon={<ShoppingCart />}
                 onClick={handleAddToCart}
+                disabled={adding}
               >
-                {t({ he: 'הוסף לסל', en: 'Add to Cart' })}
+                {adding
+                  ? t({ he: 'מוסיף...', en: 'Adding…' })
+                  : t({ he: 'הוסף לסל', en: 'Add to Cart' })}
               </Button>
             </Box>
           )}
 
-          <Paper sx={{ p: 2, mt: 4 }}>
+          <Paper className="fy-panel" sx={{ p: 2, mt: 4 }}>
             <Typography variant="h6" gutterBottom>
               {t({ he: 'מפרט טכני', en: 'Technical Specifications' })}
             </Typography>
@@ -358,9 +444,10 @@ function ProductDetailPage() {
               </Typography>
             )}
           </Paper>
+          </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </PublicPageShell>
   );
 }
 

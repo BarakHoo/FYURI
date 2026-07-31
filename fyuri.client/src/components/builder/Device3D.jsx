@@ -24,6 +24,7 @@ const ACCENT = '#00C8FF';
  */
 const MODELS = {
   monocular: { url: '/models/monocular.glb', targetSize: 2.45, camera: [2.2, 1.2, 2.8] },
+  biocular: { url: '/models/binocular.glb', targetSize: 2.45, camera: [2.4, 1.3, 3.0] },
   binocular: { url: '/models/binocular.glb', targetSize: 2.45, camera: [2.4, 1.3, 3.0] },
   panoramic: { url: '/models/panoramic.glb', targetSize: 2.8, camera: [2.4, 1.3, 3.0] },
 };
@@ -41,6 +42,15 @@ const HOTSPOTS = {
     battery: { anchor: [-0.35, 0.25, -0.2], label: [-1.6, -0.4, -0.5] },
     mount: { anchor: [0, 0.6, -0.25], label: [0, 1.5, -0.9] },
     illuminator: { anchor: [0.25, 0.4, 0.55], label: [1.3, 1.2, 1.1] },
+  },
+  biocular: {
+    housing: { anchor: [0, 0.4, 0], label: [0, 1.5, 0.6] },
+    tube: { anchor: [0.5, 0, 0.1], label: [1.8, 0.2, 0.3] },
+    objective: { anchor: [0.4, -0.05, 0.85], label: [1.3, -0.7, 1.5] },
+    eyepiece: { anchor: [0.4, -0.05, -0.8], label: [1.3, -0.7, -1.5] },
+    battery: { anchor: [-0.5, 0.3, -0.1], label: [-1.8, -0.3, -0.4] },
+    mount: { anchor: [0, 0.65, -0.25], label: [-1.2, 1.5, -0.7] },
+    illuminator: { anchor: [-0.3, 0.4, 0.6], label: [-1.4, 1.2, 1.2] },
   },
   binocular: {
     housing: { anchor: [0, 0.4, 0], label: [0, 1.5, 0.6] },

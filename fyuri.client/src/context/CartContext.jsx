@@ -1,9 +1,30 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useToast } from './ToastContext';
 import { useLanguage } from './LanguageContext';
 
 const CartContext = createContext();
+let inMemorySessionId = null;
 
+const getOrCreateSessionId = () => {
+  const randomPart = globalThis.crypto?.randomUUID?.()
+    ?? `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const createSessionId = () => `session_${randomPart}`;
+
+  try {
+    let sid = localStorage.getItem('sessionId');
+    if (!sid) {
+      sid = createSessionId();
+      localStorage.setItem('sessionId', sid);
+    }
+    return sid;
+  } catch {
+    inMemorySessionId ??= createSessionId();
+    return inMemorySessionId;
+  }
+};
+
+// Context hooks intentionally live beside their provider for a single public API.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -14,32 +35,32 @@ export const useCart = () => {
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
-  const [sessionId, setSessionId] = useState('');
+  const [cartLoading, setCartLoading] = useState(true);
+  const [cartError, setCartError] = useState(null);
+  const [sessionId] = useState(getOrCreateSessionId);
   const { showToast } = useToast();
   const { language, t } = useLanguage();
 
-  useEffect(() => {
-    // Get or create session ID
-    let sid = localStorage.getItem('sessionId');
-    if (!sid) {
-      sid = 'session_' + crypto.randomUUID();
-      localStorage.setItem('sessionId', sid);
-    }
-    setSessionId(sid);
-    loadCart(sid);
-  }, []);
-
-  const loadCart = async (sid) => {
+  const loadCart = useCallback(async (sid) => {
+    setCartError(null);
     try {
       const response = await fetch(`/api/cart/${sid}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCart(data);
-      }
+      if (!response.ok) throw new Error(`Cart request failed (${response.status})`);
+      const data = await response.json();
+      setCart(data);
     } catch (error) {
       console.error('Failed to load cart:', error);
+      setCartError(error instanceof Error ? error.message : 'Failed to load cart');
+    } finally {
+      setCartLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Loading the external cart is the synchronization this effect owns.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCart(sessionId);
+  }, [loadCart, sessionId]);
 
   const addToCart = async (product, quantity = 1) => {
     try {
@@ -147,6 +168,8 @@ export const CartProvider = ({ children }) => {
     <CartContext.Provider
       value={{
         cart,
+        cartLoading,
+        cartError,
         addToCart,
         updateQuantity,
         removeFromCart,

@@ -35,7 +35,7 @@ public class BuilderController : ControllerBase
                 return BadRequest("A custom build must contain at least one part");
             }
 
-            if (!BuilderCatalog.DeviceTypes.TryGetValue(request.DeviceType, out var tubeCount))
+            if (!BuilderCatalog.DeviceTypes.ContainsKey(request.DeviceType))
             {
                 return BadRequest("Unknown device type");
             }
@@ -69,9 +69,23 @@ public class BuilderController : ControllerBase
                     return BadRequest($"Option '{option.NameEn}' is currently unavailable");
                 }
 
-                var quantity = category.PerChannel ? tubeCount : 1;
+                var quantity = BuilderCatalog.GetComponentQuantity(request.DeviceType, category.Id);
                 totalPrice += option.Price * quantity;
                 lines.Add((category, option, quantity));
+            }
+
+            var missingRequired = BuilderCatalog.Categories
+                .Where(category =>
+                    category.Required
+                    && category.Options.Any(option =>
+                        option.DeviceTypes == null || option.DeviceTypes.Contains(request.DeviceType))
+                    && !seenCategories.Contains(category.Id))
+                .Select(category => category.NameEn)
+                .ToArray();
+
+            if (missingRequired.Length > 0)
+            {
+                return BadRequest($"Missing required component categories: {string.Join(", ", missingRequired)}");
             }
 
             var dbCategory = await _context.Categories.FirstOrDefaultAsync();

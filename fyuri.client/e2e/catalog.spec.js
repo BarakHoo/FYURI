@@ -15,6 +15,69 @@ const referenceAssets = [
   'pvs-7-reference.webp',
 ];
 
+const catalogProducts = [
+  {
+    id: 2,
+    name: 'PVS-14',
+    nameHebrew: 'PVS-14',
+    description: 'Industry standard monocular. Rugged, lightweight, proven.',
+    descriptionHebrew: 'מערכת חד-עינית תקנית, קלה ומוכחת.',
+    productType: 'monocular',
+    price: 3200,
+    generation: 'Gen 3',
+    tubeType: 'Green Phosphor',
+    inStock: true,
+    stockQuantity: 12,
+    isActive: true,
+    specifications: {},
+  },
+  {
+    id: 22,
+    name: 'PVS-14 PRO',
+    nameHebrew: 'PVS-14 PRO',
+    description: 'Enhanced optics and housing. Built for harsh conditions.',
+    descriptionHebrew: 'אופטיקה וגוף משודרגים לתנאי שטח קשים.',
+    productType: 'monocular',
+    price: 4100,
+    generation: 'Gen 3',
+    tubeType: 'White Phosphor',
+    inStock: true,
+    stockQuantity: 8,
+    isActive: true,
+    specifications: {},
+  },
+  {
+    id: 23,
+    name: 'PVS-14 LITE',
+    nameHebrew: 'PVS-14 LITE',
+    description: 'Streamlined performance. Excellent value.',
+    descriptionHebrew: 'ביצועים יעילים וערך מצוין.',
+    productType: 'monocular',
+    price: 2450,
+    generation: 'Gen 2+',
+    tubeType: 'White Phosphor',
+    inStock: true,
+    stockQuantity: 5,
+    isActive: true,
+    specifications: {},
+  },
+  {
+    id: 5,
+    name: 'PVS-7',
+    nameHebrew: 'PVS-7',
+    description: 'Compact and versatile. Battle-proven design.',
+    descriptionHebrew: 'מערכת קומפקטית ורב-שימושית בתצורה מוכחת.',
+    productType: 'monocular',
+    price: 2900,
+    generation: 'Gen 3',
+    tubeType: 'Green Phosphor',
+    inStock: true,
+    stockQuantity: 2,
+    isActive: true,
+    specifications: {},
+  },
+];
+
 const test = base.extend({
   runtimeErrors: [async ({ page }, use) => {
     const errors = [];
@@ -34,9 +97,14 @@ async function visitCatalog(page, viewport = { width: 1680, height: 944 }) {
     contentType: 'application/json',
     body: '[]',
   }));
+  await page.route('**/api/products', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(catalogProducts),
+  }));
   await page.setViewportSize(viewport);
   await page.goto('/products');
-  await expect(page.getByRole('heading', { name: 'MONOCULARS' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'NIGHT VISION SYSTEMS' })).toBeVisible();
 }
 
 async function expectNoHorizontalOverflow(page) {
@@ -134,7 +202,7 @@ test.describe('reference-parity product catalog', () => {
     );
     await expect(page.getByText('Compact. Capable. Mission ready.')).toBeVisible();
     await expect(page.locator('.reference-capabilities li')).toHaveCount(5);
-    await expect(page.getByText('Showing 1–12 of 12 results')).toBeVisible();
+    await expect(page.getByText('Showing 4 of 4 results')).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Sort by' })).toHaveValue('featured');
 
     const cards = page.getByTestId('catalog-product-card');
@@ -145,7 +213,7 @@ test.describe('reference-parity product catalog', () => {
     await expect(cards.nth(2)).toContainText('PVS-14 LITE');
     await expect(cards.nth(2)).toContainText('₪2,450');
     await expect(cards.nth(3)).toContainText('PVS-7');
-    await expect(cards.nth(3)).toContainText('Low Stock');
+    await expect(cards.nth(3)).toContainText('Low stock');
     await expect(cards.nth(3)).toContainText('₪2,900');
   });
 
@@ -156,11 +224,50 @@ test.describe('reference-parity product catalog', () => {
     await favorite.click();
     const savedFavorite = page.getByRole('button', { name: 'Remove PVS-14 from favorites' });
     await expect(savedFavorite).toHaveAttribute('aria-pressed', 'true');
+    await page.reload();
+    await expect(page.getByRole('button', { name: 'Remove PVS-14 from favorites' }))
+      .toHaveAttribute('aria-pressed', 'true');
 
     await page.getByRole('button', { name: 'List view' }).click();
     await expect(page.locator('.reference-product-grid--list')).toBeVisible();
     await page.getByRole('button', { name: 'Grid view' }).click();
     await expect(page.locator('.reference-product-grid--grid')).toBeVisible();
+  });
+
+  test('uses URL-backed filters, sorting, details and complete builder presets', async ({ page }) => {
+    await visitCatalog(page);
+
+    await page.getByRole('button', { name: 'Monoculars 4' }).click();
+    await expect(page).toHaveURL(/category=monocular/);
+
+    const genTwoPlus = page.getByLabel('Gen 2+');
+    await genTwoPlus.click();
+    await expect(page).toHaveURL(/gen=2-plus/);
+    await expect(genTwoPlus).toBeChecked();
+    await expect(page.getByTestId('catalog-product-card')).toHaveCount(1);
+    await expect(page.getByTestId('catalog-product-card')).toContainText('PVS-14 LITE');
+
+    await genTwoPlus.click();
+    await expect(genTwoPlus).not.toBeChecked();
+    await page.getByRole('button', { name: 'TUBE QUALITY' }).click();
+    const whitePhosphor = page.getByLabel('White phosphor');
+    await whitePhosphor.click();
+    await expect(whitePhosphor).toBeChecked();
+    await expect(page.getByTestId('catalog-product-card')).toHaveCount(2);
+    await expect(page).toHaveURL(/tube=white-phosphor/);
+    await whitePhosphor.click();
+    await expect(whitePhosphor).not.toBeChecked();
+
+    await page.getByRole('combobox', { name: 'Sort by' }).selectOption('price-low');
+    await expect(page.getByTestId('catalog-product-card').first()).toContainText('PVS-14 LITE');
+    await expect(page).toHaveURL(/sort=price-low/);
+
+    await expect(page.getByRole('link', { name: 'VIEW DETAILS' }).first())
+      .toHaveAttribute('href', '/products/23');
+    const configure = page.getByTestId('configure-product-23');
+    await expect(configure).toHaveAttribute('href', /\/builder\?.*preset=pvs-14-lite/);
+    await expect(configure).toHaveAttribute('href', /housing=housing-mono-ultralight/);
+    await expect(configure).toHaveAttribute('href', /tube=tube-photonis-echo/);
   });
 
   test('keeps the existing mobile navigation and adds a usable filter drawer', async ({ page }) => {
@@ -173,7 +280,7 @@ test.describe('reference-parity product catalog', () => {
     await page.getByRole('button', { name: 'FILTERS' }).click();
     const drawer = page.locator('#reference-filter-drawer');
     await expect(drawer).toBeVisible();
-    await expect(drawer.getByRole('button', { name: 'Monoculars 12' })).toHaveAttribute(
+    await expect(drawer.getByRole('button', { name: 'All products 4' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );

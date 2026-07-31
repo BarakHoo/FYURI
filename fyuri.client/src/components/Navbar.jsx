@@ -5,6 +5,8 @@ import {
   Box,
   Button,
   IconButton,
+  Popover,
+  TextField,
   Toolbar,
   useMediaQuery,
   useTheme,
@@ -13,14 +15,14 @@ import {
   Brightness4,
   Brightness7,
   Build,
+  HeadsetMicOutlined,
   KeyboardArrowDown,
   Language,
   Menu,
-  PersonOutline,
   Search,
   ShoppingCart,
 } from '@mui/icons-material';
-import { Link as RouterLink, useLocation } from 'react-router';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
@@ -30,6 +32,7 @@ import { primaryNavigationItems } from './navigationConfig';
 import Logo from './Logo';
 
 const desktopProductsButtonId = 'desktop-products-button';
+const desktopCatalogSearchId = 'desktop-catalog-search';
 const mobileNavigationId = 'mobile-site-navigation';
 
 const isRouteActive = (pathname, item) => (
@@ -41,9 +44,11 @@ function Navbar({ variant = 'default' }) {
   const { language, toggleLanguage, t } = useLanguage();
   const { mode, toggleTheme } = useThemeMode();
   const location = useLocation();
+  const navigate = useNavigate();
   const muiTheme = useTheme();
   const isDesktop = useMediaQuery(muiTheme.breakpoints.up('lg'));
   const isHomePage = location.pathname === '/';
+  const isRtl = language === 'he';
   const cartCount = getCartCount();
   const logoLinkRef = useRef(null);
 
@@ -51,11 +56,14 @@ function Navbar({ variant = 'default' }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [productsAnchorEl, setProductsAnchorEl] = useState(null);
+  const [searchAnchorEl, setSearchAnchorEl] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const navItemsById = Object.fromEntries(
     primaryNavigationItems.map((item) => [item.id, item]),
   );
   const desktopProductsOpen = Boolean(productsAnchorEl) && isDesktop;
+  const catalogSearchOpen = Boolean(searchAnchorEl) && isDesktop;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -103,6 +111,7 @@ function Navbar({ variant = 'default' }) {
     setMobileOpen(false);
     setMobileProductsOpen(false);
     setProductsAnchorEl(null);
+    setSearchAnchorEl(null);
   };
 
   const handleLanguageToggle = () => {
@@ -111,21 +120,35 @@ function Navbar({ variant = 'default' }) {
   };
 
   const handleDesktopProductsToggle = (event) => {
+    setSearchAnchorEl(null);
     setProductsAnchorEl(productsAnchorEl ? null : event.currentTarget);
+  };
+
+  const handleCatalogSearchToggle = (event) => {
+    setProductsAnchorEl(null);
+    setSearchAnchorEl(searchAnchorEl ? null : event.currentTarget);
+  };
+
+  const handleCatalogSearchSubmit = (event) => {
+    event.preventDefault();
+    const query = searchQuery.trim();
+
+    closeAllNavigation();
+    navigate(query ? `/products?${new URLSearchParams({ q: query })}` : '/products');
   };
 
   const desktopLinkSx = (active = false) => ({
     minHeight: 44,
     minWidth: 0,
     px: 1.25,
-    color: active ? '#dfffad' : 'inherit',
+    color: active ? '#9ddfff' : 'inherit',
     fontWeight: active ? 800 : 650,
     borderRadius: 1.5,
     borderBottom: '2px solid',
-    borderBottomColor: active ? '#b8ff3d' : 'transparent',
+    borderBottomColor: active ? '#42baf2' : 'transparent',
     '&:hover, &:focus-visible': {
       bgcolor: 'rgba(79, 195, 247, 0.12)',
-      borderBottomColor: active ? '#b8ff3d' : 'rgba(79, 195, 247, 0.7)',
+      borderBottomColor: active ? '#42baf2' : 'rgba(66, 186, 242, 0.7)',
       outline: '2px solid rgba(79, 195, 247, 0.65)',
       outlineOffset: -2,
     },
@@ -156,8 +179,8 @@ function Navbar({ variant = 'default' }) {
     en: `Cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`,
   });
   const languageLabel = t({
-    he: 'Switch to English',
-    en: 'עבור לעברית',
+    he: 'החלף לאנגלית',
+    en: 'Switch to Hebrew',
   });
   const themeLabel = t({
     he: mode === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה',
@@ -206,7 +229,7 @@ function Navbar({ variant = 'default' }) {
         <AppBar
           position="static"
           elevation={0}
-          dir="ltr"
+          dir={isRtl ? 'rtl' : 'ltr'}
           sx={{
             height: 93,
             color: '#f4f7f9',
@@ -232,7 +255,7 @@ function Navbar({ variant = 'default' }) {
               data-testid="site-logo-link"
               component={RouterLink}
               to="/"
-              aria-label="FYURI, home"
+              aria-label={t({ he: 'FYURI, דף הבית', en: 'FYURI, home' })}
               sx={{
                 width: 230,
                 height: 64,
@@ -266,7 +289,7 @@ function Navbar({ variant = 'default' }) {
             <Box
               component="nav"
               data-testid="desktop-nav"
-              aria-label="Primary navigation"
+              aria-label={t({ he: 'ניווט ראשי', en: 'Primary navigation' })}
               sx={{
                 marginInlineStart: '72px',
                 display: 'flex',
@@ -298,13 +321,13 @@ function Navbar({ variant = 'default' }) {
                   color: '#f9fbfc',
                 }}
               >
-                PRODUCTS
+                {t({ he: 'מוצרים', en: 'PRODUCTS' })}
               </Button>
               <Button component={RouterLink} to="/services" sx={referenceNavButtonSx}>
-                LAB SERVICES
+                {t({ he: 'שירותי מעבדה', en: 'LAB SERVICES' })}
               </Button>
               <Button component={RouterLink} to="/about" sx={referenceNavButtonSx}>
-                ABOUT US
+                {t({ he: 'מי אנחנו', en: 'ABOUT US' })}
               </Button>
               <Button
                 component={RouterLink}
@@ -315,10 +338,10 @@ function Navbar({ variant = 'default' }) {
                   fontWeight: 750,
                 }}
               >
-                BUILD YOUR DEVICE
+                {t({ he: 'בנה את המכשיר שלך', en: 'BUILD YOUR DEVICE' })}
               </Button>
               <Button component={RouterLink} to="/contact" sx={referenceNavButtonSx}>
-                CONTACT
+                {t({ he: 'צור קשר', en: 'CONTACT' })}
               </Button>
             </Box>
 
@@ -327,26 +350,76 @@ function Navbar({ variant = 'default' }) {
                 marginInlineStart: 'auto',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '18px',
+                gap: '6px',
               }}
             >
-              <IconButton aria-label="Search catalog" sx={referenceIconButtonSx}>
+              <IconButton
+                data-testid="catalog-search-button"
+                id="desktop-catalog-search-button"
+                onClick={handleCatalogSearchToggle}
+                aria-label={t({ he: 'חיפוש בקטלוג', en: 'Search catalog' })}
+                aria-controls={catalogSearchOpen ? desktopCatalogSearchId : undefined}
+                aria-expanded={catalogSearchOpen}
+                aria-haspopup="dialog"
+                sx={referenceIconButtonSx}
+              >
                 <Search />
               </IconButton>
               <IconButton
-                aria-label="Account"
+                data-testid="catalog-support-link"
+                component={RouterLink}
+                to="/contact"
+                onClick={closeAllNavigation}
+                aria-label={t({
+                  he: 'שירות לקוחות וצור קשר',
+                  en: 'Customer support and contact',
+                })}
                 sx={referenceIconButtonSx}
               >
-                <PersonOutline />
+                <HeadsetMicOutlined />
               </IconButton>
+              <Button
+                data-testid="language-toggle"
+                onClick={handleLanguageToggle}
+                aria-label={languageLabel}
+                sx={{
+                  minWidth: 58,
+                  width: 58,
+                  height: 46,
+                  px: '5px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '3px',
+                  color: '#e5edf2',
+                  borderRadius: '50px',
+                  fontFamily: '"Segoe UI", Arial, sans-serif',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  lineHeight: 1,
+                  '& svg': {
+                    width: 18,
+                    height: 18,
+                  },
+                  '&:hover, &:focus-visible': {
+                    color: '#47c6ff',
+                    background: 'rgba(64, 181, 246, 0.08)',
+                    outline: '1px solid rgba(64, 181, 246, 0.5)',
+                    outlineOffset: -1,
+                  },
+                }}
+              >
+                <Language aria-hidden="true" />
+                <span>{language === 'he' ? 'EN' : 'עב'}</span>
+              </Button>
               <IconButton
                 component={RouterLink}
                 to="/cart"
-                aria-label="Cart, 2 items"
+                aria-label={cartLabel}
                 sx={referenceIconButtonSx}
               >
                 <Badge
-                  badgeContent={2}
+                  badgeContent={cartCount}
                   sx={{
                     '& .MuiBadge-badge': {
                       minWidth: 22,
@@ -374,6 +447,84 @@ function Navbar({ variant = 'default' }) {
           onClose={() => setProductsAnchorEl(null)}
           open={desktopProductsOpen}
         />
+
+        <Popover
+          id={desktopCatalogSearchId}
+          open={catalogSearchOpen}
+          anchorEl={searchAnchorEl}
+          onClose={() => setSearchAnchorEl(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: isRtl ? 'left' : 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: isRtl ? 'left' : 'right' }}
+          slotProps={{
+            paper: {
+              role: 'dialog',
+              'aria-label': t({ he: 'חיפוש מוצרים', en: 'Product search' }),
+              sx: {
+                mt: 1,
+                p: 2,
+                width: 'min(420px, calc(100vw - 32px))',
+                color: '#e8f4fb',
+                background: 'linear-gradient(145deg, #07121d, #102838)',
+                border: '1px solid rgba(71, 198, 255, 0.42)',
+                borderRadius: 1.5,
+                boxShadow: '0 18px 54px rgba(0, 0, 0, 0.52)',
+              },
+            },
+          }}
+        >
+          <Box
+            component="form"
+            role="search"
+            aria-label={t({ he: 'חיפוש בקטלוג', en: 'Catalog search' })}
+            onSubmit={handleCatalogSearchSubmit}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gap: 1,
+              alignItems: 'start',
+            }}
+          >
+            <TextField
+              autoFocus
+              fullWidth
+              size="small"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              label={t({ he: 'חיפוש מוצרים', en: 'Search products' })}
+              inputProps={{
+                enterKeyHint: 'search',
+              }}
+              sx={{
+                '& .MuiInputLabel-root': { color: '#a9bac5' },
+                '& .MuiInputLabel-root.Mui-focused': { color: '#47c6ff' },
+                '& .MuiOutlinedInput-root': {
+                  color: '#f4f7f9',
+                  background: 'rgba(1, 8, 13, 0.52)',
+                  '& fieldset': { borderColor: 'rgba(71, 198, 255, 0.34)' },
+                  '&:hover fieldset': { borderColor: 'rgba(71, 198, 255, 0.62)' },
+                  '&.Mui-focused fieldset': { borderColor: '#47c6ff' },
+                },
+              }}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{
+                minHeight: 40,
+                color: '#041018',
+                background: '#47c6ff',
+                fontWeight: 800,
+                '&:hover, &:focus-visible': {
+                  background: '#78d5ff',
+                  outline: '2px solid #d9f4ff',
+                  outlineOffset: 1,
+                },
+              }}
+            >
+              {t({ he: 'חיפוש', en: 'Search' })}
+            </Button>
+          </Box>
+        </Popover>
       </>
     );
   }
@@ -533,19 +684,19 @@ function Navbar({ variant = 'default' }) {
                 minHeight: 44,
                 mx: 0.5,
                 px: 1.5,
-                color: '#e9ffc7',
+                color: '#d8f3ff',
                 fontWeight: 850,
-                border: '1px solid rgba(184,255,61,0.6)',
+                border: '1px solid rgba(66,186,242,0.6)',
                 borderRadius: 1.5,
                 background:
                   location.pathname === '/builder'
-                    ? 'rgba(184,255,61,0.2)'
-                    : 'linear-gradient(110deg, rgba(184,255,61,0.13), rgba(79,195,247,0.1))',
-                boxShadow: 'inset 3px 0 0 #b8ff3d, 0 0 16px rgba(184,255,61,0.08)',
+                    ? 'rgba(66,186,242,0.2)'
+                    : 'linear-gradient(110deg, rgba(66,186,242,0.13), rgba(79,195,247,0.1))',
+                boxShadow: 'inset 3px 0 0 #42baf2, 0 0 16px rgba(66,186,242,0.08)',
                 '&:hover, &:focus-visible': {
-                  bgcolor: 'rgba(184,255,61,0.18)',
-                  borderColor: '#b8ff3d',
-                  outline: '2px solid rgba(184,255,61,0.55)',
+                  bgcolor: 'rgba(66,186,242,0.18)',
+                  borderColor: '#42baf2',
+                  outline: '2px solid rgba(66,186,242,0.55)',
                   outlineOffset: 2,
                 },
               }}
@@ -612,7 +763,7 @@ function Navbar({ variant = 'default' }) {
               sx={{
                 width: 48,
                 height: 48,
-                color: location.pathname === '/cart' ? '#b8ff3d' : 'inherit',
+                color: location.pathname === '/cart' ? '#42baf2' : 'inherit',
                 '&:hover, &:focus-visible': {
                   bgcolor: 'rgba(79,195,247,0.13)',
                   outline: '2px solid #4fc3f7',

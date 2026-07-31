@@ -1,8 +1,9 @@
 import { useParams, Link as RouterLink } from 'react-router';
 import { Typography, Box, Paper, Button, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, CircularProgress } from '@mui/material';
-import { CheckCircle } from '@mui/icons-material';
+import { CheckCircle, ContactSupportOutlined, WhatsApp } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useState, useEffect } from 'react';
+import PublicPageShell from '../components/PublicPageShell';
 
 function OrderConfirmationPage() {
   const { orderNumber } = useParams();
@@ -12,57 +13,89 @@ function OrderConfirmationPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetchOrderDetails();
-  }, [orderNumber]);
+    let cancelled = false;
 
-  const fetchOrderDetails = async () => {
-    try {
-      const response = await fetch(`/api/orders/${orderNumber}`);
-      if (response.ok) {
-        const data = await response.json();
-        setOrder(data);
-      } else {
-        setError(true);
+    const loadOrderDetails = async () => {
+      try {
+        const response = await fetch(`/api/orders/${orderNumber}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (!cancelled) setOrder(data);
+        } else if (!cancelled) {
+          setError(true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch order:', err);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch order:', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadOrderDetails();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderNumber]);
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-        <CircularProgress />
-      </Box>
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / הזמנה', en: 'FYURI / ORDER' })}
+        title={t({ he: 'טוען את פרטי הבקשה…', en: 'Loading your request…' })}
+      >
+        <Box className="fy-panel fy-public-empty">
+          <CircularProgress aria-label={t({ he: 'טוען הזמנה', en: 'Loading order' })} />
+        </Box>
+      </PublicPageShell>
     );
   }
 
   if (error || !order) {
     return (
-      <Box sx={{ maxWidth: 600, mx: 'auto', textAlign: 'center' }}>
-        <Alert severity="warning">
-          {t({ 
-            he: 'לא נמצאה הזמנה זו. אנא צור קשר אם אתה מאמין שזו שגיאה.',
-            en: 'Order not found. Please contact us if you believe this is an error.'
+      <PublicPageShell
+        eyebrow={t({ he: 'FYURI / הזמנה', en: 'FYURI / ORDER' })}
+        title={t({ he: 'לא מצאנו את הבקשה.', en: 'We could not find this request.' })}
+        description={t({
+          he: 'בדקו שמספר ההזמנה בקישור מלא, או צרו איתנו קשר ונשמח לעזור.',
+          en: 'Check that the complete order number is present in the link, or contact us for help.',
+        })}
+        actions={(
+          <>
+            <Button variant="contained" component={RouterLink} to="/">
+              {t({ he: 'חזרה לדף הבית', en: 'Back to home' })}
+            </Button>
+            <Button variant="outlined" component={RouterLink} to="/contact">
+              {t({ he: 'צור קשר', en: 'Contact us' })}
+            </Button>
+          </>
+        )}
+      >
+        <Alert severity="warning" className="fy-panel">
+          {t({
+            he: 'ההזמנה אינה זמינה בקישור הזה.',
+            en: 'The order is not available at this link.',
           })}
         </Alert>
-        <Button variant="contained" component={RouterLink} to="/" sx={{ mt: 3 }}>
-          {t({ he: 'חזור לדף הבית', en: 'Back to Home' })}
-        </Button>
-      </Box>
+      </PublicPageShell>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 900, mx: 'auto' }}>
+    <PublicPageShell
+      eyebrow={t({ he: 'FYURI / בקשה התקבלה', en: 'FYURI / REQUEST RECEIVED' })}
+      title={t({ he: 'בקשת ההזמנה התקבלה.', en: 'Your order request was received.' })}
+      description={t({
+        he: `מספר ההזמנה שלך: ${orderNumber}`,
+        en: `Your order number: ${orderNumber}`,
+      })}
+    >
+    <Box sx={{ maxWidth: 980, mx: 'auto' }}>
       {/* Success Header */}
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
-        <Typography variant="h3" gutterBottom sx={{ fontWeight: 600 }}>
-          {t({ he: 'ההזמנה נשלחה בהצלחה!', en: 'Order Sent Successfully!' })}
+        <Typography component="h2" variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
+          {t({ he: 'הפרטים נשמרו בהצלחה.', en: 'Your details were saved successfully.' })}
         </Typography>
         <Typography variant="h6" color="text.secondary">
           {t({ he: `מספר הזמנה: ${orderNumber}`, en: `Order Number: ${orderNumber}` })}
@@ -70,11 +103,11 @@ function OrderConfirmationPage() {
       </Box>
 
       {/* Main Confirmation Message */}
-      <Alert severity="success" sx={{ mb: 3, textAlign: 'left' }}>
+      <Alert severity="success" sx={{ mb: 3, textAlign: 'start' }}>
         <Typography variant="body1" sx={{ fontWeight: 500 }}>
           {t({ 
-            he: 'תודה רבה! ההזמנה שלך נשלחה בהצלחה.',
-            en: 'Thank you! Your order has been sent successfully.'
+            he: 'תודה רבה. בקשת ההזמנה שלך נקלטה במערכת.',
+            en: 'Thank you. Your order request has been recorded.'
           })}
         </Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
@@ -86,7 +119,7 @@ function OrderConfirmationPage() {
       </Alert>
 
       {/* Business Hours Info */}
-      <Paper sx={{ p: 3, mb: 3, bgcolor: 'background.paper' }}>
+      <Paper className="fy-panel" sx={{ p: 3, mb: 3, textAlign: 'start' }}>
         <Typography variant="h6" gutterBottom color="primary">
           {t({ he: 'שעות הפעילות שלנו', en: 'Our Business Hours' })}
         </Typography>
@@ -105,7 +138,7 @@ function OrderConfirmationPage() {
       </Paper>
 
       {/* Order Summary */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper className="fy-panel" sx={{ p: { xs: 2, sm: 3 }, mb: 3, textAlign: 'start' }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
           {t({ he: 'סיכום הזמנה', en: 'Order Summary' })}
         </Typography>
@@ -198,14 +231,14 @@ function OrderConfirmationPage() {
       </Paper>
 
       {/* Next Steps */}
-      <Alert severity="info" sx={{ mb: 3, textAlign: 'left' }}>
+      <Alert severity="info" sx={{ mb: 3, textAlign: 'start' }}>
         <Typography variant="body1" sx={{ fontWeight: 500, mb: 1 }}>
           {t({ he: 'מה הלאה?', en: 'What\'s Next?' })}
         </Typography>
         <Typography variant="body2">
           {t({ 
-            he: '1. תקבל אישור בכתובת האימייל שהזנת',
-            en: '1. You will receive a confirmation at the email address you provided'
+            he: '1. שמרו את מספר ההזמנה המופיע בראש הדף',
+            en: '1. Keep the order number shown at the top of this page'
           })}
         </Typography>
         <Typography variant="body2">
@@ -236,8 +269,23 @@ function OrderConfirmationPage() {
         <Button variant="outlined" component={RouterLink} to="/" size="large">
           {t({ he: 'חזור לדף הבית', en: 'Back to Home' })}
         </Button>
+        <Button
+          variant="outlined"
+          component="a"
+          href={`https://wa.me/972544770200?text=${encodeURIComponent(`FYURI order ${orderNumber}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          size="large"
+          startIcon={<WhatsApp />}
+        >
+          WhatsApp
+        </Button>
+        <Button variant="outlined" component={RouterLink} to="/contact" size="large" startIcon={<ContactSupportOutlined />}>
+          {t({ he: 'צור קשר', en: 'Contact us' })}
+        </Button>
       </Box>
     </Box>
+    </PublicPageShell>
   );
 }
 

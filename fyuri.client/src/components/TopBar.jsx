@@ -13,6 +13,7 @@ import {
   ScienceOutlined,
   WhatsApp,
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
 
@@ -43,7 +44,7 @@ function TopBar({ variant = 'default' }) {
     return (
       <Box
         className="catalog-reference-topbar"
-        dir="ltr"
+        dir={language === 'he' ? 'rtl' : 'ltr'}
         sx={{
           display: { xs: 'none', md: 'flex' },
           position: 'relative',
@@ -66,20 +67,23 @@ function TopBar({ variant = 'default' }) {
           }}
         >
           <Stack direction="row" spacing={2.5} alignItems="center">
-            <Box component="a" href="/contact" sx={utilityItemSx}>
+            <Box component={RouterLink} to="/contact" sx={utilityItemSx}>
               <HeadsetMicOutlined aria-hidden="true" />
-              <span>Expert Support</span>
+              <span>{t({ he: 'תמיכה מקצועית', en: 'Expert Support' })}</span>
             </Box>
             <Box sx={{ width: '1px', height: 19, bgcolor: '#172631' }} />
-            <Box component="a" href="/services" sx={utilityItemSx}>
+            <Box component={RouterLink} to="/services" sx={utilityItemSx}>
               <ScienceOutlined aria-hidden="true" />
-              <span>Lab Services</span>
+              <span>{t({ he: 'שירותי מעבדה', en: 'Lab Services' })}</span>
             </Box>
           </Stack>
 
           <Box component="a" href="mailto:info@fyuri.co.il" sx={utilityItemSx}>
             <Email aria-hidden="true" />
-            <span>Email: info@fyuri.co.il</span>
+            <span>{t({
+              he: 'אימייל: info@fyuri.co.il',
+              en: 'Email: info@fyuri.co.il',
+            })}</span>
           </Box>
 
           <Stack
@@ -90,12 +94,12 @@ function TopBar({ variant = 'default' }) {
           >
             <Box sx={utilityItemSx}>
               <PublicOutlined aria-hidden="true" />
-              <span>Worldwide Shipping</span>
+              <span>{t({ he: 'משלוחים לכל העולם', en: 'Worldwide Shipping' })}</span>
             </Box>
             <Box sx={{ width: '1px', height: 19, bgcolor: '#172631' }} />
             <Box sx={utilityItemSx}>
               <LockOutlined aria-hidden="true" />
-              <span>Secure Checkout</span>
+              <span>{t({ he: 'תשלום מאובטח', en: 'Secure Checkout' })}</span>
             </Box>
           </Stack>
         </Box>

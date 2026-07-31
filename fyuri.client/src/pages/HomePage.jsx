@@ -83,14 +83,14 @@ function canUseHeroVideo() {
   return !reducedMotion && !connection?.saveData && !constrainedNetwork;
 }
 
-const focusRing = (color = '#b8ff3d', outlineOffset = 3) => ({
+const focusRing = (color = '#42baf2', outlineOffset = 3) => ({
   '&:focus-visible': {
     outline: `3px solid ${color}`,
     outlineOffset,
   },
 });
 
-function SectionLabel({ children, color = '#4fc3f7' }) {
+function SectionLabel({ children, color = '#42baf2' }) {
   return (
     <Typography
       component="p"
@@ -259,9 +259,16 @@ function HomePage() {
   return (
     <Box
       sx={{
-        bgcolor: isDark ? '#07111b' : '#eef3f8',
+        bgcolor: isDark ? '#030d15' : '#eef3f8',
         color: 'text.primary',
         overflowX: 'clip',
+        '& h1, & h2, & h3': {
+          fontFamily: '"Arial Black", "Segoe UI", Arial, sans-serif',
+        },
+        '& .MuiButton-root': {
+          borderRadius: 0.75,
+          letterSpacing: '0.02em',
+        },
       }}
     >
       <Box
@@ -285,7 +292,7 @@ function HomePage() {
             zIndex: 2,
             opacity: 0.24,
             backgroundImage:
-              'linear-gradient(rgba(79,195,247,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.15) 1px, transparent 1px)',
+              'linear-gradient(rgba(66,186,242,0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(66,186,242,0.13) 1px, transparent 1px)',
             backgroundSize: '40px 40px',
             maskImage: 'linear-gradient(to bottom, black, transparent 86%)',
           },
@@ -297,8 +304,8 @@ function HomePage() {
             top: 'calc(var(--site-header-reserved-height) + 28px)',
             width: 58,
             height: 58,
-            borderBlockStart: '1px solid rgba(184,255,61,0.55)',
-            borderInlineStart: '1px solid rgba(184,255,61,0.55)',
+            borderBlockStart: '1px solid rgba(66,186,242,0.62)',
+            borderInlineStart: '1px solid rgba(66,186,242,0.62)',
             pointerEvents: 'none',
           },
         }}
@@ -381,8 +388,8 @@ function HomePage() {
                 'linear-gradient(to bottom, rgba(2,7,12,0.32), rgba(2,7,12,0.68))',
                 'linear-gradient(rgba(2,7,12,0.56), rgba(2,7,12,0.64))',
                 isRtl
-                  ? 'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)'
-                  : 'radial-gradient(circle at 28% 34%, rgba(79,195,247,0.12), transparent 34%)',
+                  ? 'radial-gradient(circle at 72% 34%, rgba(66,186,242,0.12), transparent 34%)'
+                  : 'radial-gradient(circle at 28% 34%, rgba(66,186,242,0.12), transparent 34%)',
               ].join(', '),
               lg: [
                 'linear-gradient(to bottom, rgba(2,7,12,0.2), rgba(2,7,12,0.62))',
@@ -390,8 +397,8 @@ function HomePage() {
                   ? 'linear-gradient(90deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))'
                   : 'linear-gradient(270deg, rgba(2,7,12,0.36), rgba(2,7,12,0.7) 62%, rgba(2,7,12,0.9))',
                 isRtl
-                  ? 'radial-gradient(circle at 72% 34%, rgba(79,195,247,0.12), transparent 34%)'
-                  : 'radial-gradient(circle at 28% 34%, rgba(79,195,247,0.12), transparent 34%)',
+                  ? 'radial-gradient(circle at 72% 34%, rgba(66,186,242,0.12), transparent 34%)'
+                  : 'radial-gradient(circle at 28% 34%, rgba(66,186,242,0.12), transparent 34%)',
               ].join(', '),
             },
           }}
@@ -436,9 +443,9 @@ function HomePage() {
                   label="FYURI / NIGHT SYSTEMS"
                   size="small"
                   sx={{
-                    color: '#b8ff3d',
-                    bgcolor: 'rgba(184,255,61,0.08)',
-                    border: '1px solid rgba(184,255,61,0.32)',
+                    color: '#42baf2',
+                    bgcolor: 'rgba(66,186,242,0.08)',
+                    border: '1px solid rgba(66,186,242,0.34)',
                     fontFamily: 'var(--mono)',
                     fontWeight: 800,
                     letterSpacing: '0.08em',
@@ -449,8 +456,8 @@ function HomePage() {
                   size="small"
                   sx={{
                     color: '#9ddfff',
-                    bgcolor: 'rgba(79,195,247,0.08)',
-                    border: '1px solid rgba(79,195,247,0.28)',
+                    bgcolor: 'rgba(66,186,242,0.06)',
+                    border: '1px solid rgba(66,186,242,0.2)',
                     fontFamily: 'var(--mono)',
                     fontWeight: 750,
                     letterSpacing: language === 'en' ? '0.07em' : 0,
@@ -477,8 +484,8 @@ function HomePage() {
                   sx={{
                     display: 'block',
                     mt: 0.4,
-                    color: '#b8ff3d',
-                    textShadow: '0 0 28px rgba(184,255,61,0.12)',
+                    color: '#42baf2',
+                    textShadow: '0 0 28px rgba(66,186,242,0.14)',
                   }}
                 >
                   {t({ he: 'רכיבים ושירותי מעבדה.', en: 'components and lab services.' })}
@@ -519,13 +526,14 @@ function HomePage() {
                   sx={{
                     minHeight: 52,
                     px: 3,
-                    color: '#102000',
-                    bgcolor: '#b8ff3d',
+                    color: '#001019',
+                    bgcolor: '#42baf2',
                     fontWeight: 900,
-                    boxShadow: '0 12px 34px rgba(184,255,61,0.16)',
+                    borderRadius: 0.75,
+                    boxShadow: '0 12px 34px rgba(66,186,242,0.18)',
                     '&:hover': {
-                      bgcolor: '#caff70',
-                      boxShadow: '0 16px 40px rgba(184,255,61,0.23)',
+                      bgcolor: '#68c9f5',
+                      boxShadow: '0 16px 40px rgba(66,186,242,0.25)',
                     },
                     ...focusRing(),
                   }}
@@ -545,10 +553,11 @@ function HomePage() {
                     px: 3,
                     color: '#edf9ff',
                     borderColor: 'rgba(157,223,255,0.56)',
+                    borderRadius: 0.75,
                     fontWeight: 800,
                     '&:hover': {
-                      borderColor: '#4fc3f7',
-                      bgcolor: 'rgba(79,195,247,0.09)',
+                      borderColor: '#42baf2',
+                      bgcolor: 'rgba(66,186,242,0.09)',
                     },
                     ...focusRing(),
                   }}
@@ -571,7 +580,7 @@ function HomePage() {
                   color: '#b7cad6',
                   justifyContent: 'flex-start',
                   fontWeight: 700,
-                  '&:hover': { color: '#dfffad', bgcolor: 'transparent' },
+                  '&:hover': { color: '#9ddfff', bgcolor: 'transparent' },
                   ...focusRing(),
                 }}
               >
@@ -597,12 +606,12 @@ function HomePage() {
           sx={{
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' },
-            bgcolor: isDark ? 'rgba(12,28,40,0.98)' : 'rgba(255,255,255,0.98)',
+            bgcolor: isDark ? 'rgba(5,18,28,0.98)' : 'rgba(255,255,255,0.98)',
             border: '1px solid',
-            borderColor: isDark ? 'rgba(79,195,247,0.28)' : 'rgba(13,95,138,0.2)',
-            borderRadius: 2,
+            borderColor: isDark ? 'rgba(66,186,242,0.3)' : 'rgba(13,95,138,0.2)',
+            borderRadius: 0.75,
             overflow: 'hidden',
-            boxShadow: '0 24px 70px rgba(0,0,0,0.2)',
+            boxShadow: '0 24px 70px rgba(0,0,0,0.28)',
           }}
         >
           {capabilityPaths.map((item, index) => {
@@ -632,14 +641,14 @@ function HomePage() {
                     xs: index < capabilityPaths.length - 1 ? '1px solid' : 0,
                     md: 0,
                   },
-                  borderColor: isDark ? 'rgba(79,195,247,0.16)' : 'rgba(13,95,138,0.14)',
+                  borderColor: isDark ? 'rgba(66,186,242,0.18)' : 'rgba(13,95,138,0.14)',
                   transition: 'background-color 180ms ease, transform 180ms ease',
                   '&:hover, &:focus-visible': {
-                    bgcolor: isDark ? 'rgba(79,195,247,0.08)' : 'rgba(13,95,138,0.06)',
+                    bgcolor: isDark ? 'rgba(66,186,242,0.09)' : 'rgba(13,95,138,0.06)',
                     transform: { md: 'translateY(-3px)' },
                     outline: 'none',
                     '& .capability-arrow': {
-                      color: isDark ? '#b8ff3d' : '#2d6500',
+                      color: isDark ? '#42baf2' : '#0d5f8a',
                       transform: isRtl ? 'translateX(-3px) scaleX(-1)' : 'translateX(3px)',
                     },
                   },
@@ -647,7 +656,7 @@ function HomePage() {
                     transition: 'none',
                     '&:hover, &:focus-visible': { transform: 'none' },
                   },
-                  ...focusRing(isDark ? '#b8ff3d' : '#2d6500', -3),
+                  ...focusRing(isDark ? '#42baf2' : '#0d5f8a', -3),
                 }}
               >
                 <Box
@@ -656,9 +665,9 @@ function HomePage() {
                     placeItems: 'center',
                     width: 46,
                     height: 46,
-                    color: isDark ? '#4fc3f7' : '#0d5f8a',
+                    color: isDark ? '#42baf2' : '#0d5f8a',
                     border: '1px solid currentColor',
-                    borderRadius: 1.25,
+                    borderRadius: 0.5,
                   }}
                 >
                   <CapabilityIcon />
@@ -667,7 +676,7 @@ function HomePage() {
                   <Typography
                     component="p"
                     sx={{
-                      color: isDark ? '#b8ff3d' : '#2d6500',
+                      color: isDark ? '#42baf2' : '#0d5f8a',
                       fontFamily: 'var(--mono)',
                       fontSize: '0.67rem',
                       fontWeight: 900,
@@ -709,7 +718,7 @@ function HomePage() {
             }}
           >
             <Box sx={{ maxWidth: 760, textAlign: 'start' }}>
-              <SectionLabel color={isDark ? '#4fc3f7' : '#0d5f8a'}>
+              <SectionLabel color={isDark ? '#42baf2' : '#0d5f8a'}>
                 {t({ he: 'CATALOG / 01', en: 'CATALOG / 01' })}
               </SectionLabel>
               <Typography
@@ -734,14 +743,15 @@ function HomePage() {
             </Box>
 
             <Button
+              data-testid="home-all-categories-cta"
               component={RouterLink}
               to="/products"
               endIcon={<ArrowForward sx={{ transform: isRtl ? 'scaleX(-1)' : 'none' }} />}
               sx={{
                 minHeight: 48,
-                color: isDark ? '#b8ff3d' : '#2d6500',
+                color: isDark ? '#42baf2' : '#0d5f8a',
                 fontWeight: 850,
-                ...focusRing(isDark ? '#b8ff3d' : '#2d6500'),
+                ...focusRing(isDark ? '#42baf2' : '#0d5f8a'),
               }}
             >
               {t({ he: 'כל הקטגוריות', en: 'All categories' })}
@@ -766,6 +776,7 @@ function HomePage() {
               return (
                 <Box
                   key={category.id}
+                  data-testid={`home-category-${category.value}`}
                   component={RouterLink}
                   to={category.path}
                   sx={{
@@ -774,15 +785,15 @@ function HomePage() {
                     mt: { lg: index % 2 === 0 ? 0 : 5 },
                     color: '#f4fbff',
                     textDecoration: 'none',
-                    border: '1px solid rgba(79,195,247,0.2)',
-                    borderRadius: 2,
+                    border: '1px solid rgba(66,186,242,0.22)',
+                    borderRadius: 0.75,
                     overflow: 'hidden',
                     bgcolor: '#07131e',
                     boxShadow: '0 18px 42px rgba(0,0,0,0.17)',
                     transition: 'transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease',
                     '&:hover, &:focus-visible': {
                       transform: 'translateY(-7px)',
-                      borderColor: '#4fc3f7',
+                      borderColor: '#42baf2',
                       boxShadow: '0 26px 62px rgba(0,0,0,0.28)',
                       outline: 'none',
                       '& .category-media': {
@@ -832,7 +843,7 @@ function HomePage() {
                       position: 'absolute',
                       top: 20,
                       insetInlineStart: 20,
-                      color: '#b8ff3d',
+                      color: '#42baf2',
                       fontFamily: 'var(--mono)',
                       fontSize: '0.72rem',
                       fontWeight: 900,
@@ -856,9 +867,9 @@ function HomePage() {
                         width: 42,
                         height: 42,
                         mb: 1.5,
-                        color: '#4fc3f7',
-                        border: '1px solid rgba(79,195,247,0.48)',
-                        borderRadius: 1,
+                        color: '#42baf2',
+                        border: '1px solid rgba(66,186,242,0.48)',
+                        borderRadius: 0.5,
                         bgcolor: 'rgba(3,11,17,0.62)',
                       }}
                     >
@@ -883,9 +894,9 @@ function HomePage() {
         aria-labelledby="builder-heading"
         sx={{
           py: { xs: 9, md: 13 },
-          bgcolor: isDark ? '#0c1b27' : '#ffffff',
+          bgcolor: isDark ? '#071722' : '#ffffff',
           borderBlock: '1px solid',
-          borderColor: isDark ? 'rgba(79,195,247,0.14)' : 'rgba(13,95,138,0.12)',
+          borderColor: isDark ? 'rgba(66,186,242,0.16)' : 'rgba(13,95,138,0.12)',
         }}
       >
         <Container maxWidth="xl">
@@ -902,9 +913,9 @@ function HomePage() {
                 position: 'relative',
                 minHeight: { xs: 340, md: 540 },
                 overflow: 'hidden',
-                borderRadius: 2.5,
+                borderRadius: 0.75,
                 border: '1px solid',
-                borderColor: isDark ? 'rgba(79,195,247,0.26)' : 'rgba(13,95,138,0.2)',
+                borderColor: isDark ? 'rgba(66,186,242,0.28)' : 'rgba(13,95,138,0.2)',
                 bgcolor: '#06111b',
                 '&::after': {
                   content: '""',
@@ -934,7 +945,7 @@ function HomePage() {
               >
                 <defs>
                   <pattern id="builder-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-                    <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#4fc3f7" strokeWidth="0.7" opacity="0.22" />
+                    <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#42baf2" strokeWidth="0.7" opacity="0.22" />
                   </pattern>
                   <filter id="builder-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="4" result="blur" />
@@ -951,9 +962,9 @@ function HomePage() {
 
                 <rect width="640" height="460" fill="url(#builder-surface)" />
                 <rect width="640" height="460" fill="url(#builder-grid)" />
-                <path d="M 38 62 H 602 M 38 344 H 602" stroke="#4fc3f7" strokeWidth="1" opacity="0.28" />
+                <path d="M 38 62 H 602 M 38 344 H 602" stroke="#42baf2" strokeWidth="1" opacity="0.28" />
 
-                <g fill="none" stroke="#4fc3f7" strokeWidth="2">
+                <g fill="none" stroke="#42baf2" strokeWidth="2">
                   <circle cx="104" cy="200" r="58" />
                   <circle cx="104" cy="200" r="42" opacity="0.55" />
                   <path d="M 162 173 H 208 V 227 H 162" />
@@ -969,7 +980,7 @@ function HomePage() {
                 <path
                   d="M 46 200 H 594"
                   fill="none"
-                  stroke="#b8ff3d"
+                  stroke="#42baf2"
                   strokeWidth="1.4"
                   strokeDasharray="7 8"
                   opacity="0.75"
@@ -982,23 +993,23 @@ function HomePage() {
                   <text x="478" y="112">EYEPIECE</text>
                 </g>
 
-                <g transform="translate(62 372)" fill="none" stroke="#b8ff3d" strokeWidth="1.7">
+                <g transform="translate(62 372)" fill="none" stroke="#42baf2" strokeWidth="1.7">
                   <circle cx="20" cy="20" r="15" />
                   <path d="M 35 20 H 62" />
-                  <text x="0" y="62" fill="#dfffad" stroke="none" fontFamily="monospace" fontSize="10">MONO</text>
+                  <text x="0" y="62" fill="#9ddfff" stroke="none" fontFamily="monospace" fontSize="10">MONO</text>
                 </g>
-                <g transform="translate(252 372)" fill="none" stroke="#b8ff3d" strokeWidth="1.7">
+                <g transform="translate(252 372)" fill="none" stroke="#42baf2" strokeWidth="1.7">
                   <circle cx="11" cy="20" r="15" />
                   <circle cx="49" cy="20" r="15" />
                   <path d="M 26 20 H 34" />
-                  <text x="5" y="62" fill="#dfffad" stroke="none" fontFamily="monospace" fontSize="10">BINO</text>
+                  <text x="5" y="62" fill="#9ddfff" stroke="none" fontFamily="monospace" fontSize="10">BINO</text>
                 </g>
-                <g transform="translate(472 372)" fill="none" stroke="#b8ff3d" strokeWidth="1.7">
+                <g transform="translate(472 372)" fill="none" stroke="#42baf2" strokeWidth="1.7">
                   <circle cx="0" cy="20" r="12" />
                   <circle cx="27" cy="20" r="12" />
                   <circle cx="54" cy="20" r="12" />
                   <circle cx="81" cy="20" r="12" />
-                  <text x="15" y="62" fill="#dfffad" stroke="none" fontFamily="monospace" fontSize="10">PANO</text>
+                  <text x="15" y="62" fill="#9ddfff" stroke="none" fontFamily="monospace" fontSize="10">PANO</text>
                 </g>
               </Box>
               <Box
@@ -1011,16 +1022,16 @@ function HomePage() {
                   py: 1.5,
                   color: '#eefaff',
                   bgcolor: 'rgba(3,11,17,0.78)',
-                  border: '1px solid rgba(184,255,61,0.34)',
+                  border: '1px solid rgba(66,186,242,0.36)',
                   backdropFilter: 'blur(8px)',
                 }}
               >
-                <SectionLabel color="#b8ff3d">CONFIGURATOR / 03 FORM FACTORS</SectionLabel>
+                <SectionLabel color="#42baf2">CONFIGURATOR / 03 FORM FACTORS</SectionLabel>
               </Box>
             </Box>
 
             <Box sx={{ textAlign: 'start' }}>
-              <SectionLabel color={isDark ? '#4fc3f7' : '#0d5f8a'}>
+              <SectionLabel color={isDark ? '#42baf2' : '#0d5f8a'}>
                 {t({ he: 'BUILDER / 02', en: 'BUILDER / 02' })}
               </SectionLabel>
               <Typography
@@ -1079,7 +1090,7 @@ function HomePage() {
                   >
                     <Typography
                       sx={{
-                        color: isDark ? '#b8ff3d' : '#2d6500',
+                        color: isDark ? '#42baf2' : '#0d5f8a',
                         fontFamily: 'var(--mono)',
                         fontSize: '0.75rem',
                         fontWeight: 900,
@@ -1093,6 +1104,7 @@ function HomePage() {
               </Stack>
 
               <Button
+                data-testid="home-builder-section-cta"
                 component={RouterLink}
                 to="/builder"
                 variant="contained"
@@ -1102,11 +1114,12 @@ function HomePage() {
                   minHeight: 52,
                   mt: 4,
                   px: 3,
-                  color: '#102000',
-                  bgcolor: '#b8ff3d',
+                  color: '#001019',
+                  bgcolor: '#42baf2',
+                  borderRadius: 0.75,
                   fontWeight: 900,
-                  '&:hover': { bgcolor: '#caff70' },
-                  ...focusRing(isDark ? '#b8ff3d' : '#2d6500'),
+                  '&:hover': { bgcolor: '#68c9f5' },
+                  ...focusRing(isDark ? '#42baf2' : '#0d5f8a'),
                 }}
               >
                 {t({ he: 'פתחו את בונה המכשירים', en: 'Open the device builder' })}
@@ -1125,14 +1138,14 @@ function HomePage() {
           color: '#edf9ff',
           bgcolor: '#040b11',
           backgroundImage:
-            'radial-gradient(circle at 14% 20%, rgba(184,255,61,0.08), transparent 24%), radial-gradient(circle at 86% 70%, rgba(79,195,247,0.12), transparent 30%)',
+            'radial-gradient(circle at 14% 20%, rgba(66,186,242,0.08), transparent 24%), radial-gradient(circle at 86% 70%, rgba(66,186,242,0.12), transparent 30%)',
           '&::before': {
             content: '""',
             position: 'absolute',
             inset: 0,
             opacity: 0.16,
             backgroundImage:
-              'linear-gradient(rgba(79,195,247,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(79,195,247,0.16) 1px, transparent 1px)',
+              'linear-gradient(rgba(66,186,242,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(66,186,242,0.16) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
             pointerEvents: 'none',
           },
@@ -1148,7 +1161,7 @@ function HomePage() {
             }}
           >
             <Box sx={{ position: { lg: 'sticky' }, top: { lg: 'calc(var(--site-header-height) + 48px)' }, textAlign: 'start' }}>
-              <SectionLabel color="#b8ff3d">{t({ he: 'LAB / 03', en: 'LAB / 03' })}</SectionLabel>
+              <SectionLabel color="#42baf2">{t({ he: 'LAB / 03', en: 'LAB / 03' })}</SectionLabel>
               <Typography
                 id="lab-heading"
                 component="h2"
@@ -1180,9 +1193,9 @@ function HomePage() {
                   minHeight: 50,
                   mt: 3,
                   px: 0,
-                  color: '#b8ff3d',
+                  color: '#42baf2',
                   fontWeight: 900,
-                  '&:hover': { bgcolor: 'transparent', color: '#dfffad' },
+                  '&:hover': { bgcolor: 'transparent', color: '#9ddfff' },
                   ...focusRing(),
                 }}
               >
@@ -1206,14 +1219,15 @@ function HomePage() {
                       minHeight: { xs: 150, sm: 132 },
                       px: { xs: 2.5, sm: 3.5 },
                       py: 2.5,
-                      border: '1px solid rgba(79,195,247,0.18)',
-                      bgcolor: 'rgba(10,25,36,0.72)',
+                      border: '1px solid rgba(66,186,242,0.2)',
+                      borderRadius: 0.75,
+                      bgcolor: 'rgba(5,18,28,0.76)',
                       backdropFilter: 'blur(8px)',
                     }}
                   >
                     <Typography
                       sx={{
-                        color: '#b8ff3d',
+                        color: '#42baf2',
                         fontFamily: 'var(--mono)',
                         fontSize: '0.76rem',
                         fontWeight: 900,
@@ -1227,9 +1241,9 @@ function HomePage() {
                         placeItems: 'center',
                         width: 52,
                         height: 52,
-                        color: '#4fc3f7',
-                        border: '1px solid rgba(79,195,247,0.38)',
-                        borderRadius: 1,
+                        color: '#42baf2',
+                        border: '1px solid rgba(66,186,242,0.4)',
+                        borderRadius: 0.5,
                       }}
                     >
                       <ServiceIcon />
@@ -1258,10 +1272,10 @@ function HomePage() {
               px: { xs: 3, md: 6 },
               py: { xs: 5, md: 6 },
               color: isDark ? '#eefaff' : '#07131e',
-              bgcolor: isDark ? '#102636' : '#dff3ff',
+              bgcolor: isDark ? '#071c2a' : '#dff3ff',
               border: '1px solid',
-              borderColor: isDark ? 'rgba(79,195,247,0.3)' : 'rgba(13,95,138,0.24)',
-              borderRadius: 2.5,
+              borderColor: isDark ? 'rgba(66,186,242,0.32)' : 'rgba(13,95,138,0.24)',
+              borderRadius: 0.75,
               overflow: 'hidden',
               '&::after': {
                 content: '""',
@@ -1271,13 +1285,13 @@ function HomePage() {
                 insetInlineEnd: -70,
                 bottom: -100,
                 borderRadius: '50%',
-                border: '44px solid rgba(184,255,61,0.12)',
+                border: '44px solid rgba(66,186,242,0.1)',
                 pointerEvents: 'none',
               },
             }}
           >
             <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 810, textAlign: 'start' }}>
-              <SectionLabel color={isDark ? '#b8ff3d' : '#2d6500'}>
+              <SectionLabel color={isDark ? '#42baf2' : '#0d5f8a'}>
                 {t({ he: 'CONTACT / NEXT STEP', en: 'CONTACT / NEXT STEP' })}
               </SectionLabel>
               <Typography
@@ -1312,16 +1326,18 @@ function HomePage() {
                   sx={{
                     minHeight: 50,
                     px: 3,
-                    color: '#102000',
-                    bgcolor: '#b8ff3d',
+                    color: '#001019',
+                    bgcolor: '#42baf2',
+                    borderRadius: 0.75,
                     fontWeight: 900,
-                    '&:hover': { bgcolor: '#caff70' },
-                    ...focusRing(isDark ? '#b8ff3d' : '#2d6500'),
+                    '&:hover': { bgcolor: '#68c9f5' },
+                    ...focusRing(isDark ? '#42baf2' : '#0d5f8a'),
                   }}
                 >
                   {t({ he: 'WhatsApp', en: 'WhatsApp' })}
                 </Button>
                 <Button
+                  data-testid="contact-page-cta"
                   component={RouterLink}
                   to="/contact"
                   variant="outlined"
@@ -1330,8 +1346,9 @@ function HomePage() {
                     px: 3,
                     color: 'text.primary',
                     borderColor: isDark ? 'rgba(157,223,255,0.48)' : 'rgba(13,95,138,0.42)',
+                    borderRadius: 0.75,
                     fontWeight: 850,
-                    ...focusRing(isDark ? '#b8ff3d' : '#2d6500'),
+                    ...focusRing(isDark ? '#42baf2' : '#0d5f8a'),
                   }}
                 >
                   {t({ he: 'צרו קשר', en: 'Contact us' })}

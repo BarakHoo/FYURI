@@ -22,6 +22,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const LabServicesPage = lazy(() => import('./pages/LabServicesPage'));
 const BuilderPage = lazy(() => import('./pages/BuilderPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
@@ -124,6 +125,7 @@ function AppContent() {
                         <Route path="/services" element={<LabServicesPage />} />
                         <Route path="/builder" element={<BuilderPage />} />
                         <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmationPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
                       </Routes>
                     </Layout>
                   </CartProvider>

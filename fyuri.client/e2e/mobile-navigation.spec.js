@@ -147,30 +147,30 @@ test.describe('responsive site navigation', () => {
     await expect(page.getByTestId('mobile-menu-button')).toHaveAttribute('aria-expanded', 'false');
   });
 
-  test('mobile drawer follows the physical start edge in Hebrew and English', async ({ page }) => {
+  test('mobile drawer follows the physical start edge in English and Hebrew', async ({ page }) => {
     await visitPublicPage(page, mobileViewport);
 
     const root = page.locator('html');
     const menuButton = page.getByTestId('mobile-menu-button');
     const drawer = page.getByTestId('mobile-nav-paper');
 
-    await expect(root).toHaveAttribute('lang', 'he');
-    await expect(root).toHaveAttribute('dir', 'rtl');
-
-    await menuButton.click();
-    await expect(drawer).toHaveCSS('direction', 'rtl');
-    await expectDrawerAtEdge(page, drawer, 'right');
-    expect(await drawer.evaluate((element) => element.getBoundingClientRect().width))
-      .toBeLessThan(mobileViewport.width);
-    await page.getByTestId('mobile-nav-close').click();
-
-    await page.getByTestId('language-toggle').click();
     await expect(root).toHaveAttribute('lang', 'en');
     await expect(root).toHaveAttribute('dir', 'ltr');
 
     await menuButton.click();
     await expect(drawer).toHaveCSS('direction', 'ltr');
     await expectDrawerAtEdge(page, drawer, 'left');
+    expect(await drawer.evaluate((element) => element.getBoundingClientRect().width))
+      .toBeLessThan(mobileViewport.width);
+    await page.getByTestId('mobile-nav-close').click();
+
+    await page.getByTestId('language-toggle').click();
+    await expect(root).toHaveAttribute('lang', 'he');
+    await expect(root).toHaveAttribute('dir', 'rtl');
+
+    await menuButton.click();
+    await expect(drawer).toHaveCSS('direction', 'rtl');
+    await expectDrawerAtEdge(page, drawer, 'right');
     await expectNoHorizontalOverflow(page);
   });
 
@@ -224,7 +224,9 @@ test.describe('responsive site navigation', () => {
 
     const desktopNav = page.getByTestId('desktop-nav');
     const productsButton = page.getByTestId('desktop-products-button');
-    const categoryLink = page.locator('a[href="/products?category=monocular"]');
+    const categoryLink = page.locator(
+      '#desktop-products-navigation a[href="/products?category=monocular"]',
+    );
 
     await expect(desktopNav).toBeVisible();
     await expect(desktopNav).toHaveRole('navigation');
@@ -251,6 +253,67 @@ test.describe('responsive site navigation', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('catalog desktop header localizes and exposes working search, support, and cart controls', async ({ page }) => {
+    await visitPublicPage(page, { width: 1680, height: 944 }, '/products');
+
+    const root = page.locator('html');
+    const productsButton = page.getByTestId('desktop-products-button');
+    const languageButton = page.getByTestId('language-toggle');
+    const searchButton = page.getByTestId('catalog-search-button');
+    const supportLink = page.getByTestId('catalog-support-link');
+    const cartLink = page.locator('a[href="/cart"]').first();
+    const referenceHeader = page.locator('header.MuiPaper-root');
+
+    await expect(root).toHaveAttribute('lang', 'en');
+    await expect(root).toHaveAttribute('dir', 'ltr');
+    await expect(referenceHeader).toHaveAttribute('dir', 'ltr');
+    await expect(
+      page.locator('.catalog-reference-topbar').getByText('Expert Support'),
+    ).toBeVisible();
+    await expect(productsButton).toHaveAccessibleName('PRODUCTS');
+    await expect(languageButton).toBeVisible();
+    await expect(languageButton).toHaveAccessibleName('Switch to Hebrew');
+    await expect(searchButton).toHaveAccessibleName('Search catalog');
+    await expect(supportLink).toHaveAccessibleName('Customer support and contact');
+    await expect(cartLink).toHaveAccessibleName('Cart, 0 items');
+
+    await productsButton.click();
+    await expect(productsButton).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('Escape');
+    await expect(productsButton).toHaveAttribute('aria-expanded', 'false');
+    await languageButton.click();
+
+    await expect(root).toHaveAttribute('lang', 'he');
+    await expect(root).toHaveAttribute('dir', 'rtl');
+    await expect(referenceHeader).toHaveAttribute('dir', 'rtl');
+    await expect(productsButton).toHaveAccessibleName('מוצרים');
+    await expect(
+      page.locator('.catalog-reference-topbar').getByText('תמיכה מקצועית'),
+    ).toBeVisible();
+    await expect(languageButton).toHaveAccessibleName('החלף לאנגלית');
+    await expect(searchButton).toHaveAccessibleName('חיפוש בקטלוג');
+    await expect(supportLink).toHaveAccessibleName('שירות לקוחות וצור קשר');
+    await expect(cartLink).toHaveAccessibleName('סל קניות, 0 פריטים');
+
+    await languageButton.click();
+    await expect(root).toHaveAttribute('lang', 'en');
+    await expect(root).toHaveAttribute('dir', 'ltr');
+
+    await searchButton.click();
+    const searchDialog = page.getByRole('dialog', { name: 'Product search' });
+    await expect(searchDialog).toBeVisible();
+    await expect(searchButton).toHaveAttribute('aria-expanded', 'true');
+    await searchDialog.getByRole('textbox', { name: 'Search products' }).fill('pvs 14 pro');
+    await searchDialog.getByRole('button', { name: 'Search' }).click();
+
+    await expect(page).toHaveURL(/\/products\?q=pvs\+14\+pro$/);
+    await expect(page.getByRole('dialog', { name: 'Product search' })).toBeHidden();
+
+    await supportLink.click();
+    await expect(page).toHaveURL(/\/contact$/);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('desktop Products remains scrollable on short viewports', async ({ page }) => {
     await visitPublicPage(page, { width: 1200, height: 500 });
 
@@ -274,8 +337,8 @@ test.describe('responsive site navigation', () => {
     const contactStrip = page.getByTestId('contact-strip');
     const navbar = page.locator('header').first();
 
-    await expect(contactStrip).toHaveCSS('height', '44px');
-    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(44);
+    await expect(contactStrip).toHaveCSS('height', '38px');
+    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(38);
 
     await page.evaluate(() => window.scrollTo(0, 200));
 
@@ -286,8 +349,8 @@ test.describe('responsive site navigation', () => {
 
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    await expect(contactStrip).toHaveCSS('height', '44px');
+    await expect(contactStrip).toHaveCSS('height', '38px');
     await expect(contactStrip).not.toHaveAttribute('aria-hidden', 'true');
-    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(44);
+    await expect.poll(async () => (await navbar.boundingBox())?.y).toBe(38);
   });
 });
