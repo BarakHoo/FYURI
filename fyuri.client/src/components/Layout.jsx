@@ -7,6 +7,7 @@ import { useLocation } from 'react-router';
 
 function Layout({ children, fullWidth = false }) {
   const location = useLocation();
+  const catalogReferenceHeader = location.pathname === '/products';
   const [topBarCollapsed, setTopBarCollapsed] = useState(
     () => typeof window !== 'undefined' && window.scrollY > 12,
   );
@@ -44,11 +45,29 @@ function Layout({ children, fullWidth = false }) {
   return (
     <Box 
       sx={{ 
+        '--site-topbar-height': {
+          xs: '0px',
+          md: catalogReferenceHeader ? '38px' : '44px',
+        },
+        '--site-navbar-height': {
+          xs: '64px',
+          md: '64px',
+          lg: catalogReferenceHeader ? '93px' : '64px',
+        },
         '--site-header-height': {
           xs: '64px',
-          md: topBarCollapsed ? '64px' : '108px',
+          md: topBarCollapsed
+            ? '64px'
+            : (catalogReferenceHeader ? '102px' : '108px'),
+          lg: topBarCollapsed
+            ? (catalogReferenceHeader ? '93px' : '64px')
+            : (catalogReferenceHeader ? '131px' : '108px'),
         },
-        '--site-header-reserved-height': { xs: '64px', md: '108px' },
+        '--site-header-reserved-height': {
+          xs: '64px',
+          md: catalogReferenceHeader ? '102px' : '108px',
+          lg: catalogReferenceHeader ? '131px' : '108px',
+        },
         display: 'flex', 
         flexDirection: 'column', 
         minHeight: '100vh'
@@ -70,21 +89,26 @@ function Layout({ children, fullWidth = false }) {
           inert={topBarCollapsed}
           sx={{
             display: { xs: 'none', md: 'block' },
-            height: topBarCollapsed ? 0 : 44,
+            height: topBarCollapsed ? 0 : 'var(--site-topbar-height)',
             opacity: topBarCollapsed ? 0 : 1,
             overflow: 'hidden',
             pointerEvents: topBarCollapsed ? 'none' : 'auto',
-            transform: topBarCollapsed ? 'translateY(-44px)' : 'translateY(0)',
+            transform: topBarCollapsed
+              ? 'translateY(calc(-1 * var(--site-topbar-height)))'
+              : 'translateY(0)',
             transition: 'height 220ms ease, opacity 160ms ease, transform 220ms ease',
             '@media (prefers-reduced-motion: reduce)': {
               transition: 'none',
             },
           }}
         >
-          <TopBar />
+          <TopBar variant={catalogReferenceHeader ? 'catalog-reference' : 'default'} />
         </Box>
         <Box sx={{ pointerEvents: 'auto' }}>
-          <Navbar key={`${location.key}:${location.pathname}:${location.search}`} />
+          <Navbar
+            key={`${location.key}:${location.pathname}:${location.search}`}
+            variant={catalogReferenceHeader ? 'catalog-reference' : 'default'}
+          />
         </Box>
       </Box>
       {useFullWidthContent ? (

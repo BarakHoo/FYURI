@@ -1,13 +1,107 @@
 import { useState } from 'react';
 import { Box, IconButton, Stack, Tooltip } from '@mui/material';
-import { ChevronLeft, ChevronRight, Email, Phone, WhatsApp, Facebook, Instagram } from '@mui/icons-material';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Email,
+  Facebook,
+  HeadsetMicOutlined,
+  Instagram,
+  LockOutlined,
+  Phone,
+  PublicOutlined,
+  ScienceOutlined,
+  WhatsApp,
+} from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
 
-function TopBar() {
+function TopBar({ variant = 'default' }) {
   const { t, language } = useLanguage();
   const { mode } = useThemeMode();
   const [slideIndex, setSlideIndex] = useState(0);
+
+  if (variant === 'catalog-reference') {
+    const utilityItemSx = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 0.8,
+      minWidth: 0,
+      color: '#d9e2e9',
+      fontSize: '12px',
+      fontWeight: 500,
+      lineHeight: 1,
+      whiteSpace: 'nowrap',
+      textDecoration: 'none',
+      '& svg': {
+        width: 17,
+        height: 17,
+        color: '#c7d2da',
+      },
+    };
+
+    return (
+      <Box
+        className="catalog-reference-topbar"
+        dir="ltr"
+        sx={{
+          display: { xs: 'none', md: 'flex' },
+          position: 'relative',
+          height: '38px',
+          minHeight: '38px',
+          boxSizing: 'border-box',
+          alignItems: 'center',
+          color: '#d9e2e9',
+          background: '#020a13',
+          borderBottom: '1px solid #15232e',
+        }}
+      >
+        <Box
+          sx={{
+            width: '100%',
+            px: '42px',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto 1fr',
+            alignItems: 'center',
+          }}
+        >
+          <Stack direction="row" spacing={2.5} alignItems="center">
+            <Box component="a" href="/contact" sx={utilityItemSx}>
+              <HeadsetMicOutlined aria-hidden="true" />
+              <span>Expert Support</span>
+            </Box>
+            <Box sx={{ width: '1px', height: 19, bgcolor: '#172631' }} />
+            <Box component="a" href="/services" sx={utilityItemSx}>
+              <ScienceOutlined aria-hidden="true" />
+              <span>Lab Services</span>
+            </Box>
+          </Stack>
+
+          <Box component="a" href="mailto:info@fyuri.co.il" sx={utilityItemSx}>
+            <Email aria-hidden="true" />
+            <span>Email: info@fyuri.co.il</span>
+          </Box>
+
+          <Stack
+            direction="row"
+            spacing={2.5}
+            alignItems="center"
+            justifyContent="flex-end"
+          >
+            <Box sx={utilityItemSx}>
+              <PublicOutlined aria-hidden="true" />
+              <span>Worldwide Shipping</span>
+            </Box>
+            <Box sx={{ width: '1px', height: 19, bgcolor: '#172631' }} />
+            <Box sx={utilityItemSx}>
+              <LockOutlined aria-hidden="true" />
+              <span>Secure Checkout</span>
+            </Box>
+          </Stack>
+        </Box>
+      </Box>
+    );
+  }
 
   const slides = [
     {

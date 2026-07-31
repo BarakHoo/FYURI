@@ -16,6 +16,8 @@ import {
   KeyboardArrowDown,
   Language,
   Menu,
+  PersonOutline,
+  Search,
   ShoppingCart,
 } from '@mui/icons-material';
 import { Link as RouterLink, useLocation } from 'react-router';
@@ -34,7 +36,7 @@ const isRouteActive = (pathname, item) => (
   item.exact ? pathname === item.path : pathname.startsWith(item.path)
 );
 
-function Navbar() {
+function Navbar({ variant = 'default' }) {
   const { getCartCount } = useCart();
   const { language, toggleLanguage, t } = useLanguage();
   const { mode, toggleTheme } = useThemeMode();
@@ -161,6 +163,220 @@ function Navbar() {
     he: mode === 'dark' ? 'עבור למצב בהיר' : 'עבור למצב כהה',
     en: mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode',
   });
+
+  if (variant === 'catalog-reference' && isDesktop) {
+    const referenceNavButtonSx = {
+      minWidth: 0,
+      minHeight: 48,
+      px: 1.4,
+      color: '#f4f7f9',
+      borderRadius: 0,
+      fontFamily: '"Segoe UI", Arial, sans-serif',
+      fontSize: '14px',
+      fontWeight: 600,
+      letterSpacing: '0.01em',
+      lineHeight: 1,
+      whiteSpace: 'nowrap',
+      '&:hover, &:focus-visible': {
+        color: '#47c6ff',
+        background: 'rgba(64, 181, 246, 0.08)',
+        outline: '1px solid rgba(64, 181, 246, 0.5)',
+        outlineOffset: -1,
+      },
+    };
+
+    const referenceIconButtonSx = {
+      width: 46,
+      height: 46,
+      color: '#e5edf2',
+      '& svg': {
+        width: 25,
+        height: 25,
+      },
+      '&:hover, &:focus-visible': {
+        color: '#47c6ff',
+        background: 'rgba(64, 181, 246, 0.08)',
+        outline: '1px solid rgba(64, 181, 246, 0.5)',
+        outlineOffset: -1,
+      },
+    };
+
+    return (
+      <>
+        <AppBar
+          position="static"
+          elevation={0}
+          dir="ltr"
+          sx={{
+            height: 93,
+            color: '#f4f7f9',
+            background:
+              'linear-gradient(90deg, #111d26 0%, #091621 18%, #07131d 58%, #07141e 100%)',
+            borderBottom: '1px solid #152630',
+            boxShadow: 'none',
+          }}
+        >
+          <Toolbar
+            disableGutters
+            sx={{
+              width: '100%',
+              minHeight: '93px !important',
+              height: 93,
+              px: '38px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Box
+              ref={logoLinkRef}
+              data-testid="site-logo-link"
+              component={RouterLink}
+              to="/"
+              aria-label="FYURI, home"
+              sx={{
+                width: 230,
+                height: 64,
+                flex: '0 0 230px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+                overflow: 'hidden',
+                textDecoration: 'none',
+                '&:focus-visible': {
+                  outline: '2px solid #47c6ff',
+                  outlineOffset: 3,
+                },
+              }}
+            >
+              <Box
+                component="img"
+                src="/images/logos/fyuri-logo.png"
+                alt=""
+                width="230"
+                height="63"
+                sx={{
+                  width: 230,
+                  height: 63,
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            </Box>
+
+            <Box
+              component="nav"
+              data-testid="desktop-nav"
+              aria-label="Primary navigation"
+              sx={{
+                marginInlineStart: '72px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '18px',
+                minWidth: 0,
+              }}
+            >
+              <Button
+                id={desktopProductsButtonId}
+                data-testid="desktop-products-button"
+                color="inherit"
+                onClick={handleDesktopProductsToggle}
+                aria-controls="desktop-products-navigation"
+                aria-expanded={desktopProductsOpen}
+                endIcon={(
+                  <KeyboardArrowDown
+                    sx={{
+                      width: '17px !important',
+                      height: '17px !important',
+                      ml: '4px !important',
+                      transition: 'transform 160ms ease',
+                      transform: desktopProductsOpen ? 'rotate(180deg)' : 'none',
+                    }}
+                  />
+                )}
+                sx={{
+                  ...referenceNavButtonSx,
+                  color: '#f9fbfc',
+                }}
+              >
+                PRODUCTS
+              </Button>
+              <Button component={RouterLink} to="/services" sx={referenceNavButtonSx}>
+                LAB SERVICES
+              </Button>
+              <Button component={RouterLink} to="/about" sx={referenceNavButtonSx}>
+                ABOUT US
+              </Button>
+              <Button
+                component={RouterLink}
+                to="/builder"
+                sx={{
+                  ...referenceNavButtonSx,
+                  color: '#47c6ff',
+                  fontWeight: 750,
+                }}
+              >
+                BUILD YOUR DEVICE
+              </Button>
+              <Button component={RouterLink} to="/contact" sx={referenceNavButtonSx}>
+                CONTACT
+              </Button>
+            </Box>
+
+            <Box
+              sx={{
+                marginInlineStart: 'auto',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '18px',
+              }}
+            >
+              <IconButton aria-label="Search catalog" sx={referenceIconButtonSx}>
+                <Search />
+              </IconButton>
+              <IconButton
+                aria-label="Account"
+                sx={referenceIconButtonSx}
+              >
+                <PersonOutline />
+              </IconButton>
+              <IconButton
+                component={RouterLink}
+                to="/cart"
+                aria-label="Cart, 2 items"
+                sx={referenceIconButtonSx}
+              >
+                <Badge
+                  badgeContent={2}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      minWidth: 22,
+                      height: 22,
+                      px: 0.6,
+                      top: 1,
+                      right: -5,
+                      color: '#05131c',
+                      background: '#47c6ff',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                    },
+                  }}
+                >
+                  <ShoppingCart />
+                </Badge>
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <ProductsDropdown
+          anchorEl={productsAnchorEl}
+          buttonId={desktopProductsButtonId}
+          onClose={() => setProductsAnchorEl(null)}
+          open={desktopProductsOpen}
+        />
+      </>
+    );
+  }
 
   return (
     <>
