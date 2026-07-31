@@ -250,7 +250,7 @@ function Navbar({ variant = 'default' }) {
             >
               <Box
                 component="img"
-                src="/images/logos/fyuri-logo.png"
+                src="/images/logos/fyuri-logo-transparent.png"
                 alt=""
                 width="230"
                 height="63"

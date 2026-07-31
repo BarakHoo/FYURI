@@ -121,12 +121,12 @@ test.describe('reference-parity product catalog', () => {
     await expectNoHorizontalOverflow(page);
   });
 
-  test('uses the exact reference logo, hero, copy and four-card product lineup', async ({ page }) => {
+  test('uses the transparent reference logo, hero, copy and four-card product lineup', async ({ page }) => {
     await visitCatalog(page);
 
     await expect(page.getByTestId('site-logo-link').locator('img')).toHaveAttribute(
       'src',
-      '/images/logos/fyuri-logo.png',
+      '/images/logos/fyuri-logo-transparent.png',
     );
     await expect(page.locator('.reference-catalog-hero__image')).toHaveAttribute(
       'src',
