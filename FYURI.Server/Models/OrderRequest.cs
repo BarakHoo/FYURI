@@ -5,6 +5,7 @@ public class OrderRequest
     public int Id { get; set; }
     public required string OrderNumber { get; set; }
     public required string CustomerName { get; set; }
+    public string? CustomerCompany { get; set; }
     public required string CustomerEmail { get; set; }
     public required string CustomerPhone { get; set; }
     public string? CustomerAddress { get; set; }
@@ -16,6 +17,8 @@ public class OrderRequest
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     public DateTime? ContactedDate { get; set; }
     public string? AdminNotes { get; set; }
+    public int? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
 }
 
 public class OrderItem

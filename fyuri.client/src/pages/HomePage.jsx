@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useRef, useEffect } from 'react';
 import Logo from '../components/Logo';
 import useSeo from '../hooks/useSeo';
+import { resolveAssetUrl } from '../apiConfig';
 
 function HomePage() {
   const { language, t } = useLanguage();
@@ -12,7 +13,7 @@ function HomePage() {
   useSeo({
     title: t({ he: 'ציוד ראיית לילה מקצועי', en: 'Professional Night Vision' }),
     description: t({
-      he: 'FYURI – מכשירי ראיית לילה, מגברי אור ושירותי מעבדה מקצועיים.',
+      he: 'FYURI – מכשירי ראיית לילה, שפופרות ושירותי מעבדה מקצועיים.',
       en: 'FYURI – night vision devices, image intensifier tubes and professional lab services.',
     }),
   });
@@ -47,7 +48,7 @@ function HomePage() {
       category: 'monocular'
     },
     { 
-      titleHe: 'מגברי אור', 
+      titleHe: 'שפופרות', 
       titleEn: 'Image Intensifier Tubes',
       descHe: 'שפופרות איכותיות בדרגות שונות',
       descEn: 'Quality tubes in various generations',
@@ -112,7 +113,7 @@ function HomePage() {
             objectPosition: 'center center',
           }}
         >
-          <source src="/videos/tactical-nvg.mp4" type="video/mp4" />
+          <source src={`${import.meta.env.BASE_URL}videos/tactical-nvg.mp4`} type="video/mp4" />
           {/* Fallback for browsers that don't support video */}
         </Box>
 
@@ -167,7 +168,7 @@ function HomePage() {
             }}
           >
             {t({ 
-              he: 'מובילים בתחום ציוד ראיית לילה, מגברי אור ושירותי מעבדה מקצועיים',
+              he: 'מובילים בתחום ציוד ראיית לילה, שפופרות ושירותי מעבדה מקצועיים',
               en: 'Leaders in night vision equipment, image intensifier tubes and professional lab services'
             })}
           </Typography>
@@ -290,7 +291,7 @@ function HomePage() {
                               <CardMedia
                                 component="img"
                                 height="200"
-                                image={category.image}
+                                image={resolveAssetUrl(category.image)}
                                 alt={language === 'he' ? category.titleHe : category.titleEn}
                                 sx={{
                                   objectFit: 'cover',
@@ -361,7 +362,7 @@ function HomePage() {
                         align="center" 
                         sx={{ mb: 6, fontWeight: 600 }}
                       >
-                        {t({ he: 'למה FYURI?', en: 'Why FYURI?' })}
+                        {t({ he: 'אצלנו במעבדה:', en: 'In Our Lab:' })}
                       </Typography>
                       <Grid container spacing={4}>
                         <Grid item xs={12} md={4}>

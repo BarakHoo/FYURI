@@ -5,7 +5,7 @@ function Logo({ height = 40, width = 'auto' }) {
   const { mode } = useThemeMode();
 
   // Single logo asset (metallic lettering + owl mark) works on both light and dark backgrounds
-  const logoPath = '/images/logos/fyuri-logo.png';
+  const logoPath = `${import.meta.env.BASE_URL}images/logos/fyuri-logo.png`;
 
   return (
     <Box

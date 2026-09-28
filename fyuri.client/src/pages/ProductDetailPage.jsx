@@ -17,6 +17,7 @@ import { ShoppingCart, ArrowBack } from '@mui/icons-material';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
+import { resolveAssetUrl } from '../apiConfig';
 
 // Label stored as "English|Hebrew" in specifications.VariantLabel
 const variantLabel = (p, language) => {
@@ -156,7 +157,7 @@ function ProductDetailPage() {
               position: 'relative',
               overflow: 'hidden',
               backgroundImage: product.thumbnailUrl || product.imageUrls?.[0] 
-                ? `url(${product.thumbnailUrl || product.imageUrls[0]})` 
+                ? `url(${resolveAssetUrl(product.thumbnailUrl || product.imageUrls[0])})` 
                 : 'none',
               backgroundSize: 'cover',
               backgroundPosition: 'center',

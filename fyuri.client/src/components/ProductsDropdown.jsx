@@ -9,7 +9,8 @@ import {
   Build, 
   Thermostat,
   Biotech,
-  ViewInAr 
+  ViewInAr,
+  SportsMotorsports
 } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useThemeMode } from '../context/ThemeContext';
@@ -20,7 +21,7 @@ function ProductsDropdown({ onClose }) {
 
   const categories = [
     {
-      section: t({ he: 'מכשירי ראייה', en: 'Vision Devices' }),
+      section: t({ he: 'מכשירים מוכנים', en: 'Ready for action' }),
       items: [
         {
           titleHe: 'חד עיניים',
@@ -52,7 +53,7 @@ function ProductsDropdown({ onClose }) {
       section: t({ he: 'רכיבים ואופטיקה', en: 'Components & Optics' }),
       items: [
         {
-          titleHe: 'מגברי אור',
+          titleHe: 'שפופרות',
           titleEn: 'Image Intensifiers',
           descHe: 'שפופרות Gen 2, Gen 3',
           descEn: 'Gen 2, Gen 3 tubes',
@@ -95,6 +96,14 @@ function ProductsDropdown({ onClose }) {
           descEn: 'Cables, batteries, parts',
           icon: <Build />,
           link: '/products?category=accessories'
+        },
+        {
+          titleHe: 'מתאמי קסדה',
+          titleEn: 'Helmet Mounts',
+          descHe: 'תושבות, זרועות וגשרים לקסדה',
+          descEn: 'Mounts, arms & bridges for helmets',
+          icon: <SportsMotorsports />,
+          link: '/products?category=helmet-mounts'
         },
         {
           titleHe: 'שירותי מעבדה',

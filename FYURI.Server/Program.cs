@@ -57,6 +57,7 @@ builder.Services.AddCors(options =>
 
 // Register services
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddSingleton<ITotpService, TotpService>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 
@@ -188,7 +189,37 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Serve static files from wwwroot (for images)
+// When hosted under a subpath (e.g. munkys.dev/fyuri), the reverse proxy forwards
+// the prefixed path. UsePathBase strips it so routing/static files work unchanged.
+// Configure via "PathBase" in appsettings or the PATH_BASE env var (e.g. "/fyuri").
+var pathBase = builder.Configuration["PathBase"]
+    ?? Environment.GetEnvironmentVariable("PATH_BASE");
+if (!string.IsNullOrWhiteSpace(pathBase))
+{
+    app.UsePathBase(pathBase);
+}
+
 app.UseForwardedHeaders();
+
+// Security headers — set by the app itself so they apply regardless of the reverse proxy
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+    headers["X-Content-Type-Options"] = "nosniff";
+    headers["X-Frame-Options"] = "SAMEORIGIN";
+    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        headers["Cache-Control"] = "no-store";
+    }
+    await next();
+});
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
 
 app.UseStaticFiles();
 

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Barak Hoobesh — Full Stack Developer</title>
+  <meta name="description" content="Portfolio of Barak Hoobesh — full stack developer based in Herzliya. Projects, experience, and CV." />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / social preview -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Barak Hoobesh — Full Stack Developer" />
+  <meta property="og:description" content="Portfolio, projects, experience, and CV." />
+  <meta property="og:url" content="https://munkys.dev/" />
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+
+  <!-- Structured data: links this site to professional profiles for search engines -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Barak Hoobesh",
+    "jobTitle": "Full Stack Developer",
+    "url": "https://munkys.dev/",
+    "email": "mailto:baraka616263@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Herzliya",
+      "addressCountry": "IL"
+    },
+    "sameAs": [
+      "https://www.linkedin.com/in/barak-hoobesh/",
+      "https://github.com/BarakHoo"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <!-- ===== Header / Nav ===== -->
+  <header class="site-header">
+    <a class="brand" href="#top">Barak&nbsp;Hoobesh</a>
+    <nav class="nav">
+      <a href="#about" data-i18n="nav.about">About</a>
+      <a href="#projects" data-i18n="nav.projects">Projects</a>
+      <a href="#experience" data-i18n="nav.experience">Experience</a>
+      <a href="#cv" data-i18n="nav.cv">CV</a>
+      <a href="#contact" data-i18n="nav.contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="lang-toggle" class="pill" aria-label="Toggle language">EN&nbsp;/&nbsp;עב</button>
+      <button id="theme-toggle" class="pill" aria-label="Toggle theme">🌙</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ===== Hero ===== -->
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Full Stack Developer</p>
+        <h1 data-i18n="hero.title">Hi, I'm Barak Hoobesh.</h1>
+        <p class="lead" data-i18n="hero.lead">
+          A full stack developer based in Herzliya. I build complete web
+          applications end to end — from database and API design to polished,
+          responsive front-ends — and take on freelance work for businesses.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#projects" data-i18n="hero.ctaProjects">View my work</a>
+          <a class="btn btn-ghost" href="/cv.pdf" target="_blank" rel="noopener" data-i18n="hero.ctaCv">Download CV</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== About ===== -->
+    <section id="about" class="section">
+      <h2 data-i18n="about.title">About</h2>
+      <p class="prose" data-i18n="about.body">
+        I'm a full stack developer with a strong background in client care,
+        service, and sales. After years of maximizing sales opportunities and
+        solving problems for customers, I trained as a Full Stack Java developer
+        and now build web applications end to end. Alongside my own projects, I do
+        freelance development for businesses — FYURI is a prime example.
+      </p>
+
+      <h3 class="subhead" data-i18n="about.skillsTitle">Skills &amp; technologies</h3>
+      <ul class="tags tags-lg">
+        <li>Java</li><li>Spring</li><li>React</li><li>JavaScript</li>
+        <li>TypeScript</li><li>MySQL</li><li>HTML</li><li>CSS</li>
+      </ul>
+    </section>
+
+    <!-- ===== Projects ===== -->
+    <section id="projects" class="section">
+      <h2 data-i18n="projects.title">Projects</h2>
+      <div class="project-grid">
+        <!-- FYURI — the flagship project, linked to the live app under /fyuri -->
+        <article class="project-card">
+          <!-- PLACEHOLDER: drop a screenshot at portfolio/assets/fyuri-cover.jpg -->
+          <div class="project-thumb">
+            <img src="/assets/fyuri-cover.jpg" alt="FYURI screenshot"
+                 onerror="this.style.display='none';this.parentNode.classList.add('thumb-empty')" />
+            <span class="thumb-fallback">FYURI</span>
+          </div>
+          <div class="project-body">
+            <h3>FYURI</h3>
+            <p class="prose" data-i18n="projects.fyuri.desc">
+              A full-stack e-commerce &amp; custom-build platform for night-vision
+              equipment. React + Vite front-end, ASP.NET Core (.NET&nbsp;10) API,
+              MySQL, admin panel with 2FA, 3D product builder, and email pipeline.
+            </p>
+            <ul class="tags">
+              <li>React</li><li>.NET&nbsp;10</li><li>MySQL</li><li>Three.js</li><li>Docker</li>
+            </ul>
+            <div class="project-links">
+              <a class="btn btn-primary btn-sm" href="/fyuri/" data-i18n="projects.live">Live demo</a>
+              <a class="btn btn-ghost btn-sm" href="https://github.com/BarakHoo/FYURI" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- PLACEHOLDER: add more <article class="project-card"> blocks here -->
+      </div>
+    </section>
+
+    <!-- ===== Experience ===== -->
+    <section id="experience" class="section">
+      <h2 data-i18n="experience.title">Experience</h2>
+
+      <div class="timeline">
+        <article class="timeline-item">
+          <div class="timeline-head">
+            <h3 data-i18n="experience.freelance.role">Freelance Full Stack Developer</h3>
+            <span class="timeline-meta" data-i18n="experience.freelance.meta">Self-employed · Herzliya</span>
+          </div>
+          <p class="prose" data-i18n="experience.freelance.desc">
+            I build and deliver web applications for businesses — designing the
+            database and API, implementing the front-end, and deploying to
+            production. FYURI is a prime example: a full e-commerce and
+            custom-build platform I built end to end.
+          </p>
+        </article>
+
+        <article class="timeline-item">
+          <div class="timeline-head">
+            <h3 data-i18n="experience.wmo.role">Retention Manager</h3>
+            <span class="timeline-meta" data-i18n="experience.wmo.meta">WMO Marketing LTD, Herzliya · Jan 2022 – Present</span>
+          </div>
+          <p class="prose" data-i18n="experience.wmo.desc">
+            Achieved the highest sales volume in the company for three consecutive
+            months — 30% above the average sales manager. Maintained fluent English
+            communication with clients abroad, maximized retention, and innovated
+            the team's sales tactics and work methods.
+          </p>
+        </article>
+
+        <article class="timeline-item">
+          <div class="timeline-head">
+            <h3 data-i18n="experience.modan.role">Frontal Sales Agent &amp; Customer Service</h3>
+            <span class="timeline-meta" data-i18n="experience.modan.meta">Modan Publishers LTD, Herzliya · Oct 2014 – Dec 2021</span>
+          </div>
+          <p class="prose" data-i18n="experience.modan.desc">
+            Maximized sales opportunities and provided immediate problem-solving
+            for clients seeking assistance with electronic devices, while building
+            lasting relationships with clients and colleagues.
+          </p>
+        </article>
+      </div>
+
+      <h3 class="subhead" data-i18n="experience.eduTitle">Education</h3>
+      <article class="timeline-item">
+        <div class="timeline-head">
+          <h3 data-i18n="experience.edu.role">Full Stack Java Training Course</h3>
+          <span class="timeline-meta" data-i18n="experience.edu.meta">John Bryce Training College · 2023 – 2024</span>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===== CV ===== -->
+    <section id="cv" class="section">
+      <h2 data-i18n="cv.title">CV</h2>
+      <p class="prose" data-i18n="cv.body">
+        <!-- Replace cv.pdf in portfolio/ with your real CV file -->
+        A summary of my experience and skills. Download the full CV below.
+      </p>
+      <a class="btn btn-primary" href="/cv.pdf" target="_blank" rel="noopener" data-i18n="cv.download">Download CV (PDF)</a>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section id="contact" class="section">
+      <h2 data-i18n="contact.title">Contact</h2>
+      <p class="prose" data-i18n="contact.body">Get in touch:</p>
+      <ul class="contact-list">
+        <li>
+          <a href="mailto:baraka616263@gmail.com">
+            <svg class="ci" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5Z"/></svg>
+            <span>baraka616263@gmail.com</span>
+          </a>
+        </li>
+        <li>
+          <a href="tel:+972545711732">
+            <svg class="ci" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.9 15.9 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .57 3.6 1 1 0 0 1-.25 1Z"/></svg>
+            <span>054-4571732</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/BarakHoo" target="_blank" rel="noopener">
+            <svg class="ci" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+            <span>github.com/BarakHoo</span>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.linkedin.com/in/barak-hoobesh/" target="_blank" rel="noopener">
+            <svg class="ci" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.64h.05a4.17 4.17 0 0 1 3.75-2.06c4 0 4.75 2.64 4.75 6.08V21H17.6v-5.44c0-1.3-.02-2.97-1.8-2.97-1.82 0-2.1 1.42-2.1 2.88V21H9V9Z"/></svg>
+            <span>linkedin.com/in/barak-hoobesh</span>
+          </a>
+        </li>
+        <li class="contact-plain">
+          <svg class="ci" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+          <span data-i18n="contact.location">Herzliya, Israel</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="social-row">
+      <a class="social-btn" href="https://github.com/BarakHoo" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+      </a>
+      <a class="social-btn" href="https://www.linkedin.com/in/barak-hoobesh/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.64h.05a4.17 4.17 0 0 1 3.75-2.06c4 0 4.75 2.64 4.75 6.08V21H17.6v-5.44c0-1.3-.02-2.97-1.8-2.97-1.82 0-2.1 1.42-2.1 2.88V21H9V9Z"/></svg>
+      </a>
+      <a class="social-btn" href="mailto:baraka616263@gmail.com" aria-label="Email">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5Z"/></svg>
+      </a>
+    </div>
+    <p>&copy; <span id="year"></span> Barak Hoobesh</p>
+  </footer>
+
+  <script src="/main.js"></script>
+</body>
+</html>

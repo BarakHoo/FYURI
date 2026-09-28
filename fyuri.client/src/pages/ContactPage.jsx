@@ -261,21 +261,6 @@ function ContactPage() {
               </Tooltip>
             </Box>
           </Paper>
-
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ textAlign: 'left' }}>
-              {t({ he: 'שעות פעילות', en: 'Business Hours' })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'left' }}>
-              {t({ he: 'ראשון - חמישי: 9:00 - 17:00', en: 'Sunday - Thursday: 9:00 AM - 5:00 PM' })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'left' }}>
-              {t({ he: 'שישי: 9:00 - 13:00', en: 'Friday: 9:00 AM - 1:00 PM' })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'left' }}>
-              {t({ he: 'שבת: סגור', en: 'Saturday: Closed' })}
-            </Typography>
-          </Paper>
         </Grid>
       </Grid>
     </Box>

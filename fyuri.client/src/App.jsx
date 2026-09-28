@@ -28,6 +28,8 @@ const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminOrderDetailPage = lazy(() => import('./pages/admin/AdminOrderDetailPage'));
 const AdminMessagesPage = lazy(() => import('./pages/admin/AdminMessagesPage'));
+const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage'));
+const AdminCustomerDetailPage = lazy(() => import('./pages/admin/AdminCustomerDetailPage'));
 
 const RouteFallback = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
@@ -51,7 +53,7 @@ function AppContent() {
       <ThemeProvider theme={themeWithDirection}>
         <CssBaseline />
       <AdminAuthProvider>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* Hidden admin panel routes - rendered without the public Layout/Navbar/Footer */}
@@ -102,6 +104,26 @@ function AppContent() {
                 <AdminProtectedRoute>
                   <AdminLayout>
                     <AdminMessagesPage />
+                  </AdminLayout>
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/fyuri-admin/customers"
+              element={
+                <AdminProtectedRoute>
+                  <AdminLayout>
+                    <AdminCustomersPage />
+                  </AdminLayout>
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/fyuri-admin/customers/:id"
+              element={
+                <AdminProtectedRoute>
+                  <AdminLayout>
+                    <AdminCustomerDetailPage />
                   </AdminLayout>
                 </AdminProtectedRoute>
               }

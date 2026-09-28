@@ -35,7 +35,8 @@ export const AdminAuthProvider = ({ children }) => {
   useEffect(() => {
     // Only check the admin session on admin routes — regular visitors
     // should never trigger admin auth requests (avoids 401 noise in console)
-    if (window.location.pathname.startsWith('/fyuri-admin')) {
+    const adminPrefix = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/fyuri-admin`;
+    if (window.location.pathname.startsWith(adminPrefix)) {
       checkSession();
     } else {
       setLoading(false);

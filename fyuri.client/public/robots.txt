@@ -2,9 +2,9 @@ User-agent: *
 Allow: /
 
 # Do not index the private admin panel
-Disallow: /fyuri-admin
-Disallow: /checkout
-Disallow: /cart
-Disallow: /order-confirmation
+Disallow: /fyuri/fyuri-admin
+Disallow: /fyuri/checkout
+Disallow: /fyuri/cart
+Disallow: /fyuri/order-confirmation
 
-Sitemap: https://munkys.dev/sitemap.xml
+Sitemap: https://munkys.dev/fyuri/sitemap.xml

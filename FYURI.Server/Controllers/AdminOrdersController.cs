@@ -1,5 +1,6 @@
 using FYURI.Server.Data;
 using FYURI.Server.Models;
+using FYURI.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,13 @@ namespace FYURI.Server.Controllers;
 public class AdminOrdersController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IEmailService _emailService;
     private readonly ILogger<AdminOrdersController> _logger;
 
-    public AdminOrdersController(AppDbContext context, ILogger<AdminOrdersController> logger)
+    public AdminOrdersController(AppDbContext context, IEmailService emailService, ILogger<AdminOrdersController> logger)
     {
         _context = context;
+        _emailService = emailService;
         _logger = logger;
     }
 
@@ -27,6 +30,7 @@ public class AdminOrdersController : ControllerBase
         [Required]
         public OrderStatus Status { get; set; }
         public string? AdminNotes { get; set; }
+        public bool NotifyCustomer { get; set; } = true;
     }
 
     [HttpGet]
@@ -65,7 +69,9 @@ public class AdminOrdersController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var order = await _context.OrderRequests.FindAsync(id);
+        var order = await _context.OrderRequests
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
         if (order == null)
         {
             return NotFound();
@@ -73,6 +79,7 @@ public class AdminOrdersController : ControllerBase
 
         _logger.LogInformation("Updating order {OrderId} to status {Status}", id, request.Status);
 
+        var previousStatus = order.Status;
         order.Status = request.Status;
         order.AdminNotes = request.AdminNotes;
 
@@ -82,6 +89,11 @@ public class AdminOrdersController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
+
+        if (request.NotifyCustomer && previousStatus != order.Status && order.Status != OrderStatus.Pending)
+        {
+            await _emailService.SendOrderStatusUpdateToCustomerAsync(order, previousStatus);
+        }
 
         return Ok(order);
     }

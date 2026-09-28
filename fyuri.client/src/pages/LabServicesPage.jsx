@@ -41,7 +41,7 @@ function LabServicesPage() {
   const serviceList1 = [
     { he: 'בדיקות תקינות מקיפות', en: 'Comprehensive functionality tests' },
     { he: 'כיול אופטי מדויק', en: 'Precise optical calibration' },
-    { he: 'החלפת מגברי אור', en: 'Image intensifier tube replacement' },
+    { he: 'החלפת שפופרות', en: 'Image intensifier tube replacement' },
     { he: 'תיקון מערכות אלקטרוניות', en: 'Electronic system repair' },
   ];
 

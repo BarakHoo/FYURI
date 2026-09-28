@@ -12,11 +12,13 @@ public static class DbInitializer
         context.Database.Migrate();
 
         SeedAdminUser(context, configuration);
+        LinkOrphanOrdersToCustomers(context); // idempotent — safe on every startup
 
         // Check if data already exists
         if (context.Categories.Any())
         {
             SeedThermalCategoryAndProducts(context); // idempotent — safe on every startup
+            EnsureHelmetMountsCategory(context); // idempotent — safe on every startup
             SeedBuilderComponentProducts(context); // idempotent — safe on every startup
             AssignRealProductPhotos(context); // idempotent — safe on every startup
             BackfillMissingProductImages(context); // idempotent — safe on every startup
@@ -38,9 +40,9 @@ public static class DbInitializer
             new Category
             {
                 Name = "Image Intensifier Tubes",
-                NameHebrew = "מגברי אור",
+                NameHebrew = "שפופרות",
                 Description = "High-quality image intensifier tubes",
-                DescriptionHebrew = "מגברי אור איכותיים",
+                DescriptionHebrew = "שפופרות איכותיות",
                 DisplayOrder = 2,
                 IsActive = true
             },
@@ -69,6 +71,15 @@ public static class DbInitializer
                 Description = "Replacement parts and components",
                 DescriptionHebrew = "חלקי חילוף ורכיבים",
                 DisplayOrder = 5,
+                IsActive = true
+            },
+            new Category
+            {
+                Name = HelmetMountsCategoryName,
+                NameHebrew = "מתאמי קסדה",
+                Description = "Helmet mounts, arms and bridges",
+                DescriptionHebrew = "תושבות, זרועות וגשרים לקסדה",
+                DisplayOrder = 6,
                 IsActive = true
             }
         };
@@ -306,6 +317,7 @@ public static class DbInitializer
             { "intensifier", "/images/banners/image-intensifier.jpg" },
             { "optics", "/images/banners/optics.jpg" },
             { "accessories", "/images/banners/accessories.jpg" },
+            { "helmet-mounts", "/images/banners/accessories.jpg" },
             { "housing", "/images/banners/night-vision.jpg" },
             { "thermal", "/images/banners/night-vision.jpg" },
             { "monocular", "/images/products/pvs-14.jpg" },
@@ -450,19 +462,72 @@ public static class DbInitializer
         }
     }
 
+    private const string HelmetMountsCategoryName = "Helmet Mounts";
+
+    // Orders placed before client management existed have no CustomerId.
+    // Group them into Customer records using the same matching rules as new orders.
+    private static void LinkOrphanOrdersToCustomers(AppDbContext context)
+    {
+        var orphans = context.OrderRequests
+            .Where(o => o.CustomerId == null)
+            .OrderBy(o => o.CreatedDate)
+            .ToList();
+        if (orphans.Count == 0) return;
+
+        var service = new Services.CustomerService(context);
+        foreach (var order in orphans)
+        {
+            var customer = service.ResolveAsync(
+                order.CustomerName, order.CustomerCompany, order.CustomerEmail,
+                order.CustomerPhone, order.CustomerAddress, order.CustomerCity).GetAwaiter().GetResult();
+            order.Customer = customer;
+            if (customer.LastOrderDate == null || customer.LastOrderDate < order.CreatedDate)
+                customer.LastOrderDate = order.CreatedDate;
+            // Save per order so later orphans can match customers created in this loop.
+            context.SaveChanges();
+        }
+    }
+
+    // Creates the Helmet Mounts category on databases seeded before it existed. Idempotent.
+    private static void EnsureHelmetMountsCategory(AppDbContext context)
+    {
+        var tubesCat = context.Categories.FirstOrDefault(c => c.Name == "Image Intensifier Tubes");
+        if (tubesCat != null && tubesCat.NameHebrew != "שפופרות")
+        {
+            tubesCat.NameHebrew = "שפופרות";
+            tubesCat.DescriptionHebrew = "שפופרות איכותיות";
+            context.SaveChanges();
+        }
+
+        if (context.Categories.Any(c => c.Name == HelmetMountsCategoryName)) return;
+
+        var maxOrder = context.Categories.Select(c => (int?)c.DisplayOrder).Max() ?? 0;
+        context.Categories.Add(new Category
+        {
+            Name = HelmetMountsCategoryName,
+            NameHebrew = "מתאמי קסדה",
+            Description = "Helmet mounts, arms and bridges",
+            DescriptionHebrew = "תושבות, זרועות וגשרים לקסדה",
+            DisplayOrder = maxOrder + 1,
+            IsActive = true
+        });
+        context.SaveChanges();
+    }
+
     // Seeds every custom-builder component as a standalone product,
-    // categorized to match the store: Night Vision, Image Intensifier Tubes, Optics, Accessories, Spare Parts.
+    // categorized to match the store: Night Vision, Image Intensifier Tubes, Optics, Accessories, Spare Parts, Helmet Mounts.
     // Idempotent: skips products whose SKU already exists.
     private static void SeedBuilderComponentProducts(AppDbContext context)
     {
         int CatId(string name) => context.Categories.First(c => c.Name == name).Id;
-        int tubes, optics, accessories, spareParts;
+        int tubes, optics, accessories, spareParts, helmetMounts;
         try
         {
             tubes = CatId("Image Intensifier Tubes");
             optics = CatId("Optics");
             accessories = CatId("Accessories");
             spareParts = CatId("Spare Parts");
+            helmetMounts = CatId(HelmetMountsCategoryName);
         }
         catch (InvalidOperationException)
         {
@@ -596,7 +661,7 @@ public static class DbInitializer
             ("BLD-MOUNT-G24", "Wilcox L4 G24 Helmet Mount", "תושבת קסדה Wilcox L4 G24",
                 "Wilcox L4 G24 low-profile breakaway helmet mount with fine height adjust and quick release.",
                 "תושבת קסדה Wilcox L4 G24 פרופיל נמוך, כוונון גובה מדויק, שחרור מהיר.",
-                2600M, accessories, "accessories", null, null, null,
+                2600M, helmetMounts, "helmet-mounts", null, null, null,
                 new() { { "Weight", "~115g" }, { "Interface", "Dovetail shoe" }, { "Manufacturer", "Wilcox Industries" } }),
             ("BLD-IR-850", "IR Illuminator 850nm", "מאיר IR 850nm",
                 "IR illuminator, ~150m range, slight visible red glow.",
@@ -628,13 +693,16 @@ public static class DbInitializer
             var specsChanged = row.Specifications.Count != i.Specs.Count
                 || i.Specs.Any(kv => !row.Specifications.TryGetValue(kv.Key, out var v) || v != kv.Value);
             if (row.Name != i.Name || row.NameHebrew != i.NameHe ||
-                row.Description != i.Desc || row.DescriptionHebrew != i.DescHe || specsChanged)
+                row.Description != i.Desc || row.DescriptionHebrew != i.DescHe || specsChanged ||
+                row.CategoryId != i.CategoryId || row.ProductType != i.ProductType)
             {
                 row.Name = i.Name;
                 row.NameHebrew = i.NameHe;
                 row.Description = i.Desc;
                 row.DescriptionHebrew = i.DescHe;
                 row.Specifications = i.Specs;
+                row.CategoryId = i.CategoryId;
+                row.ProductType = i.ProductType;
                 textChanged = true;
             }
         }
@@ -706,6 +774,16 @@ public static class DbInitializer
             if (hasher.VerifyHashedPassword(existing, existing.PasswordHash, password) == PasswordVerificationResult.Failed)
             {
                 existing.PasswordHash = hasher.HashPassword(existing, password);
+                needsUpdate = true;
+            }
+
+            // Operator-only recovery: requires write access to server configuration.
+            // Clears the enrolled authenticator so the next login shows the QR code again.
+            if (configuration.GetValue<bool>("AdminAccount:ResetTwoFactor") && existing.TotpEnabled)
+            {
+                existing.TotpEnabled = false;
+                existing.TotpSecret = null;
+                existing.LastTotpTimeStep = null;
                 needsUpdate = true;
             }
 

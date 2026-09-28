@@ -53,7 +53,7 @@ public class AdminAuthController : ControllerBase
             return Unauthorized(new { message = "Invalid email or password" });
         }
 
-        if (admin.LockoutUntil.HasValue && admin.LockoutUntil.Value > DateTime.UtcNow)
+        if (IsLockedOut(admin))
         {
             return StatusCode(423, new { message = "Account is temporarily locked. Please try again later." });
         }
@@ -63,27 +63,20 @@ public class AdminAuthController : ControllerBase
 
         if (result == PasswordVerificationResult.Failed)
         {
-            admin.FailedLoginAttempts++;
-            if (admin.FailedLoginAttempts >= MaxFailedAttempts)
-            {
-                admin.LockoutUntil = DateTime.UtcNow.Add(LockoutDuration);
-                admin.FailedLoginAttempts = 0;
-            }
+            RegisterFailedAttempt(admin);
             await _context.SaveChangesAsync();
             return Unauthorized(new { message = "Invalid email or password" });
         }
-
-        admin.FailedLoginAttempts = 0;
-        admin.LockoutUntil = null;
-        await _context.SaveChangesAsync();
 
         var pendingToken = _jwtService.GeneratePendingToken(admin);
 
         if (!admin.TotpEnabled)
         {
-            // First-time login: generate a secret and QR code for enrollment
+            // First-time login: generate a secret and QR code for enrollment.
+            // Enrollment is only possible while no authenticator has ever been confirmed.
             var secret = _totpService.GenerateSecret();
             admin.TotpSecret = secret;
+            admin.LastTotpTimeStep = null;
             await _context.SaveChangesAsync();
 
             var qrCode = _totpService.GenerateQrCodeDataUri(admin.Email, secret);
@@ -104,6 +97,45 @@ public class AdminAuthController : ControllerBase
         });
     }
 
+    private static bool IsLockedOut(AdminUser admin) =>
+        admin.LockoutUntil.HasValue && admin.LockoutUntil.Value > DateTime.UtcNow;
+
+    private void RegisterFailedAttempt(AdminUser admin)
+    {
+        admin.FailedLoginAttempts++;
+        if (admin.FailedLoginAttempts >= MaxFailedAttempts)
+        {
+            admin.LockoutUntil = DateTime.UtcNow.Add(LockoutDuration);
+            admin.FailedLoginAttempts = 0;
+            _logger.LogWarning("Admin account {Email} locked out after repeated failures from {Ip}",
+                admin.Email, HttpContext.Connection.RemoteIpAddress);
+        }
+    }
+
+    // Validates a TOTP code, rejects replays of an already-used time step, and
+    // counts failures toward the account lockout. Persists state on failure.
+    private async Task<bool> TryConsumeTotpCodeAsync(AdminUser admin, string code)
+    {
+        var valid = _totpService.ValidateCode(admin.TotpSecret!, code, out var timeStep);
+
+        if (valid && admin.LastTotpTimeStep.HasValue && timeStep <= admin.LastTotpTimeStep.Value)
+        {
+            valid = false; // replayed or older code
+        }
+
+        if (!valid)
+        {
+            RegisterFailedAttempt(admin);
+            await _context.SaveChangesAsync();
+            return false;
+        }
+
+        admin.LastTotpTimeStep = timeStep;
+        admin.FailedLoginAttempts = 0;
+        admin.LockoutUntil = null;
+        return true;
+    }
+
     [HttpPost("enable-2fa")]
     public async Task<IActionResult> EnableTwoFactor([FromBody] TwoFactorRequest request)
     {
@@ -115,12 +147,17 @@ public class AdminAuthController : ControllerBase
 
         var email = principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
         var admin = await _context.AdminUsers.FirstOrDefaultAsync(a => a.Email == email);
-        if (admin == null || string.IsNullOrEmpty(admin.TotpSecret))
+        if (admin == null || string.IsNullOrEmpty(admin.TotpSecret) || admin.TotpEnabled)
         {
             return Unauthorized(new { message = "Session expired. Please log in again." });
         }
 
-        if (!_totpService.ValidateCode(admin.TotpSecret, request.Code))
+        if (IsLockedOut(admin))
+        {
+            return StatusCode(423, new { message = "Account is temporarily locked. Please try again later." });
+        }
+
+        if (!await TryConsumeTotpCodeAsync(admin, request.Code))
         {
             return BadRequest(new { message = "Invalid verification code" });
         }
@@ -128,6 +165,8 @@ public class AdminAuthController : ControllerBase
         admin.TotpEnabled = true;
         admin.LastLoginDate = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        _logger.LogWarning("Admin 2FA enrolled for {Email} from {Ip}", admin.Email, HttpContext.Connection.RemoteIpAddress);
 
         IssueSessionCookie(admin);
 
@@ -150,7 +189,12 @@ public class AdminAuthController : ControllerBase
             return Unauthorized(new { message = "Session expired. Please log in again." });
         }
 
-        if (!_totpService.ValidateCode(admin.TotpSecret, request.Code))
+        if (IsLockedOut(admin))
+        {
+            return StatusCode(423, new { message = "Account is temporarily locked. Please try again later." });
+        }
+
+        if (!await TryConsumeTotpCodeAsync(admin, request.Code))
         {
             return BadRequest(new { message = "Invalid verification code" });
         }
@@ -174,7 +218,13 @@ public class AdminAuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete(SessionCookieName);
+        Response.Cookies.Delete(SessionCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = Request.PathBase.HasValue ? Request.PathBase.Value : "/"
+        });
         return Ok(new { message = "Logged out" });
     }
 
@@ -186,6 +236,7 @@ public class AdminAuthController : ControllerBase
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.Strict,
+            Path = Request.PathBase.HasValue ? Request.PathBase.Value : "/",
             Expires = DateTimeOffset.UtcNow.AddHours(8)
         });
     }

@@ -197,6 +197,7 @@ function ProductFormDialog({ open, onClose, onSave, product, categories }) {
               <MenuItem value="thermal">Thermal</MenuItem>
               <MenuItem value="clip-on">Clip-On</MenuItem>
               <MenuItem value="accessories">Accessories</MenuItem>
+              <MenuItem value="helmet-mounts">Helmet Mounts</MenuItem>
             </TextField>
           </Grid>
           <Grid item xs={12} sm={4}>

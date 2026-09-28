@@ -4,5 +4,5 @@ public interface ITotpService
 {
     string GenerateSecret();
     string GenerateQrCodeDataUri(string email, string secret, string issuer = "FYURI Admin");
-    bool ValidateCode(string secret, string code);
+    bool ValidateCode(string secret, string code, out long timeStepMatched);
 }

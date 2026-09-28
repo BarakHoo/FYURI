@@ -16,6 +16,7 @@ import {
 import {
   Inventory2,
   ReceiptLong,
+  People,
   Email,
   Logout,
   Menu as MenuIcon,
@@ -39,6 +40,7 @@ function AdminLayout({ children }) {
   const navItems = [
     { label: 'Products', path: '/fyuri-admin/products', icon: <Inventory2 /> },
     { label: 'Orders', path: '/fyuri-admin/orders', icon: <ReceiptLong /> },
+    { label: 'Clients', path: '/fyuri-admin/customers', icon: <People /> },
     { label: 'Customer Messages', path: '/fyuri-admin/messages', icon: <Email /> },
   ];
 

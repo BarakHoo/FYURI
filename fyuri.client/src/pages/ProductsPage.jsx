@@ -14,6 +14,7 @@ import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatGeneration, getGenerationColor } from '../utils/generationUtils';
 import useSeo from '../hooks/useSeo';
+import { resolveAssetUrl } from '../apiConfig';
 
 const drawerWidth = 280;
 
@@ -33,7 +34,7 @@ function ProductsPage() {
   useSeo({
     title: t({ he: 'מוצרים', en: 'Products' }),
     description: t({
-      he: 'קטלוג מכשירי ראיית לילה, מגברי אור, גופים, אופטיקה ותרמי.',
+      he: 'קטלוג מכשירי ראיית לילה, שפופרות, גופים, אופטיקה ותרמי.',
       en: 'Catalog of night vision devices, image intensifier tubes, housings, optics and thermal.',
     }),
   });
@@ -65,7 +66,7 @@ function ProductsPage() {
     },
     { 
       value: 'intensifier', 
-      labelHe: 'מגברי אור', 
+      labelHe: 'שפופרות', 
       labelEn: 'Image Intensifiers',
       icon: <Memory fontSize="small" />
     },
@@ -92,6 +93,12 @@ function ProductsPage() {
       labelHe: 'אביזרים', 
       labelEn: 'Accessories',
       icon: <LocalShipping fontSize="small" />
+    },
+    { 
+      value: 'helmet-mounts', 
+      labelHe: 'מתאמי קסדה', 
+      labelEn: 'Helmet Mounts',
+      icon: <Build fontSize="small" />
     },
   ];
 
@@ -401,7 +408,7 @@ function ProductsPage() {
                   pt: '56.25%',
                   bgcolor: 'grey.800',
                 }}
-                image={product.thumbnailUrl || '/placeholder.jpg'}
+                image={resolveAssetUrl(product.thumbnailUrl) || '/placeholder.jpg'}
               />
               <CardContent sx={{ flexGrow: 1, p: 3 }}>
                 <Typography gutterBottom variant="h6" component="h2" sx={{ fontWeight: 600 }}>

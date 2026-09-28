@@ -23,6 +23,7 @@ function CheckoutPage() {
 
   const [formData, setFormData] = useState({
     customerName: '',
+    customerCompany: '',
     customerEmail: '',
     customerPhone: '',
     customerAddress: '',
@@ -243,6 +244,14 @@ function CheckoutPage() {
                 margin="normal"
                 error={!!formErrors.customerName}
                 helperText={formErrors.customerName}
+              />
+              <TextField
+                fullWidth
+                label={t({ he: 'שם חברה / ארגון (אופציונלי)', en: 'Company / Organization (optional)' })}
+                name="customerCompany"
+                value={formData.customerCompany}
+                onChange={handleChange}
+                margin="normal"
               />
               <TextField
                 required

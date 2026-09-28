@@ -101,7 +101,19 @@ function AdminOrdersPage() {
                     minute: '2-digit',
                   })}
                 </TableCell>
-                <TableCell>{order.customerName}</TableCell>
+                <TableCell>
+                  {order.customerId ? (
+                    <Button
+                      size="small"
+                      sx={{ p: 0, minWidth: 0, textTransform: 'none', fontWeight: 400 }}
+                      onClick={() => navigate(`/fyuri-admin/customers/${order.customerId}`)}
+                    >
+                      {order.customerName}
+                    </Button>
+                  ) : (
+                    order.customerName
+                  )}
+                </TableCell>
                 <TableCell>{order.customerPhone}</TableCell>
                 <TableCell align="right">₪{order.totalAmount.toLocaleString()}</TableCell>
                 <TableCell align="center">

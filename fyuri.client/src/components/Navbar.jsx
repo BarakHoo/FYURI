@@ -26,11 +26,12 @@ function Navbar() {
     { to: '/products?category=monocular', label: t({ he: 'חד עיניים', en: 'Monoculars' }) },
     { to: '/products?category=binocular', label: t({ he: 'דו עיניים', en: 'Binoculars' }) },
     { to: '/products?category=panoramic', label: t({ he: 'ארבע-עיניים', en: 'Panoramic' }) },
-    { to: '/products?category=intensifier', label: t({ he: 'מגברי אור', en: 'Image Intensifiers' }) },
+    { to: '/products?category=intensifier', label: t({ he: 'שפופרות', en: 'Image Intensifiers' }) },
     { to: '/products?category=housing', label: t({ he: 'גופים', en: 'Housings' }) },
     { to: '/products?category=optics', label: t({ he: 'עדשות ואופטיקה', en: 'Lenses & Optics' }) },
     { to: '/products?category=thermal', label: t({ he: 'תרמי', en: 'Thermal' }) },
     { to: '/products?category=accessories', label: t({ he: 'אביזרים', en: 'Accessories' }) },
+    { to: '/products?category=helmet-mounts', label: t({ he: 'מתאמי קסדה', en: 'Helmet Mounts' }) },
   ];
 
   const closeMobileMenu = () => {

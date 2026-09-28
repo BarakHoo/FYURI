@@ -24,9 +24,17 @@ public class TotpService : ITotpService
         return $"data:image/png;base64,{Convert.ToBase64String(bytes)}";
     }
 
-    public bool ValidateCode(string secret, string code)
+    public bool ValidateCode(string secret, string code, out long timeStepMatched)
     {
+        timeStepMatched = 0;
+
         if (string.IsNullOrWhiteSpace(secret) || string.IsNullOrWhiteSpace(code))
+        {
+            return false;
+        }
+
+        code = code.Trim();
+        if (code.Length != 6 || !code.All(char.IsAsciiDigit))
         {
             return false;
         }
@@ -35,7 +43,7 @@ public class TotpService : ITotpService
         {
             var key = Base32Encoding.ToBytes(secret);
             var totp = new Totp(key);
-            return totp.VerifyTotp(code, out _, new VerificationWindow(previous: 1, future: 1));
+            return totp.VerifyTotp(code, out timeStepMatched, new VerificationWindow(previous: 1, future: 1));
         }
         catch
         {

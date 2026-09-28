@@ -79,27 +79,18 @@ function OrderConfirmationPage() {
         </Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
           {t({ 
-            he: 'נציג שלנו יצור איתך קשר בהקדם האפשרי במהלך שעות הפעילות שלנו. נשמח לענות על כל שאלה!',
-            en: 'Our representative will contact you as soon as possible during our business hours. We\'ll be happy to answer any questions!'
+            he: 'נציג שלנו יצור איתך קשר בהקדם האפשרי. נשמח לענות על כל שאלה!',
+            en: 'Our representative will contact you as soon as possible. We\'ll be happy to answer any questions!'
           })}
         </Typography>
       </Alert>
 
-      {/* Business Hours Info */}
+      {/* Contact Info */}
       <Paper sx={{ p: 3, mb: 3, bgcolor: 'background.paper' }}>
         <Typography variant="h6" gutterBottom color="primary">
-          {t({ he: 'שעות הפעילות שלנו', en: 'Our Business Hours' })}
+          {t({ he: 'דברו איתנו', en: 'Talk to Us' })}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t({ he: 'ראשון - חמישי: 9:00 - 17:00', en: 'Sunday - Thursday: 9:00 AM - 5:00 PM' })}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t({ he: 'שישי: 9:00 - 13:00', en: 'Friday: 9:00 AM - 1:00 PM' })}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {t({ he: 'שבת: סגור', en: 'Saturday: Closed' })}
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 2 }} color="primary.main">
+        <Typography variant="body2" color="primary.main">
           {t({ he: 'טלפון: 054-477-0200', en: 'Phone: 054-477-0200' })}
         </Typography>
       </Paper>

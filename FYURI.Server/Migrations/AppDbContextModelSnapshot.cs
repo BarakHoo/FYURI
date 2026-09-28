@@ -39,6 +39,9 @@ namespace FYURI.Server.Migrations
                     b.Property<DateTime?>("LastLoginDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<long?>("LastTotpTimeStep")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("LockoutUntil")
                         .HasColumnType("datetime(6)");
 
@@ -170,6 +173,142 @@ namespace FYURI.Server.Migrations
                     b.ToTable("ContactMessages");
                 });
 
+            modelBuilder.Entity("FYURI.Server.Models.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("LastOrderDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("NormalizedCompany")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("NormalizedPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(8000)
+                        .HasColumnType("varchar(8000)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedCompany");
+
+                    b.HasIndex("NormalizedEmail");
+
+                    b.HasIndex("NormalizedName");
+
+                    b.HasIndex("NormalizedPhone");
+
+                    b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("FYURI.Server.Models.CustomerNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Author")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "CreatedDate");
+
+                    b.ToTable("CustomerNotes");
+                });
+
+            modelBuilder.Entity("FYURI.Server.Models.CustomerOwnedItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AddedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CustomerOwnedItems");
+                });
+
             modelBuilder.Entity("FYURI.Server.Models.OrderItem", b =>
                 {
                     b.Property<int>("Id")
@@ -234,10 +373,17 @@ namespace FYURI.Server.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("CustomerCompany")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
                     b.Property<string>("CustomerEmail")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
@@ -267,6 +413,8 @@ namespace FYURI.Server.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerEmail");
+
+                    b.HasIndex("CustomerId");
 
                     b.HasIndex("OrderNumber")
                         .IsUnique();
@@ -370,6 +518,31 @@ namespace FYURI.Server.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("FYURI.Server.Models.CustomerNote", b =>
+                {
+                    b.HasOne("FYURI.Server.Models.Customer", null)
+                        .WithMany("NoteEntries")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FYURI.Server.Models.CustomerOwnedItem", b =>
+                {
+                    b.HasOne("FYURI.Server.Models.Customer", null)
+                        .WithMany("OwnedItems")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FYURI.Server.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("FYURI.Server.Models.OrderItem", b =>
                 {
                     b.HasOne("FYURI.Server.Models.OrderRequest", null)
@@ -387,6 +560,16 @@ namespace FYURI.Server.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("FYURI.Server.Models.OrderRequest", b =>
+                {
+                    b.HasOne("FYURI.Server.Models.Customer", "Customer")
+                        .WithMany("Orders")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("FYURI.Server.Models.Product", b =>
                 {
                     b.HasOne("FYURI.Server.Models.Category", "Category")
@@ -396,6 +579,15 @@ namespace FYURI.Server.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("FYURI.Server.Models.Customer", b =>
+                {
+                    b.Navigation("NoteEntries");
+
+                    b.Navigation("Orders");
+
+                    b.Navigation("OwnedItems");
                 });
 
             modelBuilder.Entity("FYURI.Server.Models.OrderRequest", b =>

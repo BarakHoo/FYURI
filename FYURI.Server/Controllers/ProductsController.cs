@@ -56,7 +56,7 @@ public class ProductsController : ControllerBase
         {
             var product = await _context.Products
                 .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id && (p.IsActive || p.ProductType == "custom-build"));
 
             if (product == null)
             {

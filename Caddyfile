@@ -10,9 +10,28 @@
 munkys.dev, www.munkys.dev {
 	encode gzip zstd
 
-	# The frontend Nginx container already serves the SPA and proxies
-	# /api/ and /images/ to the backend, so forward everything to it.
-	reverse_proxy frontend:80
+	# FYURI is hosted under the /fyuri subpath so the root domain can later
+	# serve a separate portfolio site. handle_path strips the /fyuri prefix
+	# before forwarding, so the existing frontend Nginx container (which serves
+	# the SPA at root and proxies /api/ and /images/ to the backend) keeps
+	# working unchanged. The frontend build sets Vite base + router basename to
+	# /fyuri/, so all browser-side URLs carry the prefix that Caddy strips here.
+	handle_path /fyuri/* {
+		reverse_proxy frontend:80
+	}
+
+	# Redirect the bare /fyuri (no trailing slash) to /fyuri/ so relative asset
+	# URLs resolve correctly.
+	redir /fyuri /fyuri/ 308
+
+	# Root and everything else: serve the static portfolio site from the folder
+	# mounted into the Caddy container at /srv/portfolio (see docker-compose.yml).
+	# This is the personal portfolio at munkys.dev; FYURI stays under /fyuri.
+	handle {
+		root * /srv/portfolio
+		try_files {path} /index.html
+		file_server
+	}
 
 	# Optional: send your email to Let's Encrypt for expiry notices.
 	# tls you@example.com

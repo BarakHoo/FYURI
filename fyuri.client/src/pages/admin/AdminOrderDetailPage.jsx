@@ -19,8 +19,11 @@ import {
   TableHead,
   TableRow,
   Avatar,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Person } from '@mui/icons-material';
+import { resolveAssetUrl } from '../../apiConfig';
 
 const statusColors = {
   Pending: 'warning',
@@ -39,6 +42,7 @@ function AdminOrderDetailPage() {
   const [order, setOrder] = useState(null);
   const [status, setStatus] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [notifyCustomer, setNotifyCustomer] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -72,9 +76,11 @@ function AdminOrderDetailPage() {
     setError('');
     setSuccess('');
     try {
+      const statusChanged = status !== order.status;
       const payload = { 
         Status: status, 
-        AdminNotes: adminNotes 
+        AdminNotes: adminNotes,
+        NotifyCustomer: notifyCustomer,
       };
       const response = await fetch(`/api/admin/orders/${id}`, {
         method: 'PUT',
@@ -88,7 +94,11 @@ function AdminOrderDetailPage() {
       }
       const data = await response.json();
       setOrder(data);
-      setSuccess('Order updated successfully.');
+      setSuccess(
+        statusChanged && notifyCustomer && status !== 'Pending'
+          ? `Order updated. A status email was sent to ${data.customerEmail}.`
+          : 'Order updated successfully.'
+      );
     } catch (err) {
       console.error('Error updating order:', err);
       setError(err.message);
@@ -157,7 +167,7 @@ function AdminOrderDetailPage() {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                           <Avatar
                             variant="rounded"
-                            src={item.product?.thumbnailUrl}
+                            src={resolveAssetUrl(item.product?.thumbnailUrl)}
                             alt={item.productName}
                           />
                           <Box>
@@ -217,12 +227,24 @@ function AdminOrderDetailPage() {
                   ))}
                 </TextField>
               </Grid>
+              <Grid item xs={12} sm={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={notifyCustomer}
+                      onChange={(e) => setNotifyCustomer(e.target.checked)}
+                    />
+                  }
+                  label="Email the customer when the status changes"
+                />
+              </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
                   multiline
                   rows={4}
                   label="Admin Notes"
+                  helperText="Internal only — never sent to the customer"
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                 />
@@ -241,6 +263,17 @@ function AdminOrderDetailPage() {
             <Typography variant="h6" sx={{ mb: 2 }}>
               Customer Information
             </Typography>
+            {order.customerId && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Person />}
+                sx={{ mb: 2 }}
+                onClick={() => navigate(`/fyuri-admin/customers/${order.customerId}`)}
+              >
+                Open Client Page
+              </Button>
+            )}
             <Grid container spacing={1.5}>
               <Grid item xs={4}>
                 <Typography variant="body2" color="text.secondary">Name</Typography>
@@ -248,6 +281,17 @@ function AdminOrderDetailPage() {
               <Grid item xs={8}>
                 <Typography variant="body2">{order.customerName}</Typography>
               </Grid>
+
+              {order.customerCompany && (
+                <>
+                  <Grid item xs={4}>
+                    <Typography variant="body2" color="text.secondary">Company</Typography>
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Typography variant="body2">{order.customerCompany}</Typography>
+                  </Grid>
+                </>
+              )}
 
               <Grid item xs={4}>
                 <Typography variant="body2" color="text.secondary">Email</Typography>

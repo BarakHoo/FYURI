@@ -49,8 +49,13 @@ if (isDevelopment) {
 const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
     env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7282';
 
+// Base path the app is served from. Default "/fyuri/" so the site lives at
+// munkys.dev/fyuri. Set VITE_BASE_PATH="/" to host at the root instead.
+const basePath = (env.VITE_BASE_PATH || '/fyuri/').replace(/\/*$/, '/');
+
 // https://vitejs.dev/config/
 export default defineConfig({
+    base: basePath,
     plugins: [plugin()],
     resolve: {
         alias: {
@@ -59,9 +64,18 @@ export default defineConfig({
     },
     server: {
         proxy: {
-            '^/api': {
+            // Match /api and /images whether or not they carry the base prefix,
+            // and strip the prefix before forwarding to the backend (which runs
+            // under UsePathBase in production but at the root in dev).
+            [`^(${basePath})?api`]: {
                 target,
-                secure: false
+                secure: false,
+                rewrite: (p) => p.replace(new RegExp(`^${basePath}`), '/')
+            },
+            [`^(${basePath})?images`]: {
+                target,
+                secure: false,
+                rewrite: (p) => p.replace(new RegExp(`^${basePath}`), '/')
             },
             '^/weatherforecast': {
                 target,

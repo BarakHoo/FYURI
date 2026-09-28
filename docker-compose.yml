@@ -35,10 +35,11 @@
       - EmailSettings__SenderName=${EMAIL_SENDER_NAME:-FYURI}
       - EmailSettings__SmtpServer=${EMAIL_SMTP_SERVER:-}
       - EmailSettings__SmtpPort=${EMAIL_SMTP_PORT:-587}
+      - EmailSettings__SslMode=${EMAIL_SMTP_SSL_MODE:-StartTls}
       - EmailSettings__SmtpUsername=${EMAIL_SMTP_USERNAME:-}
       - EmailSettings__SmtpPassword=${EMAIL_SMTP_PASSWORD:-}
-      - AdminAccount__Email=${ADMIN_EMAIL:-admin@fyuri.co.il}
-      - AdminAccount__Password=${ADMIN_PASSWORD:-admin}
+      - AdminAccount__Email=${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      - AdminAccount__Password=${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       - Jwt__Secret=${JWT_SECRET:?set JWT_SECRET in .env}
       - Jwt__Issuer=FYURI
       - Jwt__Audience=FYURI
@@ -74,6 +75,7 @@
       - "443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./portfolio:/srv/portfolio:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

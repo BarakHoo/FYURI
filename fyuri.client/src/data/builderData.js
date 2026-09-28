@@ -359,6 +359,8 @@ export const builderCategories = [
     id: 'illuminator',
     // Real-world note: aiming lasers are separate weapon-mounted devices and are
     // never integrated into night vision goggles — only IR illuminators are offered.
+    // No panoramic (quad) housing supports an integrated IR illuminator, so the
+    // whole category is hidden for that form factor.
     nameHe: 'מאיר IR',
     nameEn: 'IR Illuminator',
     anchor: { x: 400, y: 240 },
@@ -371,6 +373,7 @@ export const builderCategories = [
         price: 0,
         weightGrams: 0,
         available: true,
+        deviceTypes: ['monocular', 'binocular'],
         specsHe: '',
         specsEn: '',
       },
@@ -381,6 +384,7 @@ export const builderCategories = [
         price: 890,
         weightGrams: 65,
         available: true,
+        deviceTypes: ['monocular', 'binocular'],
         specsHe: 'טווח ~150 מ׳, זוהר אדום קל גלוי',
         specsEn: '~150m range, slight visible red glow',
       },
@@ -391,6 +395,7 @@ export const builderCategories = [
         price: 1250,
         weightGrams: 70,
         available: true,
+        deviceTypes: ['monocular', 'binocular'],
         specsHe: 'ללא זוהר גלוי, טווח ~100 מ׳',
         specsEn: 'No visible glow, ~100m range',
       },

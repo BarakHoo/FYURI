@@ -16,12 +16,14 @@ public class OrdersController : ControllerBase
 
     private readonly AppDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly ICustomerService _customerService;
     private readonly ILogger<OrdersController> _logger;
 
-    public OrdersController(AppDbContext context, IEmailService emailService, ILogger<OrdersController> logger)
+    public OrdersController(AppDbContext context, IEmailService emailService, ICustomerService customerService, ILogger<OrdersController> logger)
     {
         _context = context;
         _emailService = emailService;
+        _customerService = customerService;
         _logger = logger;
     }
 
@@ -79,15 +81,22 @@ public class OrdersController : ControllerBase
 
             var orderNumber = $"FYURI-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
+            var customer = await _customerService.ResolveAsync(
+                request.CustomerName, request.CustomerCompany, request.CustomerEmail,
+                request.CustomerPhone, request.CustomerAddress, request.CustomerCity);
+            customer.LastOrderDate = DateTime.UtcNow;
+
             var order = new OrderRequest
             {
                 OrderNumber = orderNumber,
                 CustomerName = request.CustomerName,
+                CustomerCompany = request.CustomerCompany,
                 CustomerEmail = request.CustomerEmail,
                 CustomerPhone = request.CustomerPhone,
                 CustomerAddress = request.CustomerAddress,
                 CustomerCity = request.CustomerCity,
                 CustomerNotes = request.CustomerNotes,
+                Customer = customer,
                 Items = orderItems,
                 TotalAmount = orderItems.Sum(i => i.TotalPrice),
                 Status = OrderStatus.Pending
@@ -115,6 +124,7 @@ public class OrdersController : ControllerBase
                 _logger.LogError(ex, "Failed to send customer confirmation for order {OrderNumber}", orderNumber);
             }
 
+            order.Customer = null;
             return Ok(order);
         }
         catch (Exception ex)
@@ -191,6 +201,9 @@ public class CreateOrderRequest
 {
     [Required, MaxLength(200)]
     public required string CustomerName { get; set; }
+
+    [MaxLength(200)]
+    public string? CustomerCompany { get; set; }
 
     [Required, EmailAddress, MaxLength(200)]
     public required string CustomerEmail { get; set; }

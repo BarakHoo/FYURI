@@ -7,6 +7,8 @@ public class AdminUser
     public required string PasswordHash { get; set; }
     public string? TotpSecret { get; set; }
     public bool TotpEnabled { get; set; } = false;
+    // Last accepted TOTP time step; prevents a code from being replayed within its validity window
+    public long? LastTotpTimeStep { get; set; }
     public DateTime? LastLoginDate { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 

@@ -14,7 +14,8 @@ import {
   useTheme,
 } from '@mui/material';
 import { useState } from 'react';
-import { Close, RestartAlt, CheckCircle, ErrorOutline, ViewInAr, Architecture, AddShoppingCart } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Close, RestartAlt, CheckCircle, ErrorOutline, ViewInAr, Architecture, AddShoppingCart, InfoOutlined } from '@mui/icons-material';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { BuilderProvider, useBuilder } from '../context/BuilderContext';
@@ -38,7 +39,12 @@ function BlueprintScene() {
     setActiveCategory,
     hoveredCategory,
     setHoveredCategory,
+    deviceType,
   } = useBuilder();
+
+  const visibleCategories = builderCategories.filter(
+    (c) => getOptionsForDevice(c, deviceType).length > 0
+  );
 
   const isHighlighted = (id) => hoveredCategory === id || activeCategory === id;
 
@@ -184,7 +190,7 @@ function BlueprintScene() {
         </g>
 
         {/* ------ Connector lines + labels ------ */}
-        {builderCategories.map((category) => {
+        {visibleCategories.map((category) => {
           const highlighted = isHighlighted(category.id);
           const selected = Boolean(selections[category.id]);
           const name = language === 'he' ? category.nameHe : category.nameEn;
@@ -305,7 +311,11 @@ function ConfigPanel() {
           return (
             <Paper
               key={option.id}
-              onClick={() => option.available && selectOption(category.id, option.id)}
+              onClick={() => {
+                if (!option.available) return;
+                selectOption(category.id, option.id);
+                setActiveCategory(null);
+              }}
               sx={{
                 p: 2,
                 cursor: option.available ? 'pointer' : 'not-allowed',
@@ -544,6 +554,32 @@ function SummaryCard() {
           ? t({ he: 'מוסיף...', en: 'Adding...' })
           : t({ he: 'הוסף לעגלה', en: 'Add to Cart' })}
       </Button>
+
+      <Alert
+        severity="info"
+        icon={<InfoOutlined sx={{ fontSize: 18 }} />}
+        sx={{
+          mt: 2,
+          bgcolor: 'rgba(0,200,255,0.06)',
+          color: 'rgba(255,255,255,0.75)',
+          border: '1px solid rgba(0,200,255,0.25)',
+          fontSize: 12.5,
+          '& .MuiAlert-icon': { color: ACCENT },
+          '& a': { color: ACCENT, fontWeight: 600 },
+        }}
+      >
+        {t({
+          he: 'שימו לב: לא כל הרכיבים בהכרח מתאימים לכל גוף. בכל ספק — ',
+          en: 'Please note: not every component is guaranteed to fit every housing. If in doubt, ',
+        })}
+        <RouterLink to="/contact">
+          {t({ he: 'התייעצו איתנו', en: 'consult with us' })}
+        </RouterLink>
+        {t({
+          he: ' — נשמח לסייע ולהמליץ על הרכבה מותאמת אישית לצרכים ולשימוש שלכם.',
+          en: ' — we\'ll gladly assist and recommend a custom build tailored to your needs and use case.',
+        })}
+      </Alert>
     </Paper>
   );
 }

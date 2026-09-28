@@ -1,8 +1,7 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, useGLTF, Center, Html, Line } from '@react-three/drei';
-import { Box, Chip, CircularProgress, Fade, useMediaQuery } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Box, Chip, CircularProgress, Fade } from '@mui/material';
 import * as THREE from 'three';
 import { useLanguage } from '../../context/LanguageContext';
 import { useBuilder } from '../../context/BuilderContext';
@@ -24,9 +23,9 @@ const ACCENT = '#00C8FF';
  * Monocular at 2.45 is the visual reference; the others match it.
  */
 const MODELS = {
-  monocular: { url: '/models/monocular.glb', targetSize: 2.45, camera: [2.2, 1.2, 2.8] },
-  binocular: { url: '/models/binocular.glb', targetSize: 2.45, camera: [2.4, 1.3, 3.0] },
-  panoramic: { url: '/models/panoramic.glb', targetSize: 2.8, camera: [2.4, 1.3, 3.0] },
+  monocular: { url: `${import.meta.env.BASE_URL}models/monocular.glb`, targetSize: 2.45, camera: [3.6, 2.0, 4.6] },
+  binocular: { url: `${import.meta.env.BASE_URL}models/binocular.glb`, targetSize: 2.45, camera: [3.9, 2.1, 4.9] },
+  panoramic: { url: `${import.meta.env.BASE_URL}models/panoramic.glb`, targetSize: 2.8, camera: [4.1, 2.2, 5.2] },
 };
 
 // Schematic-style callouts per component category and device type.
@@ -119,18 +118,8 @@ function DeviceModel({ url, targetSize, hovered, onPointerOver, onPointerOut }) 
   );
 }
 
-/* Slow idle rotation, paused while inspecting -------------------------- */
-function IdleSpin({ paused, children }) {
-  const ref = useRef();
-  useFrame((_, delta) => {
-    if (ref.current && !paused) ref.current.rotation.y += delta * 0.15;
-  });
-  return <group ref={ref}>{children}</group>;
-}
-
-/* On mobile / touch we give up the idle spin entirely and let the user
-   rotate the device themselves via OrbitControls. Rendering a plain group
-   avoids running the per-frame rotation work at all. -------------------- */
+/* The model never auto-rotates — a spinning target makes the hotspot dots
+   hard to click. Users rotate the device themselves via OrbitControls. --- */
 function StaticGroup({ children }) {
   return <group>{children}</group>;
 }
@@ -250,12 +239,6 @@ export default function Device3D() {
   const { deviceType, selections, activeCategory, setActiveCategory } = useBuilder();
   const { t } = useLanguage();
   const [hovered, setHovered] = useState(false);
-  const theme = useTheme();
-  // Auto-rotation makes hotspots a moving target that is hard to tap accurately
-  // on touch screens, so disable the idle spin on mobile / coarse pointers.
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isCoarsePointer = useMediaQuery('(pointer: coarse)');
-  const disableIdleSpin = isMobile || isCoarsePointer;
 
   const model = MODELS[deviceType] ?? MODELS.monocular;
   const deviceInfo = deviceTypes.find((d) => d.id === deviceType);
@@ -314,9 +297,9 @@ export default function Device3D() {
           <directionalLight position={[4, 6, 4]} intensity={1.2} />
           <directionalLight position={[-4, 2, -3]} intensity={0.35} color={ACCENT} />
           {(() => {
-            const ModelGroup = disableIdleSpin ? StaticGroup : IdleSpin;
+            const ModelGroup = StaticGroup;
             return (
-              <ModelGroup paused={hovered || Boolean(activeCategory)}>
+              <ModelGroup>
                 <DeviceModel
                   url={model.url}
                   targetSize={model.targetSize}
@@ -345,7 +328,7 @@ export default function Device3D() {
           <OrbitControls
             enablePan={false}
             minDistance={2}
-            maxDistance={8}
+            maxDistance={10}
             maxPolarAngle={Math.PI * 0.85}
           />
         </Canvas>

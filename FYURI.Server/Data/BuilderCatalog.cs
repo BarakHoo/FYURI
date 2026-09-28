@@ -90,11 +90,12 @@ public static class BuilderCatalog
             new("mount-dovetail-only", "Dovetail Only (Included)", "Dovetail בלבד (כלול)", 0m, 0, true),
             new("mount-g24", "Add G24 Mount", "הוסף תושבת G24", 2600m, 115, true),
         ]),
+        // No panoramic (quad) housing supports an integrated IR illuminator.
         new BuilderCategory("illuminator", "IR Illuminator", "מאיר IR", Required: false, PerChannel: false,
         [
-            new("ir-none", "None", "ללא", 0m, 0, true),
-            new("ir-850", "IR Illuminator 850nm", "מאיר IR 850nm", 890m, 65, true),
-            new("ir-940", "Covert IR Illuminator 940nm", "מאיר IR 940nm חשאי", 1250m, 70, true),
+            new("ir-none", "None", "ללא", 0m, 0, true, ["monocular", "binocular"]),
+            new("ir-850", "IR Illuminator 850nm", "מאיר IR 850nm", 890m, 65, true, ["monocular", "binocular"]),
+            new("ir-940", "Covert IR Illuminator 940nm", "מאיר IR 940nm חשאי", 1250m, 70, true, ["monocular", "binocular"]),
         ]),
     ];
 

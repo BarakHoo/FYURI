@@ -54,6 +54,8 @@ public class ContactController : ControllerBase
             _logger.LogError(ex, "Error emailing contact message from {Email}", request.Email);
         }
 
+        await _emailService.SendContactAutoReplyAsync(request.Name, request.Email);
+
         return Ok(new { message = "Message sent" });
     }
 }
