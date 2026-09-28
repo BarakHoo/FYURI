@@ -1,0 +1,26 @@
+# FYURI — standalone Caddy sample for hosting on your OWN domain at root (/).
+#
+# This file is a template for the business owner (or any standalone deployment)
+# who wants to run FYURI by itself on a dedicated domain, WITHOUT the munkys.dev
+# portfolio/edge layer.
+#
+# To use it:
+#   1. Rename this file to "Caddyfile".
+#   2. Replace "example.com" with your domain.
+#   3. Run FYURI at root by setting the base path to "/" (this is the default):
+#        - Backend:  PathBase="/"  (or leave PATH_BASE unset)
+#        - Frontend: build with VITE_BASE_PATH="/"
+#   4. Add this caddy service back to docker-compose.yml (publish 80/443) OR run
+#      Caddy separately, pointing reverse_proxy at the fyuri_frontend container.
+#
+# The FYURI frontend Nginx serves the SPA at root and proxies /api and /images
+# to the backend, so a single reverse_proxy is all that's needed.
+
+example.com, www.example.com {
+	encode gzip zstd
+
+	reverse_proxy fyuri_frontend:80
+
+	# Optional: send your email to Let's Encrypt for expiry notices.
+	# tls you@example.com
+}

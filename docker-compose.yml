@@ -52,6 +52,11 @@
       - fyuri_network
 
   # Frontend (React + Vite + Nginx)
+  # Joins the internal fyuri_network (to reach backend) AND the shared external
+  # "web" network so the munkys-edge Caddy can reverse-proxy to it via the
+  # alias "fyuri-frontend". No ports are published here — the edge stack owns
+  # the public 80/443 ports. When hosting FYURI on its own domain (the business
+  # owner's deployment), drop the "web" network and put your own proxy in front.
   frontend:
     build:
       context: .
@@ -63,36 +68,20 @@
     volumes:
       - backend_images:/usr/share/nginx/html/images:ro
     networks:
-      - fyuri_network
-
-  # Reverse proxy + automatic HTTPS (Caddy)
-  caddy:
-    image: caddy:latest
-    container_name: fyuri_caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./portfolio:/srv/portfolio:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - frontend
-    networks:
-      - fyuri_network
+      fyuri_network: {}
+      web:
+        aliases:
+          - fyuri-frontend
 
 networks:
   fyuri_network:
     driver: bridge
+  # Shared edge network, created once on the server: docker network create web
+  web:
+    external: true
 
 volumes:
   mysql_data:
     driver: local
   backend_images:
-    driver: local
-  caddy_data:
-    driver: local
-  caddy_config:
     driver: local
