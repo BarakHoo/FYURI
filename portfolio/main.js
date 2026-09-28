@@ -44,6 +44,16 @@ const translations = {
     'projects.title': 'Projects',
     'projects.fyuri.desc':
       'A full-stack e-commerce & custom-build platform for night-vision equipment. React + Vite front-end, ASP.NET Core (.NET 10) API, MySQL, admin panel with 2FA, 3D product builder, and email pipeline.',
+    'projects.calc3d.desc':
+      'A calculator for estimating 3D-printing costs — material, machine time, electricity, and profit margins.',
+    'projects.face.desc':
+      'Real-time in-browser face detection using the device camera and on-device machine-learning models.',
+    'projects.gps.desc':
+      'Set reminders that trigger based on your GPS location, using the browser Geolocation API.',
+    'projects.shopping.desc':
+      'A clean, simple shopping-list app for adding, checking off, and managing items on the go.',
+    'projects.facemesh.desc':
+      'Real-time facial-landmark mesh visualization rendered live from the camera feed.',
     'projects.live': 'Live demo',
     'experience.title': 'Experience',
     'experience.freelance.role': 'Freelance Full Stack Developer',
@@ -87,6 +97,16 @@ const translations = {
     'projects.title': 'פרויקטים',
     'projects.fyuri.desc':
       'פלטפורמת מסחר אלקטרוני ובנייה מותאמת אישית לציוד ראיית לילה. פרונט-אנד ב-React + Vite, שרת ASP.NET Core (.NET 10), MySQL, פאנל ניהול עם אימות דו-שלבי, בונה מוצרים תלת-ממדי ומערכת דוא"ל.',
+    'projects.calc3d.desc':
+      'מחשבון להערכת עלויות הדפסת תלת-ממד — חומר, זמן מכונה, חשמל ומרווחי רווח.',
+    'projects.face.desc':
+      'זיהוי פנים בזמן אמת בדפדפן באמצעות מצלמת המכשיר ומודלי למידת מכונה מקומיים.',
+    'projects.gps.desc':
+      'הגדרת תזכורות שמופעלות לפי מיקום ה-GPS שלך, באמצעות ממשק המיקום של הדפדפן.',
+    'projects.shopping.desc':
+      'אפליקציית רשימת קניות נקייה ופשוטה להוספה, סימון וניהול פריטים בקלות.',
+    'projects.facemesh.desc':
+      'ויזואליזציה של רשת נקודות ציון בפנים בזמן אמת, המרונדרת חיה מהזנת המצלמה.',
     'projects.live': 'הדגמה חיה',
     'experience.title': 'ניסיון',
     'experience.freelance.role': 'מפתח פול-סטאק עצמאי (פרילנס)',

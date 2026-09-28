@@ -24,6 +24,35 @@ munkys.dev, www.munkys.dev {
 	# URLs resolve correctly.
 	redir /fyuri /fyuri/ 308
 
+	# --- Static side-projects (each is its own repo + Nginx container) ---
+	# handle_path strips the subpath prefix, so each project's Nginx serves at
+	# root. The projects use relative asset paths, so they work under any prefix.
+	# Containers come from docker-compose.projects.yml.
+	handle_path /calc3d/* {
+		reverse_proxy calc3d:80
+	}
+	redir /calc3d /calc3d/ 308
+
+	handle_path /face/* {
+		reverse_proxy face:80
+	}
+	redir /face /face/ 308
+
+	handle_path /gps-reminder/* {
+		reverse_proxy gps-reminder:80
+	}
+	redir /gps-reminder /gps-reminder/ 308
+
+	handle_path /shopping-list/* {
+		reverse_proxy shopping-list:80
+	}
+	redir /shopping-list /shopping-list/ 308
+
+	handle_path /face-mesh/* {
+		reverse_proxy face-mesh:80
+	}
+	redir /face-mesh /face-mesh/ 308
+
 	# Root and everything else: serve the static portfolio site from the folder
 	# mounted into the Caddy container at /srv/portfolio (see docker-compose.yml).
 	# This is the personal portfolio at munkys.dev; FYURI stays under /fyuri.
