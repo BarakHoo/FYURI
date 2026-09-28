@@ -410,7 +410,7 @@ function ProductsPage() {
                 }}
                 image={resolveAssetUrl(product.thumbnailUrl) || '/placeholder.jpg'}
               />
-              <CardContent sx={{ flexGrow: 1, p: 3 }}>
+              <CardContent sx={{ flexGrow: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
                 <Typography gutterBottom variant="h6" component="h2" sx={{ fontWeight: 600 }}>
                   {language === 'he' ? (product.nameHebrew || product.name) : product.name}
                 </Typography>
@@ -419,6 +419,7 @@ function ProductsPage() {
                   color="text.secondary"
                   sx={{
                     mb: 2,
+                    flexGrow: 1,
                     display: '-webkit-box',
                     WebkitBoxOrient: 'vertical',
                     WebkitLineClamp: 3,
